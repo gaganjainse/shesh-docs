@@ -1,4 +1,4 @@
-# Shesha readme
+# Shesh readme
 
 > Auto-generated placeholder — original doc will be copied here via live update flow. See source repo for full content. This file exists to keep navigation working (mdBook requires file exists, SUMMARY.md load-bearing).
 

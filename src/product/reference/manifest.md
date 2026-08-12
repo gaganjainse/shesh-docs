@@ -44,8 +44,8 @@ version = "0.1.0"
 license = "MIT"
 channel = "devel"
 provides = ["task-router", "scheduler", "tool-broker"]
-upstream = { name = "shesh-kernel", repo = "gaganjainse/shesh-kernel", ref = "main" }
-notes = "Packaged sheshaos-kernel for desktop; routes tool calls through policy."
+upstream = { name = "shesh-kernel", repo = "gaganjainse/shesha-kernel", ref = "main" }
+notes = "Packaged shesh-kernel for desktop; routes tool calls through policy."
 
 # ─────────────────────────────────────────────────────────────────────────────
 # MIND — deliberative models (SheshOS specialist routing, small models on 6GB)
@@ -249,7 +249,7 @@ notes = "eBPF telemetry with Aya (Rust) for system/performance sensing read-only
 # ─────────────────────────────────────────────────────────────────────────────
 # BASE — the desktop substrate (fork of end-4, stays closest to upstream)
 # ─────────────────────────────────────────────────────────────────────────────
-[component.auto-desktopenv]
+[component.shesh-desktop]
 layer = "soma"
 repo = "gaganjainse/shesh-desktop"
 version = "rolling"

@@ -100,7 +100,7 @@
 - [AI Prompts — Copy-Paste per Phase](./desktop/09-ai-prompts.md)
 - [Licenses & Sources](./desktop/10-licenses-sources.md)
 - [Ambient Design — Catch-up Scheduler + Warm Proactivity](./desktop/ambient-design.md)
-- [Shesha Readme (old)](./desktop/shesha-readme.md)
+- [Shesh Readme (old)](./desktop/shesh-readme.md)
 - [Checklist](./desktop/checklist.md)
 
 # Part V: Architecture Decision Records (ADRs)

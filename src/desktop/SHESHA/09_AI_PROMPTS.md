@@ -12,8 +12,8 @@
 Paste this at the top of every AI session. It anchors the model to reality:
 
 ```
-You are working on the "Shesha" ecosystem — Gagan's local-first, AI-first CachyOS/Hyprland desktop
-fork of end-4/dots-hyprland. Repo: /home/user/shesha-desktop (a git repo).
+You are working on the "Shesh" ecosystem — Gagan's local-first, AI-first CachyOS/Hyprland desktop
+fork of end-4/dots-hyprland. Repo: /home/user/shesh-desktop (a git repo).
 
 HARDWARE (verified 2026-08-09 — do NOT use other numbers):
 - MSI Sword 16 HX B14VEKG-210IN; i7-14700HX; Intel iGPU + NVIDIA RTX 4050 6GB GDDR6
@@ -136,7 +136,7 @@ warnings that bootloader cmdline needs manual editing. Mirror the structure of 2
 
 ```
 Create profiles/msi-sword-cachyos/ containing profile.conf (the canonical hardware values from
-04_DEVICE_PROFILE.md), mkinitcpio.fragment, kernel-cmdline.txt, sysctl/99-shesha.conf,
+04_DEVICE_PROFILE.md), mkinitcpio.fragment, kernel-cmdline.txt, sysctl/99-shesh.conf,
 udev/60-ioschedulers.rules, and a hypr/custom snippet that sets monitor eDP-1,1920x1200@144 and
 battery/AC visual presets. Then wire setup to apply this profile when product_name matches "Sword 16
 HX". Every file must have a comment pointing back to docs/SHESHA/04_DEVICE_PROFILE.md. Provide
@@ -162,13 +162,13 @@ Show each file and the test output. Do not call the LLM in tests (mock it).
 
 ---
 
-## 6. Phase 6 — Shesha agent prompts
+## 6. Phase 6 — Shesh agent prompts
 
 ### 6.1 MCP servers
 ```
 Fix tools/sesha: (a) correct system_control.py (fix the `decoration` typo, add get_system_status,
 trigger_backup, set_power_profile); (b) create hyprland_control.py from
-docs/SHESHA/06_SHESHA_AGENT.md section 5; (c) create smart_organizer.py with organize/last_moves/
+docs/SHESHA/06_SHESH_AGENT.md section 5; (c) create smart_organizer.py with organize/last_moves/
 undo_last/pause/resume; (d) change setup_ai_stack to iterate actual *.py files and create stdio units
 only for those (fix N-04); (e) replace the bogus http://localhost:87xx MCP URLs in
 dots/.config/newelle/config.toml with stdio command entries. Use fastmcp, stdio transport, and a
@@ -177,16 +177,16 @@ shared audit-log helper. Provide py_compile + a manual MCP smoke test.
 
 ### 6.2 Audit log + policy
 ```
-Create tools/shesha/shesha_audit.py: an append-only JSONL + SQLite writer with a chained SHA-256 hash
+Create tools/shesh/shesh_audit.py: an append-only JSONL + SQLite writer with a chained SHA-256 hash
 (prev_hash field) like an event log, and policy.toml loading (confirm/deny/auto tool lists + denied
 paths). Wrap every @mcp.tool with it (decorator) so calls/args/results are logged and denied tools
-refused. Add `shesha log` and `shesha undo` CLI subcommands. Include tests that tampering breaks the
+refused. Add `shesh log` and `shesh undo` CLI subcommands. Include tests that tampering breaks the
 chain.
 ```
 
 ### 6.3 Quickshell overlay
 ```
-Create dots/.config/quickshell/ii/shesha/SheshaOverlay.qml: a small Material-You-colored pill (reuse
+Create dots/.config/quickshell/ii/shesh/SheshaOverlay.qml: a small Material-You-colored pill (reuse
 end-4's color variables) bottom-right showing idle/listening/thinking/speaking states. It should read
 state from a small file/socket the Newelle bridge updates (do not assume an API that doesn't exist;
 propose the minimal bridge). Keep it <150 lines, no heavy dependencies. Note it must not regress
