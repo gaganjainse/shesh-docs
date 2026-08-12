@@ -56,3 +56,8 @@ npm run dev
 - Factory: https://github.com/gaganjainse/shesh-workspace
 - Gateway: https://github.com/gaganjainse/shesh-omniroute + https://github.com/gaganjainse/OmniRoute
 - Desktop: https://github.com/gaganjainse/shesh-desktop
+
+## Security
+
+Security posture and vulnerability reporting: [canonical ecosystem security
+policy](https://github.com/gaganjainse/shesh-ecosystem/blob/main/SECURITY.md).
