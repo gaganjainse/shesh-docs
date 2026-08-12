@@ -1,0 +1,33 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: internal markdown links resolve
+        run: |
+          python3 - <<'PY'
+          import pathlib, re, sys
+          root = pathlib.Path("src")
+          bad = []
+          link_re = re.compile(r"\[[^\]]*\]\(([^)#\s]+)(?:#[^)]+)?\)")
+          for md in root.rglob("*.md"):
+              for m in link_re.finditer(md.read_text(encoding="utf-8")):
+                  url = m.group(1)
+                  if "://" in url or url.startswith("mailto:"):
+                      continue
+                  target = (md.parent / url).resolve()
+                  if not target.exists():
+                      bad.append(f"{md}: {url}")
+          if bad:
+              print("\n".join(bad))
+              sys.exit(1)
+          print("all internal links resolve")
+          PY
+      - name: no stale canonical names
+        run: |
+          ! grep -rniE "nexusaos|sheshaaos|auto-desktopenv" src/ || { echo "stale names found — run the sweep"; exit 1; }

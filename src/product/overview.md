@@ -24,15 +24,15 @@ tested combinations reach the daily driver. This gives us:
 - **Coherence** — one manifest, one lockfile, one audit log, one policy engine.
 - **Ownership** — the integrated whole is *Shesh*, not a pile of someone else's brands.
 
-Read the conceptual foundation: [`docs/architecture/AGENTIC_BODY.md`](docs/architecture/AGENTIC_BODY.md).
-Read the federation model: [`docs/architecture/REPO_TOPOLOGY.md`](docs/architecture/REPO_TOPOLOGY.md).
-Language choices: [`docs/architecture/LANGUAGE_POLICY.md`](docs/architecture/LANGUAGE_POLICY.md).
-Environments (Podman/uv): [`docs/CONTAINERS_AND_VENV.md`](docs/CONTAINERS_AND_VENV.md).
-Linux layout: [`docs/LINUX_LAYOUT.md`](docs/LINUX_LAYOUT.md).
-Tooling/skills catalog: [`docs/TOOLING_CATALOG.md`](docs/TOOLING_CATALOG.md).
-See the [glossary](docs/GLOSSARY.md).
+Read the conceptual foundation: [`docs/architecture/AGENTIC_BODY.md`](architecture/agentic-body.md).
+Read the federation model: [`docs/architecture/REPO_TOPOLOGY.md`](architecture/repo-topology.md).
+Language choices: [`docs/architecture/LANGUAGE_POLICY.md`](architecture/language-policy.md).
+Environments (Podman/uv): [`docs/CONTAINERS_AND_VENV.md`](../adr/0002-containers-and-venv.md).
+Linux layout: [`docs/LINUX_LAYOUT.md`](concepts/linux-layout.md).
+Tooling/skills catalog: [`docs/TOOLING_CATALOG.md`](../audits/tooling-catalog.md).
+See the [glossary](../glossary.md).
 
-See everything we absorb: [`docs/SOURCES.md`](docs/SOURCES.md) and [`ATTRIBUTION.md`](ATTRIBUTION.md).
+See everything we absorb: [`docs/SOURCES.md`](https://github.com/gaganjainse/shesh-ecosystem/blob/main/docs/SOURCES.md) and [`ATTRIBUTION.md`](https://github.com/gaganjainse/shesh-ecosystem/blob/main/ATTRIBUTION.md).
 
 ---
 
@@ -95,7 +95,7 @@ upstream forks ──▶ component repos ──▶ shesh-ecosystem integration �
 
 Every arrow is a gate in `scripts/` (CI runs them). Nothing reaches ⑤ without a green gate and a
 btrfs snapshot before apply. The policy engine governs all tool actions the agent takes — see
-[`policies/SKILLS_POLICY.md`](policies/SKILLS_POLICY.md).
+[`policies/SKILLS_POLICY.md`](https://github.com/gaganjainse/shesh-ecosystem/blob/main/policies/SKILLS_POLICY.md).
 
 ---
 
@@ -121,10 +121,10 @@ repos, fork Newelle as `shesh-voice`, and wire `shesh-audit` to SheshAOS.
 
 ## Documentation index
 
-- **Start here:** [TODO.md](TODO.md) — master roadmap; [GLOSSARY.md](docs/GLOSSARY.md)
-- **Architecture:** [Agentic Body](docs/architecture/AGENTIC_BODY.md) · [Repo topology](docs/architecture/REPO_TOPOLOGY.md) · [Languages](docs/architecture/LANGUAGE_POLICY.md) · [Multi-agent](docs/architecture/MULTI_AGENT.md)
-- **Platform:** [Containers/uv](docs/CONTAINERS_AND_VENV.md) · [Linux layout](docs/LINUX_LAYOUT.md) · [ACP & A2A](docs/ACP_A2A.md)
-- **Mind:** [Learning/memory](docs/LEARNING.md) · [Tooling catalog](docs/TOOLING_CATALOG.md)
-- **Process:** [Gap analysis](docs/GAP_ANALYSIS.md) · [Autopilot skill](docs/skills/autopilot.md) · [Query log](docs/queries/QUERYLOG.md)
-- **Components:** [acp](docs/components/shesh-acp.md) · [audit](docs/components/shesh-audit.md) · [files](docs/components/shesh-files.md) · [harness](docs/components/shesh-harness.md) · [memory](docs/components/shesh-memory.md) · [orchestrator](docs/components/shesh-orchestrator.md) · [shell](docs/components/shesh-shell.md) · [skills](docs/components/shesh-skills.md) · [system](docs/components/shesh-system.md)
-- **Desktop:** [Shesh desktop docs](docs/desktop/)
+- **Start here:** [TODO.md](https://github.com/gaganjainse/shesh-ecosystem/blob/main/TODO.md) — master roadmap; [GLOSSARY.md](../glossary.md)
+- **Architecture:** [Agentic Body](architecture/agentic-body.md) · [Repo topology](architecture/repo-topology.md) · [Languages](architecture/language-policy.md) · [Multi-agent](architecture/multi-agent.md)
+- **Platform:** [Containers/uv](../adr/0002-containers-and-venv.md) · [Linux layout](concepts/linux-layout.md) · [ACP & A2A](architecture/acp-a2a.md)
+- **Mind:** [Learning/memory](concepts/learning.md) · [Tooling catalog](../audits/tooling-catalog.md)
+- **Process:** [Gap analysis](https://github.com/gaganjainse/shesh-ecosystem/blob/main/docs/GAP_ANALYSIS.md) · [Autopilot skill](https://github.com/gaganjainse/shesh-ecosystem/blob/main/docs/skills/autopilot.md) · [Query log](../queries/querylog.md)
+- **Components:** [acp](../components/shesh-acp.md) · [audit](../components/shesh-audit.md) · [files](../components/shesh-files.md) · [harness](../components/shesh-harness.md) · [memory](../components/shesh-memory.md) · [orchestrator](../components/shesh-orchestrator.md) · [shell](../components/shesh-shell.md) · [skills](../components/shesh-skills.md) · [system](../components/shesh-system.md)
+- **Desktop:** [Shesh desktop docs](../desktop/)
