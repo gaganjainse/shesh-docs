@@ -133,4 +133,4 @@ The full map: **[docs/INDEX.md](https://github.com/gaganjainse/shesh-ecosystem/b
 - **Mind:** [Learning/memory](concepts/learning.md) · [Tooling catalog](../audits/tooling-catalog.md) · [Style & performance](https://github.com/gaganjainse/shesh-ecosystem/blob/main/docs/STYLE_PERFORMANCE.md)
 - **Process:** [Gap analysis](../audits/gap-analysis.md) · [Swarm](../factory/swarm/README.md) · [Query log](../queries/querylog.md)
 - **Components:** [docs/components/](https://github.com/gaganjainse/shesh-ecosystem/blob/main/docs/components) — one page per component, generated cross-links
-- **Desktop:** [docs/desktop/](https://github.com/gaganjainse/shesh-ecosystem/blob/main/docs/desktop) — the canonical SHESH desktop set
+- **Desktop:** [shesh-desktop/docs/SHESH/](https://github.com/gaganjainse/shesh-desktop/tree/main/docs/SHESH) — the canonical SHESH desktop set (mirrored by the book; old in-repo mirror retired to docs/attic/desktop-mirror-2026-08-13)
