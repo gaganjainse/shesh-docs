@@ -1,5 +1,15 @@
-# Gpu power mux
+# 4. GPU, power, and MUX (MSI-specific)
 
-> Auto-generated placeholder — original doc will be copied here via live update flow. See source repo for full content. This file exists to keep navigation working (mdBook requires file exists, SUMMARY.md load-bearing).
+> Part of the [Manual Verification Checklist](../../verification/manual-verification.md) — section 4 of 16.
 
-This doc is part of compilation for reading only. Source: shesh-ecosystem, shesh-workspace, shesh-desktop, etc. Properly organised per Docusaurus + Kubernetes + Rust book best practices: Concepts, Tasks, Tutorials, Reference, plus Factory/Product/Gateway separation.
+- [ ] **NVIDIA driver loaded**: `nvidia-smi` shows the GPU and temp/power
+- [ ] `powerprofilesctl list`; switching performance↔balanced↔power-saver works
+  - [ ] `shesh-system-mcp` → `set_power_profile("gaming")` changes it
+  - [ ] Hyprland blur/shadow auto-reduce on battery (verify visually)
+- [ ] **MUX switch** (if you use it): `sudo msi-mux-switcher status` shows the
+      current mode; switching requires a reboot as documented
+- [ ] GPU VRAM doesn't exceed the 5.5 GB budget when two models load
+      (`watch nvidia-smi`)
+- [ ] Hybrid graphics routes apps correctly (offload with `__NV_PRIME_RENDER_OFFLOAD=1`)
+
+---

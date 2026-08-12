@@ -31,14 +31,34 @@ jobs:
               sys.exit(1)
           print("all internal links resolve")
           PY
+      - name: SUMMARY chapters all exist
+        run: |
+          python3 - <<'PY'
+          import pathlib, re, sys
+          root = pathlib.Path("src")
+          text = (root / "SUMMARY.md").read_text(encoding="utf-8")
+          urls = re.findall(r"\[[^\]]*\]\(\.(/[^)\s#]+)[^)]*\)", text)
+          bad = [u for u in urls if not (root / u.lstrip("/")).exists()]
+          if bad:
+              print("SUMMARY targets missing:", *bad, sep="\n  ")
+              sys.exit(1)
+          print(f"SUMMARY targets all exist ({len(urls)} chapters)")
+          PY
+      - name: mdbook renders (real gate, not warnings-as-green)
+        uses: taiki-e/install-action@b20dedce73af6905cdc30d6611090c9b67557c8d  # v2.85.12
+        with:
+          tool: mdbook
+      - run: mdbook build
       - name: no stale canonical names
         run: |
           # Same carve-out as rename_sweep2.py: regenerated audit artifacts
-          # (AUDIT_EXHAUSTIVE and dated AUDIT_* snapshots) and immutable
-          # history (QUERYLOG, ADR records) quote the old world by definition;
-          # the gate protects living docs only.
+          # (exhaustive-audit + incident snapshots) and immutable history
+          # (QUERYLOG, ADR records) quote the old world by definition; the
+          # gate protects living docs only.
           ! grep -rniE "nexusaos|sheshaaos|auto-desktopenv" src/ \
               --exclude="AUDIT_*" \
+              --exclude="exhaustive-audit.md" \
+              --exclude="incident-*.md" \
               --exclude-dir=queries \
               --exclude-dir=adr \
           || { echo "stale names found — run the sweep"; exit 1; }

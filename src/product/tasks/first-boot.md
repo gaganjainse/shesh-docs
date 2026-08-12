@@ -1,5 +1,14 @@
-# First boot
+# 0. First boot
 
-> Auto-generated placeholder — original doc will be copied here via live update flow. See source repo for full content. This file exists to keep navigation working (mdBook requires file exists, SUMMARY.md load-bearing).
+> Part of the [Manual Verification Checklist](../../verification/manual-verification.md) — section 0 of 16.
 
-This doc is part of compilation for reading only. Source: shesh-ecosystem, shesh-workspace, shesh-desktop, etc. Properly organised per Docusaurus + Kubernetes + Rust book best practices: Concepts, Tasks, Tutorials, Reference, plus Factory/Product/Gateway separation.
+- [ ] **Boots into CachyOS / Hyprland** without errors
+- [ ] `hyprctl version` works; keybinds from the desktop fork are active
+- [ ] Resolution is **1920×1200 @ 144 Hz** (check `hyprctl monitors`)
+- [ ] The Quickshell status bar / settings render with no pink placeholders
+- [ ] Audio works (speakers + headphone jack): `wpctl status`, play a sound
+- [ ] Microphone works (for wake word / STT)
+- [ ] Network (Wi-Fi + Ethernet) connects
+- [ ] `~/.local/share/shesh/` directory tree exists after first run
+
+---

@@ -1,3 +1,6 @@
+# Models — models.toml
+
+```toml
 # Shesh — Model Manifest — free, model-agnostic routing
 # Every model declares capabilities, context, cost, provider, and free tier.
 # Router picks best model that satisfies task requirements, not hardcoded names.
@@ -169,3 +172,4 @@ free = true
 capabilities = ["planner", "coordinator", "researcher", "critic", "coder", "vision", "embedding"]
 notes = "Deterministic stub — returns fixed JSON steps, always valid, zero variance — final fallback"
 priority = 99
+```

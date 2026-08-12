@@ -1,5 +1,15 @@
-# Voice
+# 3. Voice (shesh-voice / Newelle fork)
 
-> Auto-generated placeholder — original doc will be copied here via live update flow. See source repo for full content. This file exists to keep navigation working (mdBook requires file exists, SUMMARY.md load-bearing).
+> Part of the [Manual Verification Checklist](../../verification/manual-verification.md) — section 3 of 16.
 
-This doc is part of compilation for reading only. Source: shesh-ecosystem, shesh-workspace, shesh-desktop, etc. Properly organised per Docusaurus + Kubernetes + Rust book best practices: Concepts, Tasks, Tutorials, Reference, plus Factory/Product/Gateway separation.
+- [ ] Fork `gaganjainse/shesh-voice` is tracking upstream `qwersyk/Newelle`
+      (rebase occasionally)
+- [ ] The overlay config copied:
+  - [ ] `cp shesh-overlay/shesh-mcp-servers.json ~/.config/Newelle/mcp-servers.json`
+  - [ ] Default model set to local Ollama `phi4-mini`
+- [ ] **Wake word "hey shesh"** triggers listening (openwakeword)
+- [ ] Speech-to-text transcribes your voice accurately (try faster-whisper)
+- [ ] Text-to-speech reads responses aloud
+- [ ] Mic permission / PipeWire access not blocked
+
+---

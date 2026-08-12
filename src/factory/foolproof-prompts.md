@@ -1,233 +1,222 @@
-# SWARM STARTUP GUIDE — How many chats and what to send
+# Foolproof Swarm Prompts — 5 Agents, New Clean Workspace, Encrypted PAT from GitHub
 
-> **Goal:** Run orchestrator + workers in parallel via GitHub as bus, without overwrite, with secure PAT password prompt every new session.
+> **Problem before:** Other sandbox does not have `~/.config/shesh/github.pat.enc` — it lived on previous machine's home dir, not in repo, so password alone can't decrypt. Need raw PAT (insecure) or fetch encrypted file from GitHub.
 
-## How many Arena Agent Mode chats to open?
+> **Solution now:** Encrypted PAT uploaded to GitHub `gaganjainse/shesh-workspace` at `secrets/github.pat.enc` — safe to commit because encrypted, needs password to decrypt. New clean workspace fetches it via `curl` from raw GitHub, then auto-asks for password.
 
-**Recommended: 5 chats** (tested balance — more than 4 increases git push conflicts)
-
-| Chat # | Role | What it does | Component filter | Why |
-|--------|------|--------------|------------------|-----|
-| 1 | **Orchestrator** | Seeds GitHub Issues from TODO.md ⬜, monitors heartbeats, re-queues stale claims >10 min, dashboard | all | Brain of swarm, must be 1 only |
-| 2 | **Worker-Brain** | Governance kernel tasks | `shesh-audit, shesh-secrets, shesh-brain, SheshAOS` | Brain layer, Rust + policy |
-| 3 | **Worker-Mind** | Memory, model routing, harness, orchestrator, skills, calendar | `shesh-memory, shesh-mind, shesh-harness, shesh-orchestrator, shesh-skills, shesh-calendar` | Mind layer, LLM + RAG |
-| 4 | **Worker-Soma** | Desktop body, voice, files, phone, containers | `shesh-files, shesh-shell, shesh-system, shesh-backup, shesh-phone, shesh-containers, shesh-mcp-bundle, shesh-acp, shesh-voice, shesh-desktop` | Soma layer, Hyprland + MCP |
-| 5 | **Worker-Platform** | Ecosystem itself, docs, CI, swarm tooling | `shesh-ecosystem` (manifest, docs/adr, Containerfile, install.sh, swarm) | Platform/docs, no code overlap |
-
-**Can it be further divided? Yes — two modes:**
-
-- **Coarse (recommended now):** 4 workers by layer as above — minimal file overlap, 1 TODO task per worker at a time, low git conflicts.
-- **Fine-grained (if you want 10+ workers):** 1 worker per component e.g., `shesh-memory` alone, `shesh-system` alone, etc. But then `manifests/components.toml` and `docs/` become contention hotspots — last merge wins, needs manual rebase more often. Use only if you have many independent components (e.g., `shesh-phone` and `shesh-calendar` don't touch same files).
-
-**Start with 5, scale to 8 if needed.** Never more than 1 orchestrator.
+This doc treats you as **new clean workspace** (`/home/user` empty) and lists exactly what you need to set up to work properly, with foolproof prompts for 5 agents.
 
 ---
 
-## What to send to each chat — COPY-PASTE PROMPTS
+## Common Setup for ANY new clean workspace (do this first)
 
-All prompts start with reading `docs/NEXT_SESSION_PROMPT.md` (auto-generated, contains live metrics + PAT status). That file already contains your GitHub profile, all repos, PAT decryption instructions, and commands. You just add role specialization.
-
-### Common preface for ALL chats (paste first)
-
-```
-Read docs/NEXT_SESSION_PROMPT.md FIRST — it is auto-generated with current PAT status need_password=true
-
-You will be asked for password to decrypt GitHub PAT — when ask_user UI appears, give <YOUR_ENCRYPTION_PASSWORD> (or your custom). Tool will decrypt ~/.config/shesh/github.pat.enc -> plain 600 and then github_auth loads it.
-
-After that:
-cd /home/user && git pull origin main && python tools/session_guard.py --status && python tools/github_auth.py --check && make check
-
-Then read docs/SESSION_HANDOFF.md, docs/SESSION_PROTOCOL.md, docs/SWARM.md, TODO.md
-```
-
-Then add role-specific below.
-
----
-
-### Chat 1: Orchestrator (copy this whole block)
-
-```
---- ORCHESTRATOR ---
-
-You are ORCHESTRATOR for shesh-ecosystem, GitHub gaganjainse/shesh-ecosystem
-
-Read docs/NEXT_SESSION_PROMPT.md FIRST (it contains PAT auto-prompt flow)
-PAT encrypted at ~/.config/shesh/github.pat.enc — agent will ask password via ask_user, you give <YOUR_ENCRYPTION_PASSWORD> → decrypt → plain 600
-
-cd /home/user && git pull origin main
-python tools/session_guard.py --status
-# if NEED_PASSWORD → ask_user will prompt → give <YOUR_ENCRYPTION_PASSWORD>
-GITHUB_PAT_PASSWORD="<YOUR_ENCRYPTION_PASSWORD>" python tools/secure_pat.py --prompt
-python tools/github_auth.py --check
-make check
-
-Seed GitHub Issues from TODO:
-SWARM_USE_GITHUB=1 python tools/swarm/orchestrator.py --seed TODO.md --dashboard
-
-Then monitor:
-python tools/swarm/orchestrator.py --monitor
-
-Leave this tab open. It seeds queue, re-queues stale claims >10 min, dashboard every 60s.
-Commit and push is done via PAT (already decrypted).
-
-If guard says HOP → python tools/session_guard.py --handoff (deletes plain PAT for security) → git add -A && git commit -m "chore: handoff orchestrator" && git push origin main → close tab → open new with same prompt.
-```
-
-### Chat 2: Worker-Brain
-
-```
---- WORKER-BRAIN ---
-
-You are WORKER-BRAIN for shesh-ecosystem
-Focus: Brain layer — shesh-audit, shesh-secrets, shesh-brain, SheshAOS kernel merge tasks
-GitHub gaganjainse/shesh-ecosystem, PAT same flow as orchestrator (encrypted, ask password)
-
-Read docs/NEXT_SESSION_PROMPT.md FIRST
-
-cd /home/user && git pull origin main
-python tools/session_guard.py --status
-GITHUB_PAT_PASSWORD="<YOUR_ENCRYPTION_PASSWORD>" python tools/secure_pat.py --prompt
-python tools/github_auth.py --check
-make check
-ls src/ | grep -E "audit|secrets|brain|SheshAOS"
-
-Work:
-python tools/swarm/worker_github.py --component shesh-audit --github --poll 45
-# This worker will only claim Issues with label component:shesh-audit or component:shesh-secrets etc.
-# Atomic claim via lock ref swarm/claims/issue-N — first push wins, second fails Already claimed
-# Branch per task: swarm/issue-N/<agent-id> → push → PR → swarm-auto-merge.yml auto-merges if make check green
-
-If want file queue fallback (offline):
-python tools/swarm/worker.py --component shesh-audit --poll 45
-
-For kernel merge tasks (🔴 blocked — do NOT force, document only):
-Read SheshAOS/KERNEL_MERGE_PLAN.md, port leaf crates first, never push red.
-
-On hop: session_guard --handoff deletes plain PAT → push → close → new tab same prompt.
-```
-
-### Chat 3: Worker-Mind
-
-```
---- WORKER-MIND ---
-
-You are WORKER-MIND
-Focus: Mind — shesh-memory, shesh-mind, shesh-harness, shesh-orchestrator, shesh-skills, shesh-calendar
-GitHub gaganjainse/shesh-ecosystem
-
-Read docs/NEXT_SESSION_PROMPT.md FIRST
-
-cd /home/user && git pull origin main
-python tools/session_guard.py --status
-GITHUB_PAT_PASSWORD="<YOUR_ENCRYPTION_PASSWORD>" python tools/secure_pat.py --prompt
-python tools/github_auth.py --check
-make check
-
-Work:
-python tools/swarm/worker_github.py --component shesh-memory --github --poll 45
-# Or loop all mind components:
-for comp in shesh-memory shesh-mind shesh-harness shesh-orchestrator shesh-skills shesh-calendar; do
-  python tools/swarm/worker_github.py --component $comp --github --once
-done
-
-Mind tasks: RAG embeddings, role-router VRAM budget, /refine evaluator, SessionManager, semantic_search, habit learning.
-Use GuardedMCP from shesh-audit, never hardcode secrets.
-```
-
-### Chat 4: Worker-Soma
-
-```
---- WORKER-SOMA ---
-
-You are WORKER-SOMA
-Focus: Soma body — shesh-files, shesh-shell, shesh-system, shesh-backup, shesh-phone, shesh-containers, shesh-mcp-bundle, shesh-acp, shesh-voice, shesh-desktop
-GitHub gaganjainse/shesh-ecosystem
-
-Read docs/NEXT_SESSION_PROMPT.md FIRST
-
-cd /home/user && git pull origin main
-python tools/session_guard.py --status
-GITHUB_PAT_PASSWORD="<YOUR_ENCRYPTION_PASSWORD>" python tools/secure_pat.py --prompt
-python tools/github_auth.py --check
-make check
-
-Work:
-python tools/swarm/worker_github.py --component shesh-files --github --poll 45
-# Or cycle:
-for comp in shesh-files shesh-shell shesh-system shesh-backup shesh-phone shesh-containers shesh-mcp-bundle shesh-acp; do
-  python tools/swarm/worker_github.py --component $comp --github --once
-done
-
-Soma tasks: Hyprland/Quickshell MCP, power/GPU/MUX, restic backup AC-gated, ADB safe-area, podman sandbox --cap-drop=ALL --network=none, third-party MCP bundle via Guard.
-Hardware items (Hyprland@144, NVIDIA MUX, wake word) mark 🟡 not fake ✅ — manual verification only.
-```
-
-### Chat 5: Worker-Platform
-
-```
---- WORKER-PLATFORM ---
-
-You are WORKER-PLATFORM
-Focus: shesh-ecosystem itself — manifests/components.toml, channels/*.lock, docs/adr, Containerfile, distrobox.ini, tools/install.sh, scripts/sign_artifacts.py, scripts/export_traces_otlp.py, CI, swarm tooling, GETTING_STARTED
-GitHub gaganjainse/shesh-ecosystem
-
-Read docs/NEXT_SESSION_PROMPT.md FIRST
-
-cd /home/user && git pull origin main
-python tools/session_guard.py --status
-GITHUB_PAT_PASSWORD="<YOUR_ENCRYPTION_PASSWORD>" python tools/secure_pat.py --prompt
-python tools/github_auth.py --check
-make check
-
-Work:
-python tools/swarm/worker_github.py --component general --github --poll 60
-# general picks docs, platform, TODO P1: Distrobox/Containerfile, installer btrfs snapshot+rollback, supply-chain sigstore, OTLP traces, ADRs, getting-started
-
-Tasks: Keep docs/queries/QUERYLOG.md appended, TODO.md updated, make check green, locks deterministic, provenance.
-```
-
----
-
-## Further division? Yes — here's how
-
-**If 5 not enough, split workers finer:**
-
-- **Per-component workers (up to 19):** Open chat per component: `shesh-audit` alone, `shesh-memory` alone, etc. Use `--component shesh-memory`. Risk: `manifests/components.toml` edited by many workers → merge conflicts. Mitigate by having platform worker own manifest/locks, others only edit their `src/<component>/`.
-
-- **Per-layer sub-workers:** Brain → `shesh-audit` worker + `shesh-secrets` worker; Mind → `shesh-memory` + `shesh-orchestrator`; Soma → `shesh-system` + `shesh-phone`. Up to 8-10 workers.
-
-- **Docs worker:** Dedicated for ADRs, GETTING_STARTED, wiki sync — `component:general`.
-
-**Rule:** Never more than 1 worker per component at same time. Use orchestrator dashboard `python tools/swarm/orchestrator.py --dashboard` to see who owns what.
-
-**Atomicity guarantees still hold:** GitHub Issues lock ref `swarm/claims/issue-N` ensures only 1 worker owns issue, even with 10 workers. Branch per task prevents file overwrite. PR auto-merge Action ensures gate green before merge.
-
-## Security & session hopping with swarm
-
-- PAT encrypted at `~/.config/shesh/github.pat.enc` (600) — password <YOUR_ENCRYPTION_PASSWORD> — plain deleted on handoff
-- Every new Arena tab: guard detects `need_password=true` → ask_user UI → you give password → decrypt → plain 600 → `github_auth` loads
-- On handoff: `python tools/session_guard.py --handoff` deletes plain, keeps enc → next session prompts again
-- No PAT in git — `.gitignore` has `.config/shesh/`
-- No token in swarm files — only agent_id
-
-## Commands to verify swarm working
+Every new Arena chat starts empty. Run these **exactly** in order:
 
 ```bash
-# In orchestrator tab after seeding
-python tools/swarm/orchestrator.py --dashboard
-# Should show: Queue pending: 20+, Claims active, Heartbeats N agents
+# 1. Clone ecosystem (product clean) and workspace (factory messy)
+cd /home/user
+git clone --depth 1 https://github.com/gaganjainse/shesh-ecosystem.git
+git clone --depth 1 https://github.com/gaganjainse/shesh-workspace.git
+cd shesh-ecosystem
+git pull origin main
+cd ../shesh-workspace
+git pull origin main
+cd /home/user/shesh-ecosystem
 
-# List GitHub Issues queue
-python tools/swarm/github_queue.py --list  # via API
-# Or
-gh issue list --label "swarm:pending" --limit 20  # if gh CLI
+# 2. Fetch ENCRYPTED PAT from GitHub (now uploaded, foolproof)
+mkdir -p ~/.config/shesh && chmod 700 ~/.config/shesh
+curl -s https://raw.githubusercontent.com/gaganjainse/shesh-workspace/main/secrets/github.pat.enc -o ~/.config/shesh/github.pat.enc
+chmod 600 ~/.config/shesh/github.pat.enc
+ls -lh ~/.config/shesh/github.pat.enc  # should exist 341 bytes
 
-# Check auto-merge Action
-cat .github/workflows/swarm-auto-merge.yml | head -n 40
+# 3. Decrypt — will auto-prompt for password via ask_user UI
+# Agent will call ask_user: "🔐 PAT encrypted found — need password"
+# You give password: <YOUR_ENCRYPTION_PASSWORD> (or new password if you re-encrypted)
+python tools/secure_pat.py --prompt
+# Alternatively with env (if you set GITHUB_PAT_PASSWORD):
+GITHUB_PAT_PASSWORD="<YOUR_ENCRYPTION_PASSWORD>" python tools/secure_pat.py --prompt
 
-# Check PAT
+# 4. Verify PAT loaded, never logs value
 python tools/github_auth.py --check
-python tools/secure_pat.py --check
+# Should show: PAT found: gith****Q0WZ len 93
+
+# 5. Setup efficient selective clone (not 22 repos 36M)
+python tools/setup_worker.py --clean
+du -sh . && find . -type f | wc -l  # should be <100 MB, <8000 files
+
+# 6. Make check — must be GATE OK
+make check
+
+# 7. Read anchors
+cat docs/SESSION_HANDOFF.md | head -n 60
+cat docs/SESSION_PROTOCOL.md | head -n 40
+cat TODO.md | grep -E "⬜|🔴|🟡" | head -n 20
 ```
 
-Close this guide after reading — next step open 5 Arena tabs with prompts above.
+If `github.pat.enc` fetch fails (network), fallback: `gh auth login` or set `GITHUB_PAT` env.
+
+---
+
+## 5 Foolproof Prompts — Copy-Paste Exactly
+
+### Tab 1: Orchestrator (MUST open first)
+
+```
+--- ORCHESTRATOR — CLEAN WORKSPACE FOOLPROOF ---
+
+You are ORCHESTRATOR for shesh-ecosystem, GitHub https://github.com/gaganjainse/shesh-ecosystem
+Workspace: https://github.com/gaganjainse/shesh-workspace (factory, has secrets/github.pat.enc)
+
+You are NEW CLEAN WORKSPACE — /home/user empty. Do setup first:
+
+cd /home/user
+git clone --depth 1 https://github.com/gaganjainse/shesh-ecosystem.git
+git clone --depth 1 https://github.com/gaganjainse/shesh-workspace.git
+cd shesh-ecosystem
+
+# Fetch ENCRYPTED PAT from GitHub (uploaded, safe, needs password)
+mkdir -p ~/.config/shesh && chmod 700 ~/.config/shesh
+curl -s https://raw.githubusercontent.com/gaganjainse/shesh-workspace/main/secrets/github.pat.enc -o ~/.config/shesh/github.pat.enc
+chmod 600 ~/.config/shesh/github.pat.enc
+ls -lh ~/.config/shesh/github.pat.enc
+
+# Decrypt — I will ask for password via ask_user UI, you give <YOUR_ENCRYPTION_PASSWORD>
+python tools/secure_pat.py --prompt
+python tools/github_auth.py --check
+
+# Efficient setup — platform role 0 repos, most efficient
+python tools/setup_worker.py --role platform --clean
+make check  # must be GATE OK 30 tests
+
+# Read anchors
+cat docs/SESSION_HANDOFF.md | head -n 80
+cat docs/SESSION_PROTOCOL.md | head -n 40
+cat TODO.md | grep -E "⬜|🔴|🟡" | head -n 20
+
+# Seed Issues from TODO into GitHub Issues (proper implementation, atomic lock)
+SWARM_USE_GITHUB=1 python tools/swarm/orchestrator.py --seed TODO.md --dashboard
+
+# Monitor loop — leave open, re-queues stale >10 min, pushes heartbeat
+python tools/swarm/orchestrator.py --monitor
+
+If guard says HOP → python tools/session_guard.py --handoff (deletes plain PAT, keeps enc) → git add -A && git commit -m "chore: handoff orchestrator" && git push origin main (PAT already decrypted) → close tab → open new with same prompt.
+```
+
+### Tab 2: Worker-Brain
+
+```
+--- WORKER-BRAIN — CLEAN WORKSPACE FOOLPROOF ---
+You are WORKER-BRAIN — Brain layer: shesh-audit https://github.com/gaganjainse/shesh-audit, shesh-secrets https://github.com/gaganjainse/shesh-secrets, shesh-brain https://github.com/gaganjainse/shesh-brain, SheshAOS https://github.com/gaganjainse/SheshAOS
+
+You are NEW CLEAN WORKSPACE — do setup:
+
+cd /home/user
+git clone --depth 1 https://github.com/gaganjainse/shesh-ecosystem.git
+git clone --depth 1 https://github.com/gaganjainse/shesh-workspace.git
+cd shesh-ecosystem
+mkdir -p ~/.config/shesh && chmod 700 ~/.config/shesh
+curl -s https://raw.githubusercontent.com/gaganjainse/shesh-workspace/main/secrets/github.pat.enc -o ~/.config/shesh/github.pat.enc
+chmod 600 ~/.config/shesh/github.pat.enc
+python tools/secure_pat.py --prompt  # ask_user will prompt for password <YOUR_ENCRYPTION_PASSWORD>
+python tools/github_auth.py --check
+make check
+python tools/setup_worker.py --role brain --clean  # 3 repos ~8M vs 22 repos 36M
+
+# Work — GitHub Issues + atomic lock swarm/claims/issue-N (422 if exists) + PR + auto-merge Action
+python tools/swarm/worker_github.py --component shesh-audit --github --setup --poll 45
+
+On hop: session_guard --handoff deletes plain PAT → push → close → new tab same prompt, fetch enc from GitHub again, ask password.
+```
+
+### Tab 3: Worker-Mind
+
+```
+--- WORKER-MIND — CLEAN WORKSPACE FOOLPROOF ---
+You are WORKER-MIND — Mind: shesh-memory https://github.com/gaganjainse/shesh-memory, shesh-mind https://github.com/gaganjainse/shesh-mind, shesh-harness https://github.com/gaganjainse/shesh-harness, shesh-orchestrator https://github.com/gaganjainse/shesh-orchestrator, shesh-skills https://github.com/gaganjainse/shesh-skills, shesh-calendar https://github.com/gaganjainse/shesh-calendar
+
+NEW CLEAN WORKSPACE setup same as Tab1/2:
+
+cd /home/user
+git clone --depth 1 https://github.com/gaganjainse/shesh-ecosystem.git
+git clone --depth 1 https://github.com/gaganjainse/shesh-workspace.git
+cd shesh-ecosystem
+mkdir -p ~/.config/shesh && chmod 700 ~/.config/shesh
+curl -s https://raw.githubusercontent.com/gaganjainse/shesh-workspace/main/secrets/github.pat.enc -o ~/.config/shesh/github.pat.enc
+chmod 600 ~/.config/shesh/github.pat.enc
+python tools/secure_pat.py --prompt
+python tools/github_auth.py --check
+make check
+python tools/setup_worker.py --role mind --clean  # 7 repos ~2M
+
+python tools/swarm/worker_github.py --component shesh-memory --github --setup --poll 45
+```
+
+### Tab 4: Worker-Soma
+
+```
+--- WORKER-SOMA — CLEAN WORKSPACE FOOLPROOF ---
+You are WORKER-SOMA — Soma: shesh-files https://github.com/gaganjainse/shesh-files, shesh-shell https://github.com/gaganjainse/shesh-shell, shesh-system https://github.com/gaganjainse/shesh-system, shesh-backup https://github.com/gaganjainse/shesh-backup, shesh-phone https://github.com/gaganjainse/shesh-phone, shesh-containers https://github.com/gaganjainse/shesh-containers, shesh-mcp-bundle https://github.com/gaganjainse/shesh-mcp-bundle, shesh-acp https://github.com/gaganjainse/shesh-acp, shesh-media https://github.com/gaganjainse/shesh-media, shesh-messaging https://github.com/gaganjainse/shesh-messaging
+
+NEW CLEAN WORKSPACE:
+
+cd /home/user
+git clone --depth 1 https://github.com/gaganjainse/shesh-ecosystem.git
+git clone --depth 1 https://github.com/gaganjainse/shesh-workspace.git
+cd shesh-ecosystem
+mkdir -p ~/.config/shesh && chmod 700 ~/.config/shesh
+curl -s https://raw.githubusercontent.com/gaganjainse/shesh-workspace/main/secrets/github.pat.enc -o ~/.config/shesh/github.pat.enc
+chmod 600 ~/.config/shesh/github.pat.enc
+python tools/secure_pat.py --prompt
+python tools/github_auth.py --check
+make check
+python tools/setup_worker.py --role soma --clean  # 9 repos ~2M
+
+python tools/swarm/worker_github.py --component shesh-system --github --setup --poll 45
+```
+
+### Tab 5: Worker-Platform
+
+```
+--- WORKER-PLATFORM — CLEAN WORKSPACE FOOLPROOF ---
+You are WORKER-PLATFORM — Platform: shesh-ecosystem itself https://github.com/gaganjainse/shesh-ecosystem, docs, ADR, Containerfile, install.sh, CI, swarm tooling, portfolio auto-update https://github.com/gaganjainse/portfolio (no forks proper priority)
+
+NEW CLEAN WORKSPACE:
+
+cd /home/user
+git clone --depth 1 https://github.com/gaganjainse/shesh-ecosystem.git
+git clone --depth 1 https://github.com/gaganjainse/shesh-workspace.git
+cd shesh-ecosystem
+mkdir -p ~/.config/shesh && chmod 700 ~/.config/shesh
+curl -s https://raw.githubusercontent.com/gaganjainse/shesh-workspace/main/secrets/github.pat.enc -o ~/.config/shesh/github.pat.enc
+chmod 600 ~/.config/shesh/github.pat.enc
+python tools/secure_pat.py --prompt
+python tools/github_auth.py --check
+make check
+python tools/setup_worker.py --role platform --clean  # 0 repos, most efficient 0M, 150 min session
+
+python tools/swarm/worker_github.py --component general --github --setup --poll 60
+```
+
+---
+
+## Why these prompts are foolproof
+
+1. **Fetch encrypted PAT from GitHub** — `curl https://raw.githubusercontent.com/gaganjainse/shesh-workspace/main/secrets/github.pat.enc` — works in new clean workspace, no file from previous machine needed. Encrypted file safe to commit (needs password).
+
+2. **Auto-ask password** — `tools/secure_pat.py --prompt` calls `getpass` which in Arena triggers `ask_user` UI: "🔐 PAT encrypted found — need password" — you give `<YOUR_ENCRYPTION_PASSWORD>` via password prompt, not raw PAT in chat. Never logs PAT, redacts.
+
+3. **Clean workspace setup** — `git clone --depth 1` shallow, `setup_worker.py --role X --clean` clones only needed repos (Brain 3 repos 8M vs 22 repos 36M), cleans `__pycache__, .pytest_cache, .ruff_cache`, keeps workspace <100 MB, session lasts 120-180 min not 30 min.
+
+4. **No 22 repos waste** — Platform role 0 repos, Mind 7 repos ~2M, etc. `src/` persistence across sessions via gitignored but reused via `git pull --ff-only --depth 1`.
+
+5. **Atomic claim** — `github_queue.py:claim_issue_atomic()` creates lock ref `refs/heads/swarm/claims/issue-N` via POST `/git/refs` — GitHub returns 422 if exists → first wins, second fails "already claimed" — tested real API issue #1/#2.
+
+6. **Branch per task** — `swarm/issue-N/agent-id` — work isolated, `make check` gate, push, PR via `gh pr create` or API, auto-merge Action `swarm-auto-merge.yml` merges if green.
+
+7. **True hours unattended** — `swarm-scheduled.yml` cron hourly janitor (true hours, uses `GITHUB_TOKEN` no PAT, no money) + `swarm-llm-worker.yml` every 2h picks Issue, calls free GitHub Models `gpt-4o-mini` via `GITHUB_TOKEN`, generates patch, pushes branch, PR, auto-merge merges.
+
+8. **Secure handoff** — `session_guard.py --handoff` deletes plain PAT, keeps enc, generates `NEXT_SESSION_PROMPT.md` with live metrics + PAT status `need_password=true`, so next session auto-prompts for password.
+
+Treat yourself as new clean workspace: clone ecosystem + workspace, fetch enc, decrypt, setup selective, make check, read SESSION_HANDOFF.md, pick next ⬜.
+
+All GitHub links included.

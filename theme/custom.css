@@ -1,0 +1,18 @@
+/* Shesh Docs theme tweaks — referenced from book.toml [output.html].
+   Keep restrained: legibility and brand accent only; mdbook's default
+   themes do the heavy lifting. */
+
+:root {
+    --links: #2f6f8f;
+}
+
+.content .warning {
+    padding: 0.6rem 1rem;
+    border-left: 4px solid #b58900;
+    background: rgba(181, 137, 0, 0.08);
+}
+
+/* Checklist pages (manual verification fissions) read better tighter. */
+.content li.task-list-item {
+    list-style: none;
+}

@@ -1,5 +1,13 @@
-# Containers
+# 8. Containers / sandboxing
 
-> Auto-generated placeholder — original doc will be copied here via live update flow. See source repo for full content. This file exists to keep navigation working (mdBook requires file exists, SUMMARY.md load-bearing).
+> Part of the [Manual Verification Checklist](../../verification/manual-verification.md) — section 8 of 16.
 
-This doc is part of compilation for reading only. Source: shesh-ecosystem, shesh-workspace, shesh-desktop, etc. Properly organised per Docusaurus + Kubernetes + Rust book best practices: Concepts, Tasks, Tutorials, Reference, plus Factory/Product/Gateway separation.
+- [ ] `podman` installed and rootless works: `podman run --rm alpine echo ok`
+- [ ] `shesh-containers-mcp` → `run_sandboxed(["echo","hi"])` returns output
+- [ ] Sandboxed commands have **no network** by default (`--network=none`)
+- [ ] `--cap-drop=ALL` is in effect (verify with a privileged syscall)
+- [ ] Containers are removed after each run (`--rm`)
+- [ ] The third-party MCP bundle (filesystem/fetch/git) launches only if
+      `npx`/`uvx` are present
+
+---

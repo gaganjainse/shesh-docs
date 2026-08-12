@@ -1,5 +1,13 @@
-# Overview
+# Reference
 
-> Auto-generated placeholder — original doc will be copied here via live update flow. See source repo for full content. This file exists to keep navigation working (mdBook requires file exists, SUMMARY.md load-bearing).
+Exact, generated-from-source pages — no prose drift possible.
 
-This doc is part of compilation for reading only. Source: shesh-ecosystem, shesh-workspace, shesh-desktop, etc. Properly organised per Docusaurus + Kubernetes + Rust book best practices: Concepts, Tasks, Tutorials, Reference, plus Factory/Product/Gateway separation.
+- [Manifest — components.toml](manifest.md) — every organ, declared.
+- [Channels — stable/canary/devel](channels.md) — release filters and
+  promotion gates.
+- [Components — all shesh-*](components/README.md) — table generated from
+  the manifest.
+- [Models — models.toml](models.md) — capabilities, context, cost, free
+  tier, per model.
+- [Upstreams — Sources & Steal-Map](upstreams.md) — what we track upstream
+  and why.

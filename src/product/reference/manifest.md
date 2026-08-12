@@ -1,3 +1,6 @@
+# Manifest — components.toml
+
+```toml
 # Shesh Ecosystem — component manifest
 #
 # Every organ of the Agentic Body is declared here. The resolve-manifest script
@@ -256,3 +259,4 @@ channel = "stable"
 provides = ["dotfiles", "hyprland-config", "quickshell", "installer"]
 upstream = { name = "dots-hyprland", repo = "end-4/dots-hyprland", ref = "main" }
 notes = "The desktop body. Thin custom/ overrides; rebase upstream often."
+```

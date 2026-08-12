@@ -1,5 +1,10 @@
-# Overview
+# Tutorials
 
-> Auto-generated placeholder — original doc will be copied here via live update flow. See source repo for full content. This file exists to keep navigation working (mdBook requires file exists, SUMMARY.md load-bearing).
+Guided flows through real, shipped features. Each tutorial names its canonical
+component docs and ends in verifiable checks.
 
-This doc is part of compilation for reading only. Source: shesh-ecosystem, shesh-workspace, shesh-desktop, etc. Properly organised per Docusaurus + Kubernetes + Rust book best practices: Concepts, Tasks, Tutorials, Reference, plus Factory/Product/Gateway separation.
+- [Organize Downloads — Smart Organizer v2](organize-downloads.md)
+- [Voice + Settings + Organizer Flow](voice-settings-organizer.md)
+- [Memory & Recall (RAG today, vector planned)](rag-vector.md)
+
+Prerequisite for all three: [Getting Started](../getting-started.md).

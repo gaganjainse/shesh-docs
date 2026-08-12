@@ -1,5 +1,13 @@
-# Display desktop
+# 5. Display and desktop
 
-> Auto-generated placeholder — original doc will be copied here via live update flow. See source repo for full content. This file exists to keep navigation working (mdBook requires file exists, SUMMARY.md load-bearing).
+> Part of the [Manual Verification Checklist](../../verification/manual-verification.md) — section 5 of 16.
 
-This doc is part of compilation for reading only. Source: shesh-ecosystem, shesh-workspace, shesh-desktop, etc. Properly organised per Docusaurus + Kubernetes + Rust book best practices: Concepts, Tasks, Tutorials, Reference, plus Factory/Product/Gateway separation.
+- [ ] Refresh rate stays at 144 Hz (no drop to 60)
+- [ ] Fractional/HiDPI scaling looks correct
+- [ ] Screen recording / screenshots work (the `grim`+`slurp` pipeline)
+- [ ] Notifications appear and are not duplicated
+- [ ] Idle inhibitor works during video/media
+- [ ] The **ambient offer overlay** appears at natural pauses (not while typing
+      or gaming) and doesn't nag (max 3/day, 30-min cooldown)
+
+---

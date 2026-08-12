@@ -1,7 +1,6 @@
 [book]
 authors = ["Gagan Jain"]
 language = "en"
-multilingual = false
 src = "src"
 title = "Shesh Docs — Complete Reading Compilation"
 

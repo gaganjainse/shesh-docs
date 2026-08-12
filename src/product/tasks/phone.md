@@ -1,5 +1,12 @@
-# Phone
+# 7. Phone (shesh-phone, Realme Narzo)
 
-> Auto-generated placeholder — original doc will be copied here via live update flow. See source repo for full content. This file exists to keep navigation working (mdBook requires file exists, SUMMARY.md load-bearing).
+> Part of the [Manual Verification Checklist](../../verification/manual-verification.md) — section 7 of 16.
 
-This doc is part of compilation for reading only. Source: shesh-ecosystem, shesh-workspace, shesh-desktop, etc. Properly organised per Docusaurus + Kubernetes + Rust book best practices: Concepts, Tasks, Tutorials, Reference, plus Factory/Product/Gateway separation.
+- [ ] ADB debugging enabled on the phone; `adb devices` lists it
+- [ ] `shesh-phone-mcp` connects (safe-area taps land on screen)
+- [ ] Taps **outside the status/nav bars are refused** (try a coordinate at y=10)
+- [ ] Screenshots pull successfully
+- [ ] Vision model can describe a screenshot if you wire it
+- [ ] The phone does **not** accept destructive commands without confirmation
+
+---

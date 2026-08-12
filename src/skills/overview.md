@@ -1,5 +1,27 @@
-# Overview
+# Skills — the behavior library
 
-> Auto-generated placeholder — original doc will be copied here via live update flow. See source repo for full content. This file exists to keep navigation working (mdBook requires file exists, SUMMARY.md load-bearing).
+Status: living · last verified 2026-08-13
+Runtime component: [shesh-skills](https://github.com/gaganjainse/shesh-skills)
+· Policy: [POLICY](../policies/skills-policy.md)
 
-This doc is part of compilation for reading only. Source: shesh-ecosystem, shesh-workspace, shesh-desktop, etc. Properly organised per Docusaurus + Kubernetes + Rust book best practices: Concepts, Tasks, Tutorials, Reference, plus Factory/Product/Gateway separation.
+Skills are Markdown documents with YAML frontmatter (`name`, `description`)
+that steer agent behavior for a recurring task class. This directory is the
+canonical text; `shesh-skills` serves them to agents over MCP.
+
+## The set
+
+| Skill | Job |
+|---|---|
+| [coding](coding.md) | read-before-edit discipline, tests always, never push unreviewed |
+| [web-research](web-research.md) | source-cited research protocol |
+| [docs-writer](docs-writer.md) | documentation in the house [style](https://github.com/gaganjainse/shesh-ecosystem/blob/main/docs/STYLE_GUIDE.md) |
+| [safety-governance](safety-governance.md) | the immutable safety layer (never refined away) |
+| [daily-briefing](daily-briefing.md) | morning/evening digest format |
+| [autopilot](autopilot.md) | safe unattended progress rules |
+
+## Rules
+
+- Safety skills are **immutable** — the continual harness (shesh-harness)
+  can refine supplemental state but never the base safety layer.
+- New skills arrive as Markdown with frontmatter; no code shipment, so a bad
+  skill can degrade style but never execute anything by itself.

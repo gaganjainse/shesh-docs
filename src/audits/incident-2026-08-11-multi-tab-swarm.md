@@ -1,12 +1,64 @@
-# Situation Report — 5 Agents Started All Stopped (2026-08-11)
+# Incident post-mortem — 2026-08-11: five-tab swarm collision
+
+**Status:** mitigated same-day; controls landed in PRs #37, #38, #39, #40.
+
+## What happened
+
+Five parallel agent tabs (orchestrator + brain/mind/soma/platform workers) plus
+GitHub Actions drove one swarm bus for a day. Net effect: real bugs got found and
+fixed, but also: duplicate/noise issues seeded (#19–34), placeholder "work" PRs
+merged to main (5 commits: marker files from a stub `do_work`), claim/PR closure
+cross-talk via the shared issue/PR number space, and a PAT exposed in a transcript.
+
+## Root causes (each now has a control)
+
+1. **Worker placebo** — `do_work()` marker-filed every claim and auto-merge
+   closed real issues. → Workers now fail closed without `--executor` and release
+   claims (`release_issue_claim`) — #39.
+2. **Loose TODO seeder** — any line containing ⬜/🟡 became an issue. → Strict
+   bullet parser + blocked-ancestor inheritance — #38.
+3. **Shared working tree with daemon commits** — heartbeat commits raced manual
+   rebases. → daemons isolated to their own clone via `tools/swarm/daemon.sh`;
+   orchestrator refuses swarm commits off-main — #40.
+4. **Gate gaps** — ruff didn't cover `tools/` locally (29 pre-existing errors);
+   workflow used forbidden `gh pr review --approve`. → fixed on main same day
+   (68a0df5, 17ef93c); local `make check` and CI now match.
+5. **Session guard self-nuke** — `--status` past 60 min deleted the plain PAT
+   under running daemons. → read-only status; explicit `--handoff` only — #40.
+6. **Credential hygiene** — PAT visible in a tool transcript. → rotation task
+   opened (owner action), askpass-style auth in workers — #39.
+
+## What was good
+
+- Atomic claim refs, auto-merge gate, heartbeat bus and hop protocol all behaved
+  under multi-agent load once the above were fixed. The incident was the best
+  stress test the system has had; findings became code the same day.
+
+## Residue
+
+- 5 placeholder commits remain in main's history (no force-push, by policy).
+  They are harmless inert markers under `swarm/artifacts/` — content removed in
+  d9dc459; this note is the institutional memory.
+
+---
+
+## Appendix A — original situation report (raw evidence, 2026-08-11)
+
+Preserved verbatim (quotes included) when `docs/SITUATION_REPORT.md` was
+fused into this incident record on 2026-08-13 ("one topic, one home"). Two
+findings here extend the root-cause list above: the **queue fallback defect**
+(claiming blocked kernel tasks when no matching issue existed — fixed to
+strict-filter waiting) and **heartbeat files as the reliable liveness signal**
+(buffered stdout of long-running processes is not). The per-tab chronology
+below is the source evidence for the post-mortem.
 
 > **User said:** "I just gave them the start as a prompt. Leave that aside the main point is that the five agents I started all stopped, not a good look for a autocomplete but these are the outputs of them"
 
 You attached PDF with outputs from Tab1 Orchestrator, Tab2 Worker-Brain, etc.
 
-## What happened (from PDF)
+### What happened (from PDF)
 
-### Tab1 Orchestrator — Starting the workers
+#### Tab1 Orchestrator — Starting the workers
 
 - Seeded 14 issues from TODO.md ⬜
 - Claim protocol already swaps `swarm:pending → swarm:claimed` correctly
@@ -17,7 +69,7 @@ You attached PDF with outputs from Tab1 Orchestrator, Tab2 Worker-Brain, etc.
 - Verified live — fresh heartbeats from both monitor and worker (14:23), plus third from `worker-shesh-audit` (another agent active) — multi-agent swarm genuinely running
 - **Work delivered PR #37 → merged `e3764e5`, closes #31:** Found weakest link and fixed it, dogfooding full pipeline
 
-### Weakest link found and fixed (dogfooding)
+#### Weakest link found and fixed (dogfooding)
 
 1. **`do_work()` was placeholder** — marker-filed every claim and let auto-merge silently close real TODOs without doing them. Now worker **refuses without implementer and releases claim back to `swarm:pending`** (drops lock ref + work branch + labels + reason comment). Placeholder kept behind explicit `--simulate`
 2. **PAT fingerprint removed** from worker logs (length only)
@@ -35,7 +87,7 @@ You attached PDF with outputs from Tab1 Orchestrator, Tab2 Worker-Brain, etc.
 - Background committers + manual branch work share one working tree — rebase hit heartbeat commit mid-flight. Future manual work: pause monitor first or use separate clone
 - Long-running swarm processes buffer stdout — heartbeat files in `swarm/heartbeats/` are reliable liveness signal, not logs
 
-### Tab2 Worker-Brain — Clean workspace boot
+#### Tab2 Worker-Brain — Clean workspace boot
 
 - Fresh clean-workspace boot with PAT retrieved from `shesh-workspace` (no pasting needed)
 - Stopped old worker from previous turn and verified encrypted PAT fetchable: encrypted PAT live at `shesh-workspace/secrets/github.pat.enc` (valid PBKDF2/Fernet)
@@ -45,7 +97,7 @@ You attached PDF with outputs from Tab1 Orchestrator, Tab2 Worker-Brain, etc.
 - `setup_worker --role brain --clean` — tool's `--clean` flag short-circuits to cache-cleaning only, so ran twice: exact command from sequence, then actual clone: 3 brain repos cloned — **3.3 MB/305 files** (blob-filtered shallow clones vs 36 MB for all 22)
 - Starting swarm worker with full auth: worker is live and claiming issues — found queue populated this time. Verify poll loop continues
 
-### Tab2 continued — PR failures
+#### Tab2 continued — PR failures
 
 - Worker claiming issues and pushing branches, but **every PR fails with 422 "No commits between main and branch"** — placeholder work never gets committed
 - Found: 4 claim refs and 4 branches exist (two claimed by another live agent `worker-general-…` — swarm genuinely multi-agent). PR failures point to missing git identity: `git commit` would fail silently with no `user.name`/`user.email` configured
@@ -55,7 +107,7 @@ You attached PDF with outputs from Tab1 Orchestrator, Tab2 Worker-Brain, etc.
 - Stopped worker before it claims more issues with broken pushes, cleaning up all empty claims/branches and restoring issues to pending: script bug — wrong index in branch-name parse, fixing and rerunning, all 8 empty claims/branches cleaned, issues back to pending
 - Verifying CLI git auth works end-to-end before restarting worker: Auth verified — pull+push both work. Restarting worker: worker restarted with fresh agent-id, claimed issue #16, waiting for PR result: 🎉 **PR #19 created** — full pipeline works now. Confirm auto-merge workflow picks it up
 
-### Tab2 continued — auto-merge runs failed
+#### Tab2 continued — auto-merge runs failed
 
 - PRs #14/#15 auto-merge runs failed — checking workflow logic and failed run's job steps: CI passes on same branches but Swarm Auto-Merge fails — get exact failing step: Ruff fails on PR branches
 - PR actually changed and ruff error itself: `behind_by:2` and only marker files changed — but ruff only scans `scripts/tools/`, which we never touch. Pull actual run log: Found it — auto-merge gate runs `ruff check scripts/tools/`, and repo's own `tools/` has **29 pre-existing lint errors** (mostly in `tools/session_guard.py`: `datetime.UTC`, `SIM115` context managers). Local `make check` only lints `scripts/tests/`, so this never surfaced — but it blocks **every** swarm PR from auto-merging
@@ -63,13 +115,13 @@ You attached PDF with outputs from Tab1 Orchestrator, Tab2 Worker-Brain, etc.
 - Worker left trail of PRs #19–22 with commits — pipeline works plus more empty claims from fast loop. Plan: fix lint debt (unblocks auto-merge for whole swarm), gate, push to main, rerun stuck auto-merges, clean empty claims, restart worker. Starting with lint fixes: 16 auto-fixed, 15 manual, applying all 15 manual fixes now
 - All edits applied, full gate — exact command auto-merge workflow runs, plus `make check`: Both gates green. Quick smoke tests, then commit and push: Lint fix on main `68a0df5`. Now rerun stuck auto-merge runs for PRs and clean remaining empty claims from worker run #2 — current state: All 12 claims/branches are ours (issues 5–16); PRs #19–22 carry real commits. Before rerunning failed auto-merge runs, checking whether PR merge refs include main fix (they auto-recompute against base): Merge refs stale (pre-fix) or pending — rerunning won't help. Pushing no-op commit to each PR branch to trigger fresh gate run (exactly "fix and push to same branch" flow workflow suggests): Fetch syntax issue — fetching all refs instead
 
-### Current situation after PDF
+#### Current situation after PDF
 
 - **Orchestrator Tab1:** Monitor loop pid 4623 ✅ heartbeats, GitHub worker general pid 4692 ✅ polling 45s, queue correctly empty until new `swarm:pending` seeds — **both stopped now** (you said 5 agents all stopped)
 - **Worker-Brain Tab2:** Clean workspace boot with PAT retrieved from `shesh-workspace`, GATE OK, 3.3 MB/305 files, worker live claiming issues, then PR failures 422, fixed git identity + credential helper, PR #19 created 🎉, auto-merge pipeline live, but then lint debt blocked every swarm PR, fixed lint debt `68a0df5`, reran auto-merges
 - **Other 3 agents:** Not detailed in PDF excerpt but likely similar — started, stopped, not good look for autocomplete
 
-## Why autocomplete stopped — root causes (honest)
+### Why autocomplete stopped — root causes (honest)
 
 1. **Placeholder `do_work()`** — marked file every claim and let auto-merge silently close TODOs without doing them. Now fixed to refuse without implementer and release claim back to `swarm:pending` (drops lock ref + work branch + labels + reason comment). Placeholder behind explicit `--simulate`
 
@@ -87,7 +139,7 @@ You attached PDF with outputs from Tab1 Orchestrator, Tab2 Worker-Brain, etc.
 
 8. **Queue fallback defect** — when no component-matching Issue exists, old code fell back to arbitrary pending and claimed blocked kernel task. Fixed to strict filter — wait instead of claiming blocked
 
-## What we fixed in this session (from PDF outputs)
+### What we fixed in this session (from PDF outputs)
 
 - Created branch first, then patching labels block needs exact match
 - Both files patched, syntax check, gate, commit, rebase, push, PR #36 live, #37 merged `e3764e5` closes #31
@@ -101,7 +153,7 @@ You attached PDF with outputs from Tab1 Orchestrator, Tab2 Worker-Brain, etc.
 - Clean workspace boot: `cryptography` and `ruff` didn't survive snapshot, installing them, decrypting PAT, GATE OK, `setup_worker --role brain --clean` 3.3 MB/305 files vs 36 MB
 - Worker live claiming issues, fixed git identity + credential auth, PR #19 created 🎉, auto-merge workflow picks it up, lint debt fixed `68a0df5`, reran auto-merge runs
 
-## What remains to make autocomplete work for hours (clear base)
+### What remains to make autocomplete work for hours (clear base)
 
 **You are traveling, phone only, 1 orchestrator tab open, plus GitHub Actions true hours unattended:**
 

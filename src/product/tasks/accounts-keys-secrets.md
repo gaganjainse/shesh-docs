@@ -1,5 +1,20 @@
-# Accounts keys secrets
+# 1. Accounts, keys, and secrets
 
-> Auto-generated placeholder — original doc will be copied here via live update flow. See source repo for full content. This file exists to keep navigation working (mdBook requires file exists, SUMMARY.md load-bearing).
+> Part of the [Manual Verification Checklist](../../verification/manual-verification.md) — section 1 of 16.
 
-This doc is part of compilation for reading only. Source: shesh-ecosystem, shesh-workspace, shesh-desktop, etc. Properly organised per Docusaurus + Kubernetes + Rust book best practices: Concepts, Tasks, Tutorials, Reference, plus Factory/Product/Gateway separation.
+- [ ] **Ollama installed and running**: `systemctl --user status ollama`
+- [ ] Models pulled for the 6 GB stack:
+  - [ ] `phi4-mini` (primary/planner/researcher/critic)
+  - [ ] `qwen2.5-coder:3b` (coder)
+  - [ ] `moondream2` (vision)
+  - [ ] `nomic-embed-text` (embeddings/RAG)
+  - [ ] Pull only what you need: `ollama pull <model>`
+- [ ] **`restic` installed** and a repo initialized: `restic -r <repo> snapshots`
+- [ ] `restic` repository password stored in **gopass/KeePassXC**, referenced as
+  `env:RESTIC_PASSWORD` or `gopass:shesh/backup` — **never** in plain config
+- [ ] MCP servers resolve secrets via `shesh-secrets`:
+  `shesh-secrets-mcp` → `get_secret("env:MY_TOKEN")`
+- [ ] No API keys/tokens committed to any repo (run a secret scan)
+- [ ] Git identity configured: `git config --global user.email/name`
+
+---
