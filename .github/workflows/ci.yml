@@ -30,4 +30,10 @@ jobs:
           PY
       - name: no stale canonical names
         run: |
-          ! grep -rniE "nexusaos|sheshaaos|auto-desktopenv" src/ || { echo "stale names found — run the sweep"; exit 1; }
+          # Same carve-out as rename_sweep2.py: regenerated audit artifacts and
+          # the historical QUERYLOG quote the old world by definition; the gate
+          # protects living docs only.
+          ! grep -rniE "nexusaos|sheshaaos|auto-desktopenv" src/ \
+              --exclude="AUDIT_EXHAUSTIVE.*" \
+              --exclude-dir=queries \
+          || { echo "stale names found — run the sweep"; exit 1; }
