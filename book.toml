@@ -1,0 +1,20 @@
+[book]
+authors = ["Gagan Jain"]
+language = "en"
+multilingual = false
+src = "src"
+title = "Shesh Docs — Complete Reading Compilation"
+
+[build]
+build-dir = "book"
+create-missing = false
+
+[preprocessor]
+
+[output.html]
+additional-css = ["theme/custom.css"]
+git-repository-url = "https://github.com/gaganjainse/shesh-docs"
+edit-url-template = "https://github.com/gaganjainse/shesh-docs/edit/main/src/{path}"
+
+[output.html.search]
+limit-results = 20
