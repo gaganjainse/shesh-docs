@@ -123,7 +123,7 @@ shesh-desktop/
 
 GPL-3.0 — same as upstream [end-4/dots-hyprland](https://github.com/end-4/dots-hyprland).
 See [`LICENSE`](https://github.com/gaganjainse/shesh-desktop/blob/main/LICENSE). Third-party components retain their own licenses; see
-[`docs/SHESHA/10_LICENSES_AND_SOURCES.md`](https://github.com/gaganjainse/shesh-desktop/blob/main/docs/).
+[`docs/SHESH/10_LICENSES_AND_SOURCES.md`](https://github.com/gaganjainse/shesh-desktop/blob/main/docs/SHESH/10_LICENSES_AND_SOURCES.md).
 
 ## Acknowledgments
 

@@ -56,6 +56,22 @@ capabilities = ["embedding"]
 notes = "Embeddings — RAG, semantic search"
 priority = 1
 
+# ── OmniRoute — our self-hosted OpenAI-compatible gateway (shesh-omniroute) ──
+# Preferred in unattended runs: one endpoint routes to every configured
+# upstream (Groq/OpenRouter/HF/GitHub/Ollama) with our own policy.
+
+[model.omniroute-coder]
+provider = "omniroute"
+model = "shesh-coder"
+context = 16384
+supports_json = true
+supports_tools = false
+cost = 0.0
+free = true
+capabilities = ["coder", "planner", "coordinator", "critic", "coder-lite"]
+notes = "OmniRoute virtual route — needs SHESH_OMNIROUTE_BASE_URL (+ SHESH_OMNIROUTE_API_KEY)"
+priority = 1
+
 # ── Groq free tier — fast, free API key, rate limited ──
 
 [model.groq-llama-3_1-8b]
@@ -136,31 +152,9 @@ capabilities = ["planner", "coder-lite"]
 notes = "HF free — Phi-3-mini"
 priority = 4
 
-# ── GitHub Models free — uses GITHUB_TOKEN or PAT, free for public repos ──
-
-[model.github-gpt-4o-mini]
-provider = "github"
-model = "gpt-4o-mini"
-context = 16384
-supports_json = true
-supports_tools = true
-cost = 0.0
-free = true
-capabilities = ["planner", "coordinator", "researcher", "critic", "coder"]
-notes = "GitHub Models free — gpt-4o-mini, uses GITHUB_TOKEN"
-priority = 3
-
-[model.github-phi-3-medium]
-provider = "github"
-model = "Phi-3-medium-128k-instruct"
-context = 131072
-supports_json = true
-supports_tools = false
-cost = 0.0
-free = true
-capabilities = ["planner", "coder-lite"]
-notes = "GitHub Models free — Phi-3-medium"
-priority = 3
+# ── GitHub Models: RETIRED 2026-07-30 (upstream shutdown, brownouts July 16/23) ──
+# Do not re-add github/* models here; the inference API is gone (HTTP 410).
+# Chain today: OmniRoute gateway → Groq free → OpenRouter :free → HF free → Ollama.
 
 # ── Fallback deterministic stubs — always free, offline, zero quality variance ──
 
