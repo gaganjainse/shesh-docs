@@ -145,7 +145,7 @@ settings system and a matching **Sesha settings page** (`SeshaConfig.qml`) in
 the same widget style as General/Bar/Services. A `Sesha.qml` service applies
 toggles to systemd units and hyprctl. All changes are in the dotfiles repo.
 
-**Docs:** [desktop/06_SESHA_AGENT.md](../desktop/06-shesh-agent.md)
+**Docs:** [desktop/06_SHESH_AGENT.md](../desktop/06-shesh-agent.md)
 
 ---
 
