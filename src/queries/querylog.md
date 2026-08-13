@@ -14,6 +14,61 @@ intent and prevents drift.
 
 ---
 
+---
+
+---
+
+## Q: "Implement the federation consolidation — fold the small repos" (2026-08-13)
+
+**Answer:** Done. Created `shesh-core` monorepo (16 folded packages + wave config,
+175/175 tests, ruff clean, 15 unchanged console-script names). ADR-0019 records
+the decision. Kept as services: shesh-memory (33 tests), shesh-orchestrator (28),
+shesh-harness (23), shesh-phone, shesh-omniroute — all re-tested against
+`shesh-core>=0.1` (imports unchanged; only the dep declaration moved).
+
+**Ecosystem wiring:** manifest's 16 folded components' `repo` → gaganjainse/shesh-core
+(organs/`provides`/channels unchanged); locks regenerated (stable 1 / canary 19 /
+devel 23); fetch-components.sh clones each repo once + symlinks shared components;
+install.sh installs unique repos only (pipx would otherwise reinstall core 16×);
+generate_mcp_config: shesh-files → None (it never had a console script — latent bug).
+
+**Archived (17):** shesh-acp, audit, backup, brain, calendar, containers, ebpf,
+files, mcp-bundle, media, messaging, mind, secrets, shell, skills, system, wave.
+
+**Docs:** ADR-0019, REPO_TOPOLOGY §②, NEXT_SESSION_PROMPT, SESSION_HANDOFF §0.1, this file.
+
+## Q: "Complete P0/P1/P2 — everything, master->main, no loose ends; CachyOS + end-4/dots-hyprland" (2026-08-13)
+
+**Answer:** Everything executed; verified on origin/main unless noted.
+
+**Branches:** all 60 repos now on `main` (khoj master→main, leon develop→main,
+OmniRoute release/v3.8.50→main, shesh-voice master→main via ruleset
+disable/rename/re-enable, VillageClinicLedger master→main; rulesets re-verified active).
+
+**CachyOS + end-4/dots-hyprland environment:**
+- shesh-desktop: `setup` was 100644 (bootstrap `./setup` would Permission-denied
+  on fresh clones) → 100755; bootstrap now `--recurse-submodules` + submodule
+  update; added missing shesh-{system-control,files,shell}-mcp.service units.
+- shesh-ecosystem: new `tools/install-shesh-stack.sh` — desktop-agnostic AI stack
+  (uv + Ollama + manifest components + MCP configs + systemd units + 6GB models +
+  verification). GETTING_STARTED now documents Path A (shesh-desktop bootstrap)
+  and Path B (end-4 `./setup install` + install-shesh-stack.sh).
+
+**SheshAOS P2:** config.rs (936) → config/{mod.rs 417, tests.rs 516};
+runtime/kernel.rs (1140) → runtime/kernel/{mod.rs 587, tests.rs 551} — inline
+test modules extracted, public API unchanged. fmt/clippy(-D warnings)/877 tests
+green. Added fuzz/ (config_parse + event_json, libfuzzer+ASAN, standalone
+workspace) + weekly fuzz compile gate + macos.yml (cargo check, workflow_dispatch).
+
+**Gates fixed (CI had gone red on my own commits):** install-shesh-stack.sh
+SF4 (`|| true`) + SC2318; proofread.py/boilerplate_check.py BLE001 (noqa+reason)
++ E741; shesh-docs regenerated (getting-started/manifest/querylog drift).
+
+**macOS build-check: SUCCESS** (SheshAOS compiles on macos-latest). Fuzz gate:
+fixed nightly toolchain (first run failed: option Z needs nightly).
+
+**Docs:** this file; shesh-fleet-audit.md ledger.
+
 ## Q: "Force-push authorized, 15-min timer on, autocomplete — complete the audit" (2026-08-13)
 
 **Answer:** Completed every safe/high-value open item; measured the rest and

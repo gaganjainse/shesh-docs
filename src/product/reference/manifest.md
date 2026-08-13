@@ -23,7 +23,7 @@ body_doc = "docs/architecture/AGENTIC_BODY.md"
 [component.shesh-secrets]
 upstream = "original"
 layer = "brain"
-repo = "gaganjainse/shesh-secrets"
+repo = "gaganjainse/shesh-core"
 version = "0.1.0"
 license = "GPL-3.0-or-later"
 channel = "canary"
@@ -32,7 +32,7 @@ notes = "Multi-backend secret resolution (env/gopass/keepassxc/file); no keys in
 
 [component.shesh-audit]
 layer = "brain"
-repo = "gaganjainse/shesh-audit"
+repo = "gaganjainse/shesh-core"
 version = "0.1.0"
 license = "GPL-3.0-or-later"
 channel = "canary"
@@ -42,7 +42,7 @@ notes = "Bridge to SheshAOS append-only event store and policy engine."
 
 [component.shesh-brain]
 layer = "brain"
-repo = "gaganjainse/shesh-brain"
+repo = "gaganjainse/shesh-core"
 version = "0.1.0"
 license = "GPL-3.0-or-later"
 channel = "devel"
@@ -55,7 +55,7 @@ notes = "Packaged shesh-kernel for desktop; routes tool calls through policy."
 # ─────────────────────────────────────────────────────────────────────────────
 [component.shesh-mind]
 layer = "mind"
-repo = "gaganjainse/shesh-mind"
+repo = "gaganjainse/shesh-core"
 version = "0.1.0"
 license = "GPL-3.0-or-later"
 channel = "canary"
@@ -89,7 +89,7 @@ notes = "Native (not Flatpak). STDIO MCP, wake word, faster-whisper + Piper."
 
 [component.shesh-files]
 layer = "soma"
-repo = "gaganjainse/shesh-files"
+repo = "gaganjainse/shesh-core"
 version = "0.2.0"
 license = "GPL-3.0-or-later"
 channel = "canary"
@@ -99,7 +99,7 @@ notes = "Rust notify watcher + Python classifier; promoted from shesh-desktop."
 
 [component.shesh-shell]
 layer = "soma"
-repo = "gaganjainse/shesh-shell"
+repo = "gaganjainse/shesh-core"
 version = "0.1.0"
 license = "GPL-3.0-or-later"
 channel = "canary"
@@ -108,7 +108,7 @@ notes = "Hyprland/Quickshell control MCP server."
 
 [component.shesh-system]
 layer = "soma"
-repo = "gaganjainse/shesh-system"
+repo = "gaganjainse/shesh-core"
 version = "0.1.0"
 license = "GPL-3.0-or-later"
 channel = "canary"
@@ -117,7 +117,7 @@ notes = "Power/GPU/MUX MCP + automations."
 
 [component.shesh-skills]
 layer = "mind"
-repo = "gaganjainse/shesh-skills"
+repo = "gaganjainse/shesh-core"
 version = "0.1.0"
 license = "GPL-3.0-or-later"
 channel = "canary"
@@ -130,7 +130,7 @@ notes = "Everyday MCP tools + Markdown skills (coding, web research, docs, safet
 # ─────────────────────────────────────────────────────────────────────────────
 [component.shesh-acp]
 layer = "soma"
-repo = "gaganjainse/shesh-acp"
+repo = "gaganjainse/shesh-core"
 version = "0.1.0"
 license = "GPL-3.0-or-later"
 channel = "canary"
@@ -161,7 +161,7 @@ notes = "PLANNED: CRUD supplemental state, evidence-backed /refine, auto skill c
 
 [component.shesh-backup]
 layer = "soma"
-repo = "gaganjainse/shesh-backup"
+repo = "gaganjainse/shesh-core"
 version = "0.1.0"
 license = "GPL-3.0-or-later"
 channel = "canary"
@@ -173,7 +173,7 @@ notes = "Verified local restic backups; AC-gated and daily-scheduled."
 [component.shesh-calendar]
 upstream = "original"
 layer = "mind"
-repo = "gaganjainse/shesh-calendar"
+repo = "gaganjainse/shesh-core"
 version = "0.1.0"
 license = "GPL-3.0-or-later"
 channel = "canary"
@@ -182,7 +182,7 @@ notes = "Local-first iCalendar vdir reader (vdirsyncer/khal compatible)."
 
 [component.shesh-mcp-bundle]
 layer = "soma"
-repo = "gaganjainse/shesh-mcp-bundle"
+repo = "gaganjainse/shesh-core"
 version = "0.1.0"
 license = "GPL-3.0-or-later"
 channel = "canary"
@@ -192,7 +192,7 @@ notes = "Third-party MCP servers (filesystem/fetch/git) proxied behind Guard."
 
 [component.shesh-containers]
 layer = "soma"
-repo = "gaganjainse/shesh-containers"
+repo = "gaganjainse/shesh-core"
 version = "0.1.0"
 license = "GPL-3.0-or-later"
 channel = "canary"
@@ -211,7 +211,7 @@ notes = "ADB port of the macOS phone-harness OCR/vision→tap loop for Realme Na
 
 [component.shesh-media]
 layer = "soma"
-repo = "gaganjainse/shesh-media"
+repo = "gaganjainse/shesh-core"
 version = "0.1.0"
 license = "GPL-3.0-or-later"
 channel = "canary"
@@ -220,7 +220,7 @@ notes = "Media tools — grim+slurp screenshots, wf-recorder screen recording, s
 
 [component.shesh-ebpf]
 layer = "soma"
-repo = "gaganjainse/shesh-ebpf"
+repo = "gaganjainse/shesh-core"
 version = "0.1.0"
 license = "GPL-3.0-or-later"
 channel = "canary"
@@ -229,7 +229,7 @@ notes = "eBPF telemetry with Aya (Rust, read-only) — /proc metrics now, Aya pr
 
 [component.shesh-messaging]
 layer = "soma"
-repo = "gaganjainse/shesh-messaging"
+repo = "gaganjainse/shesh-core"
 version = "0.1.0"
 license = "GPL-3.0-or-later"
 channel = "canary"
