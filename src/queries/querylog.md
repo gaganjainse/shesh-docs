@@ -6,6 +6,139 @@ intent and prevents drift.
 
 ---
 
+---
+
+---
+
+---
+
+---
+
+## Q: "Force-push authorized, 15-min timer on, autocomplete — complete the audit" (2026-08-13)
+
+**Answer:** Completed every safe/high-value open item; measured the rest and
+deferred only what a force-push or blind refactor would make *worse*. All verified.
+
+**Done this run (pushed):**
+- FWRS: 1 → 18 tests. **Found + fixed a real solver bug** — fairness_stage had no
+  per-NGO demand cap, so surplus supply over-allocated (delivered 100 to a 30-demand
+  NGO; delivered_pct 333%). Added the cap. Removed generated map.html / dataset /
+  allocs.csv / summary.csv from git + gitignored. @ 6113a4d
+- rag-service: lifespan DI (no import-time embedder/ChromaDB singletons), CHROMA_DIR
+  override, tests updated, 22/22. @ cd7dccf
+- Vyakrti: removed dead jit_compiler.rs + jit_memory.rs (0 callers; 2-instruction
+  "JIT" with a library panic!); cargo test green. @ e602a2a
+- ePustakalay: archived (empty). shesh-workspace: archived (all 5 docs already
+  mirrored in shesh-ecosystem/docs/). Fleet now 10 archived.
+- rag-service CI pin (SHA actions + hash embedder env) is staged but NOT pushed —
+  the fine-grained token lacks the **Workflows: Read and write** permission needed
+  to touch `.github/workflows/*` (missed it in the earlier permission list).
+
+**Measured, not rewritten (honest):** binary-history purge is unnecessary — git
+object sizes: AIM 8.4 MB, FWRS 0.1 MB, ClinicLedger 22.9 MB, portfolio 17.7 MB.
+A filter-repo force-push would be pure risk. **C6's "55 MB PNG" was a measurement
+artifact** (fleet-metrics counted binary newlines as LOC) — corrected in the audit.
+
+**Deferred (P2, with reasons):** SheshAOS god-file split / macOS CI / cargo-fuzz
+(internal-quality refactors; high regression risk, zero user-visible value, right
+to sequence after the green fleet stabilizes); real borrow checker (5–10k LOC, a
+separate project).
+
+**Owner action needed:** add **Workflows: Read and write** to the fine-grained PAT
+so future workflow-file edits can push.
+
+**Docs:** this file; shesh-fleet-audit.md final ledger.
+
+## Q: "Make all sites live on Vercel, implement every feature, fix every bug" (2026-08-13)
+
+**Answer:** Deployments are split honestly by platform fit; repo-side configs committed + pushed.
+
+**Deployment prep (all pushed):**
+- GameVault → Vercel: vercel.json added (Next.js auto-detect; needs only 2 Supabase
+  env vars). Verified build green locally + CI. gamevault.vercel.app returns 402
+  (foreign project or Vercel plan limit) — documented; use a different subdomain.
+- FWRS → Vercel: api/index.py + vercel.json (stateless Flask over committed CSVs,
+  no DB). Smoke-tested locally: GET/POST 200 with LP results.
+- AIM: Vercel site is a demo page by design (api/index.py → demo.html). Full app
+  gets render.yaml (production Dockerfile: gunicorn, non-root, healthcheck) + MySQL
+  steps + schema.sql load note.
+- grievance-portal: Dockerfile rewritten (was php:8.3-cli with no COPY/CMD — broken);
+  now demo-grade artisan-serve + migrate --force + render.yaml.
+- rag-service: render.yaml (Dockerfile/uvicorn) + ChromaDB persistence caveat.
+- vyakrti-ide: already live; documented that the Rust backend can't run on Vercel.
+- docs/DEPLOYMENTS.md: platform matrix, per-repo steps, env var reference (never commit).
+
+**Bug fixes:**
+- AIM CI: removed `bandit --exit-zero` + dead `safety || true` (safety now requires
+  a login). New gate: bandit with bandit.yaml (documented exclusions), pip-audit
+  (0 vulns), flake8, py_compile, pytest 101. **Correction to prior note:** AIM was
+  NOT 18 high-severity bandit issues — 18 high-CONFIDENCE; severity is 1 HIGH (SHA1,
+  false positive per HIBP k-anonymity spec) + 9 medium (B608 parameterized-query
+  false positives, B104 bind 0.0.0.0, B108, B310, B704) — all documented.
+- Vyakrti README: test count 123 → 122 (verified).
+
+**Not done (needs owner, honest):** the actual Vercel/Render deploy clicks, DB
+provisioning, and secret values are account-side (documented in DEPLOYMENTS.md).
+ePustakalay still an empty placeholder — build it or archive it.
+
+**Docs:** docs/DEPLOYMENTS.md, this file.
+
+## Q: "Reset timer, I'll rotate the PAT; clear dependabot + build boilerplate-as-code" (2026-08-13)
+
+**Answer:** Both delivered, all verified on origin/main.
+
+**Dependabot clearance (0 open alerts on all three, CI green):**
+- GameVault 72→0: Next 13.5.1→15.5.23 + React 19.2.8 + Suspense wrappers on the 4
+  useSearchParams pages + overrides (next→postcss 8.5.x, sharp 0.35); cmdk/embla/
+  vaul/sonner/day-picker bumped for React 19 peers; recharts 2.15.4 + resizable-panels
+  2.1.9 pinned (v3/v4 are breaking majors). Verified: npm audit 0, tsc, eslint, next build green.
+- grievance-portal 17→0: Laravel 11→12.66.0 (11.x fully EOL; Composer 2.10 blocks
+  advisory-affected), commonmark 2.10, guzzle 7.15.3, vite 6.4.3 (esbuild 0.25).
+  composer.json pins config.platform.php=8.3.6 so the lock matches CI's PHP 8.3.
+- Vyakrti 4→0: nested vyakrti-ide frontend vite 5.2→8.2.1 + plugin-react 4.2→6.0.5.
+
+**CI lies fixed:** GameVault's `npm run build 2>/dev/null || ... || echo "install gate
+passed"` replaced with a real npm ci + typecheck + lint + build gate (placeholder env).
+
+**Boilerplate-as-code:** templates/boilerplate/ (ci-python/ci-node/ci-static, SECURITY,
+dependabot) + tools/boilerplate_check.py (fleet drift gate: hygiene files + CI
+suppression patterns, forks exempt, YAML comments skipped, token-aware) + weekly
+.github/workflows/boilerplate.yml. Applied: FWRS, shesh-wave, ePustakalay, gaganjainse,
+shesh-workspace (honest CI + SECURITY.md), shesh-audit/shesh-phone bench install
+(pyproject/requirements branch), wiki-sync (ls-remote branch detect). Remaining drift:
+AIM bandit `--exit-zero`/`safety || true` (18 high bandit findings behind the flag —
+tracked, needs a findings-triage pass before un-suppressing).
+
+**Timer:** tools/session_timer.sh — adaptive 15-min tick with precise JSON verdict
+parsing (replaces the hardcoded 5-min loop). Committed.
+
+**Docs:** this file.
+
+## Q: "Clone every repo, deep study, brutal audit; then give extensive suggestions" (2026-08-13)
+
+**Answer:** Cloned 58/60 repos, file-level study of flagships, hash-level duplication
+analysis, live API verification. Delivered `shesh-fleet-audit.md` (findings + scorecard +
+reference comparison + P0/P1/P2 roadmap). Then executed the approved P0+P1 sweep.
+
+**Executed & pushed this session:**
+- Profile README rewritten to current reality (SheshAOS 877+/9 crates + CLI; dropped
+  NexusAOS/SeshaOS/nexus-kernel; added shesh-ecosystem/omniroute/ClinicLedger) — `gaganjainse` @ e202e2e.
+- Facts gate extended to all 8 projects (`resume-facts.json` projects map); ecosystem 30→63
+  (pytest --collect-only), Vyakrti 123→122; PDF regenerated — portfolio @ 07b5d4a + 49c4e4b.
+- Licenses: +28 LICENSE files; components.toml reconciled (audit/brain/mind MIT→GPL-3.0-or-later;
+  omniroute stays MIT) — shesh-ecosystem @ 0c4866e.
+- SECURITY.md ×11 portfolio repos. Kotlin trio consolidated (VillageClinicLedger +
+  ClinicLedger-Template archived); .artifacts removed from ClinicLedger.
+
+**Key audit findings (top):** encrypted PAT + password example committed to public
+`shesh-workspace/secrets/` (P0 — awaits owner rotation + new credential flow before purge);
+GameVault 72 open dependabot alerts (1 critical/35 high, Next.js 13 EOL); Vyakrti borrow
+checker is wired-in-but-simplified (no lifetimes/scope release) and jit_compiler is dead code
+(README itself is honest — no overclaim); boilerplate duplication (25× SECURITY.md, 11× ci.yml);
+license contradiction resolved.
+
+**Docs:** this file; audit at `shesh-fleet-audit.md` (workspace, pending repo placement).
+
 ## Q: "Benchmarks … do we need these, if yes then create them everywhere" (2026-08-13)
 
 **Answer:** Honest classification first — benchmarks only where there's a measurable hot path; no fake stubs anywhere. Created real benchmarks in **6 more repos** (8 total incl. pre-existing SheshAOS + shesha-kernel), documented reasons for the rest in `docs/BENCHMARKS.md`.
