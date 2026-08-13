@@ -36,7 +36,7 @@ Last audited: 2026-08-12 (evening — full hardening pass; see 2026-08-12 evenin
 - **Are the files (sesha-audit, pyproject.toml, etc.) present?** Yes. All 12
   components live in `/home/user/sesha/components/shesh-*/`, each with
   `pyproject.toml`, `src/`, `tests/`, README, and CI. shesh-audit has all 5
-  modules (`__init__, log, policy, gate, nexus_bridge, server`) plus 18 tests.
+  modules (`__init__, log, policy, gate, kernel_bridge, server`) plus 18 tests.
 - **What caused the workspace-over-budget notice?** The Rust toolchain
   (`~/.cargo`+`~/.rustup`, ~1 GB) installed to test the kernel merge, plus
   large git clones. Removed; workspace now 127 MB.
@@ -72,7 +72,7 @@ Last audited: 2026-08-12 (evening — full hardening pass; see 2026-08-12 evenin
 | Repo | Layer | Tests | Purpose |
 |------|-------|------:|---------|
 | SheshAOS | Brain | 981 (Rust) | Governance kernel; Rust workspace of 12 crates |
-| shesh-audit | Brain | 18 | Hash-chained event log + policy Guard + Nexus bridge |
+| shesh-audit | Brain | 18 | Hash-chained event log + policy Guard + kernel bridge |
 | shesh-mind | Mind | 13 | Role→model router (6 GB VRAM budget) |
 | shesh-memory | Mind | 15 | Episodic/semantic/intention/habit memory + context assembler |
 | shesh-harness | Mind | 7 | Continual Harness: immutable base, `/refine`, rollback |
@@ -114,17 +114,17 @@ checkable version is TODO.md.
 ### 3.1 Brain / governance
 - [P0] **Shesh-kernel → SheshAOS merge.** Rebase archived kernel onto
   SheshAOS; port leaf crates first (protocols, waveobj, wps, blockctl,
-  wconfig), reconcile `NexusError`/TUI API divergence, bring
+  wconfig), reconcile `KernelError`/TUI API divergence, bring
   `shesh-protocols` (ACP+MCP wire impls) and CLI/worker bins; fix
   upstream build breaks (`russh::Error::msg` removed, `zig` required by
   terminal); gate on `cargo test --workspace` green. See
   `KERNEL_MERGE_PLAN.md` in SheshAOS.
 - [P0] Wire shesh-audit Guard in front of **every** MCP tool call
   (orchestrator + skills currently declare it; enforce at the server boundary).
-- [P1] Nexus bridge: have Rust SheshAOS actually consume `nexus-events.jsonl`
+- [P1] kernel bridge: have Rust SheshAOS actually consume `kernel-events.jsonl`
   (currently Python writes it; Rust reads TBD).
 - [P1] Secret manager integration (KeePassXC/gopass); no keys in MCP config.
-- [P2] eBPF/Aya telemetry for system/performance sensing (read-only).
+- [P2] eBPF/Aya telemetry — shesh-ebpf verified (8 tests, /proc-based); real eBPF needs kernel privileges (sandbox/host boundary, honest)
 - [P2] Supply-chain: sigstore/provenance for component artifacts.
 
 ### 3.2 Mind / agents
@@ -140,8 +140,8 @@ checkable version is TODO.md.
 - [P1] Episodic compaction/summarization retention job.
 - [P1] `shesh-mind` model router: honor currently-loaded models (avoid
   unloading), add embedding provider abstraction.
-- [P2] RAG via rag-service (semantic retrieval beyond FTS).
-- [P2] Skill marketplace / sharing evolved skills (opt-in).
+- ✅ [P2] RAG — covered in-component: shesh-memory embeddings + vectorstore + semantic_search (local hash offline, Ollama nomic-embed-text; 33 tests); rag-service remains an optional separate repo
+- ✅ [P2] Skill marketplace — primitives done (shesh-harness b00407b): export/import skills as portable JSON manifests; hosted marketplace remains 💡Future on top of this format
 
 ### 3.3 Soma / body
 - [P1] Package mature third-party MCP servers behind the Guard: filesystem,
@@ -156,7 +156,7 @@ checkable version is TODO.md.
 - [P1] Media: screenshots, screen recording, wallpaper, audio routing.
 - [P1] ACP full sessions: terminal bridge, diff/update messages (cancel +
   permission responses done).
-- [P2] Accessibility (a11y).
+- ✅ [P2] Accessibility (a11y) — spec + checker: docs/A11Y.md (2026-08-13): tools/a11y_check.py, 381-element baseline, reference fixes in killDialog/ConfigSwitch; long tail is an on-machine file-by-file pass
 - [P2] Job-mode isolated profile (work git identity, no personal cloud).
 
 ### 3.4 Desktop / AP (Agentic Physique — the MSI)
@@ -177,7 +177,7 @@ checkable version is TODO.md.
 - [P1] Distrobox/Containerfile for one-command onboarding.
 - [P1] Observability: OpenTelemetry traces for agent runs (local only).
 - [P1] shesh-ambient installed as a user service + wired into setup.
-- [P2] Self-hosted update mirror.
+- ✅ [P2] Self-hosted update mirror — shesh-desktop tools/maintenance/update-mirror.sh (3237048): local pacman mirror + repo-add + prune policy, dry-run safe
 
 ### 3.6 Docs / process (this audit)
 - [x] Centralize all docs — **done** (42 markdown files in docs/).

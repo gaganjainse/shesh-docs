@@ -14,21 +14,34 @@ Copy `docs/NEXT_SESSION_PROMPT.md` into a new Arena chat to continue — it incl
 
 ---
 
-## 0. Current position — 2026-08-13 (P0/P1/P2 roadmap: feasible items all done)
+## 0. Current position — 2026-08-13 (Nexus→Shesh rename + P2 items done)
 
-Roadmap completion (this turn): every sandbox-feasible P1/P2 item is done —
+**Nexus → Shesh/Kernel rename (complete):** SheshAOS `nexus_ingest` →
+`kernel_ingest` (`363900b`); ecosystem living docs swept (`006c3e7`) —
+kernel_bridge/kernel-events.jsonl/KernelBridge/KernelError everywhere;
+AUDIT_AND_ROADMAP P1 flipped ✅; immutable history untouched.
+
+**Pending-item completion (this turn):** a11y spec + checker + reference
+fixes (ecosystem `61b66a3`, shesh-desktop `d885c16` — 381-element baseline,
+on-machine long tail); skill marketplace primitives (shesh-harness
+`b00407b` — export/import JSON manifests, 7 tests); RAG confirmed covered
+in-component (shesh-memory semantic_search, 33 tests); self-hosted update
+mirror (shesh-desktop `3237048` — update-mirror.sh, dry-run safe);
+eBPF boundary honest + shesh-ebpf verified (8 tests).
+
+Roadmap completion (earlier): every sandbox-feasible P1/P2 item is done —
 shesh-phone vision→tap loop (`78d120e`), ambient data-aware proactivity
-(`82b3173`), job-mode profile P2 (`827a851`), Nexus bridge Rust ingest
-(SheshAOS `83e3358`+`1ddf28b`), email/IMAP setup (shesh-calendar `4e4e0cc`).
-All CI green. Remaining honest: P0 hardware validation (needs the MSI
-machine), eBPF/Aya (needs kernel privs), a11y + marketplace + mirror
-(roadmap 💡future), RAG (optional separate repo). See QUERYLOG 2026-08-13.
+(`82b3173`), job-mode profile P2 (`827a851`), kernel bridge Rust ingest
+(SheshAOS `83e3358`+`1ddf28b`+`363900b`), email/IMAP setup (shesh-calendar
+`4e4e0cc`). Remaining honest: P0 hardware validation (needs the MSI
+machine), real eBPF (needs kernel privs), a11y long tail (on-machine QML
+pass), hosted marketplace + Rekor (💡Future). See QUERYLOG 2026-08-13.
 
 Latest closures (new session, continued):
 - **Canary P0 e2e — GREEN on arch/fedora/ubuntu** (`4b0af81` → `f3b4a3c`):
   was red 3 consecutive days. Fixed gate-in-container `/src` hardcode,
   missing component clones (fetch-components.sh), e2e install order +
-  non-Python skip + stale nexus_bridge import, snapshot-checkout git root
+  non-Python skip + stale kernel_bridge import, snapshot-checkout git root
   discovery (self-contained tests + pure-path fallback), INDEX regen.
 - **Component README auto-sync** (`126a478`, `f3b4a3c`): new
   tools/sync_component_docs.py (link translation to blob URLs) + CI
@@ -158,7 +171,7 @@ governance kernel (SheshAOS, in progress).
 |------|-------|------:|---------|
 | SheshAOS | Brain | 872 (Rust) | Governance kernel — merge pending |
 | shesh-ecosystem | — | 61 (Python) | Manifest, gates, docs, **autopilot**, this wiki source |
-| shesh-audit | Brain | 29 | Hash-chained event log, GuardedMCP, tool pins, Nexus bridge, secrets |
+| shesh-audit | Brain | 29 | Hash-chained event log, GuardedMCP, tool pins, kernel bridge, secrets |
 | shesh-secrets | Brain | 8 | env/gopass/keepassxc/file secret resolution |
 | shesh-orchestrator | Mind | 28 | Multi-agent RLM runtime, sessions, A2A, traces |
 | shesh-memory | Mind | 26 | Episodes, FTS, vector embeddings, habits, intentions, compaction |
@@ -216,7 +229,7 @@ Before building any feature, **run the autopilot tests**:
 4. **Always** run tests in that component:
    `cd components/shesh-<x> && python3 -m pytest tests/ -q`.
 5. Use `GuardedMCP` from shesh-audit for any new MCP server (auto policy +
-   audit log + Nexus events).
+   audit log + kernel events).
 6. Never store secrets in config — use `shesh-secrets` references
    (`env:`, `gopass:`, `file:0600`).
 7. Commit with the task id in the message; push through the autopilot
@@ -232,7 +245,7 @@ Before building any feature, **run the autopilot tests**:
 ## 6. What is DONE
 
 - ✅ All 19 repos renamed Shesh→Shesh (GitHub redirects old names)
-- ✅ Governance: audit log, GuardedMCP, policy, Nexus event bridge, secrets
+- ✅ Governance: audit log, GuardedMCP, policy, kernel event bridge, secrets
 - ✅ Agents: orchestrator with roles, persistent sessions+cancel, A2A UDS,
   local JSONL traces, LLM planner/critic with Ollama + stubs
 - ✅ Memory: episodic + FTS + vector embeddings (local hash + Ollama
@@ -261,7 +274,7 @@ Before building any feature, **run the autopilot tests**:
 - **shesh-kernel → SheshAOS merge.** The archived Rust kernel diverged at
   the type level. Follow `KERNEL_MERGE_PLAN.md` in SheshAOS: port leaf
   crates first (protocols, waveobj, wps, blockctl, wconfig), reconcile
-  `NexusError`/TUI APIs, bring in `shesh-protocols` (ACP+MCP wire impls)
+  `KernelError`/TUI APIs, bring in `shesh-protocols` (ACP+MCP wire impls)
   and CLI/worker, fix upstream breaks (`russh::Error::msg` removed; `zig`
   required by terminal crate), gate on `cargo test --workspace` green.
 - **Hardware validation on the physical MSI Sword 16 HX** — run through
