@@ -777,7 +777,7 @@ web search (keyless DuckDuckGo HTML) + fetch, git/github inspection, pandoc
 document conversion, and reminders — plus Markdown skills: coding, web-research,
 docs-writer, safety-governance, daily-briefing.
 
-**Docs:** [components/shesh-skills.md](https://github.com/gaganjainse/shesh-ecosystem/blob/main/docs/components/shesh-skills.md),
+**Docs:** [components/shesh-skills.md](../components/shesh-skills.md),
 [skills/](https://github.com/gaganjainse/shesh-ecosystem/blob/main/docs/skills)
 
 ---
@@ -870,7 +870,7 @@ injectable Ollama client. MCP tools `select_model`/`plan_session`/`list_roles`/
 `set_model_for_role`/`list_installed_models`. 13 offline tests, ruff clean,
 pushed to gaganjainse/shesh-mind and added to the ecosystem manifest.
 
-**Docs:** [components/shesh-mind.md](https://github.com/gaganjainse/shesh-ecosystem/blob/main/docs/components/shesh-mind.md), TODO.md
+**Docs:** [components/shesh-mind.md](../components/shesh-mind.md), TODO.md
 
 ---
 
