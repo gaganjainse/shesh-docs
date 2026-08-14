@@ -2,6 +2,10 @@
 
 > **Purpose:** Copy for reading only — compilation of all docs from `shesh-ecosystem`, `shesh-desktop`, `shesh-workspace`, `shesh-omniroute`, `OmniRoute` fork, and all `shesh-*` components — properly organised so you have no issues in navigation.
 
+- **License:** GPL-3.0-or-later
+- **Owner:** Gagan Jain ([@gaganjainse](https://github.com/gaganjainse))
+- **Built with:** [mdBook](https://rust-lang.github.io/mdBook/)
+
 **Why this repo exists:** User said: "Make a docs repo and copy every docs there for my reading only as I need to understand what is going on. Add that in the live update flow too. It is a copy meaning docs are updated to other places as intended but for my knowledge, they are updated in the repo, but keep one point in mind, the docs in the repo should be properly organised as they are the compilation of all the docs and I should not have issues in navigation. Do a proper deep research on it, learn from other sources as every big project makes docs, understand the structure. Steal every good point from them. Also find out what other documentations we have missed to make. Then make them and updated on both is intended place and the docs repo. And properly separate factory and the product in three docs as I don't want a messed up system."
 
 **Structure (stealing every good point from big projects):**
@@ -61,3 +65,7 @@ npm run dev
 
 Security posture and vulnerability reporting: [canonical ecosystem security
 policy](https://github.com/gaganjainse/shesh-ecosystem/blob/main/SECURITY.md).
+
+## License
+
+GPL-3.0-or-later — see [LICENSE](LICENSE).
