@@ -8,4 +8,5 @@ dist/
 build/
 .venv/
 *.log
-/book/  # mdbook render output — built by CI, never committed
+/book/
+# mdbook render output — built by CI, never committed

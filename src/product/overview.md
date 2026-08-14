@@ -185,3 +185,5 @@ The full map: **[docs/INDEX.md](https://github.com/gaganjainse/shesh-ecosystem/b
 - **Components:** [docs/components/](https://github.com/gaganjainse/shesh-ecosystem/blob/main/docs/components) — one page per component, generated cross-links
 - **Style:** [README & docs style guide](https://github.com/gaganjainse/shesh-ecosystem/blob/main/docs/README_STYLE_GUIDE.md)
 - **Desktop:** [shesh-desktop/docs/SHESH/](https://github.com/gaganjainse/shesh-desktop/tree/main/docs/SHESH)
+- **Ops:** [ATTRIBUTION.md](https://github.com/gaganjainse/shesh-ecosystem/blob/main/ATTRIBUTION.md) (upstream credits) · [CONTAINER.md](https://github.com/gaganjainse/shesh-ecosystem/blob/main/CONTAINER.md) (dev/canary container)
+- **Compiled reading:** [https://github.com/gaganjainse/shesh-docs](https://github.com/gaganjainse/shesh-docs) — the mdBook compilation of every repo's docs

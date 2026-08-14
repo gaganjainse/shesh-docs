@@ -151,3 +151,9 @@
 
 - [Portfolio Overview — Smart, No Forks, Proper Priority](./portfolio/overview.md)
 - [Auto-Update — GitHub API + generate:all + CI gates + Vercel deploy](./portfolio/auto-update.md)
+
+# Part XI: SheshAOS — The Flagship Rust AI OS
+
+- [SheshAOS Overview — Governance-First, Event-Sourced OS](./sheshaos/README.md)
+- [Handover — Developer Transition Guide](./sheshaos/handover.md)
+- [Architecture — Layers, Control Flow, Event Model](./sheshaos/architecture.md)
