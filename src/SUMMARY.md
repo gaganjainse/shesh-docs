@@ -157,3 +157,7 @@
 - [SheshAOS Overview — Governance-First, Event-Sourced OS](./sheshaos/README.md)
 - [Handover — Developer Transition Guide](./sheshaos/handover.md)
 - [Architecture — Layers, Control Flow, Event Model](./sheshaos/architecture.md)
+
+# Part XII: Standalone Projects — Portfolio Beyond the Ecosystem
+
+- [Projects Index — Languages, Apps, AI Tooling](./projects/index.md)
