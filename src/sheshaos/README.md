@@ -16,6 +16,10 @@ audit trail, and the whole thing runs local-first with replaceable AI providers.
 ![Tests](https://img.shields.io/badge/Tests-877-success?style=for-the-badge)
 ![CI](https://github.com/gaganjainse/SheshAOS/actions/workflows/ci.yml/badge.svg)
 
+- **License:** GPL-3.0-or-later
+- **Owner:** Gagan Jain ([@gaganjainse](https://github.com/gaganjainse))
+- **Target:** CachyOS/Arch · Linux-native · Rust
+
 [📖 Docs](https://github.com/gaganjainse/shesh-docs) · [🗺 Architecture](architecture.md) · [🤝 Contributing](https://github.com/gaganjainse/SheshAOS/blob/main/CONTRIBUTING.md) · [🔒 Security](https://github.com/gaganjainse/SheshAOS/blob/main/SECURITY.md) · [📝 Changelog](https://github.com/gaganjainse/SheshAOS/blob/main/CHANGELOG.md)
 
 ---
@@ -247,6 +251,11 @@ cargo bench --workspace      # 6 criterion benches
 | [🔒 Security](https://github.com/gaganjainse/SheshAOS/blob/main/SECURITY.md) | Vulnerability reporting |
 | [📝 Changelog](https://github.com/gaganjainse/SheshAOS/blob/main/CHANGELOG.md) | Version history |
 | [🤗 Code of Conduct](https://github.com/gaganjainse/SheshAOS/blob/main/CODE_OF_CONDUCT.md) | Community standards |
+
+## Status
+
+CI green. Security: [SECURITY.md](https://github.com/gaganjainse/SheshAOS/blob/main/SECURITY.md). Compiled reading:
+[shesh-docs](https://github.com/gaganjainse/shesh-docs).
 
 ## License
 
