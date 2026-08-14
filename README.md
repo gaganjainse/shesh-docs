@@ -46,13 +46,10 @@
 **Build:**
 
 ```bash
-# mdBook
+# This repo is a pure mdBook project — there is no package.json, so the
+# npm-based dev server below does NOT apply (it never shipped). Build with:
 mdbook build
 mdbook serve  # serves at http://localhost:3000
-
-# Or Astro Starlight (since portfolio uses Astro 7.2)
-npm install
-npm run dev
 ```
 
 **Live update:** This repo is reading only, but live update flow copies docs from `shesh-ecosystem`, `shesh-desktop`, `shesh-workspace` etc into here via `tools/live_update.py --docs ALL` + `scripts/sync-docs.sh` (to be added).
