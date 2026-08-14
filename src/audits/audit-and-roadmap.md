@@ -204,7 +204,7 @@ checkable version is TODO.md.
 
 1. Anchor to TODO.md; pick the highest-priority unblocked ⬜.
 2. Branch per item; tests gate every push; never push red.
-3. After every user message: append to `docs/queries/QUERYLOG.md`, update TODO.md status, and refresh relevant docs — real-time.
+3. After every user message: append to `docs/history/queries/QUERYLOG.md`, update TODO.md status, and refresh relevant docs — real-time.
 4. Archive, never delete. No force-push to main.
 5. Mark hardware-dependent items 🟡 rather than faking success.
 6. **DON'T make minimal versions/stubs that become dead code — make proper working versions** with real implementation, tests, integration, docs. Minimal versions we made (shesh-brain, media, messaging, ebpf minimal) became stubs — user called out, now we make proper.
@@ -220,7 +220,7 @@ checkable version is TODO.md.
 ## 6. Manual verification
 
 Things that cannot be tested in the sandbox are tracked separately in
-**[MANUAL_VERIFICATION.md](../verification/manual-verification.md)** — work through it on the
+**[MANUAL_VERIFICATION.md](MANUAL_VERIFICATION.md)** — work through it on the
 physical MSI after install. It covers accounts/keys, the MCP mesh, voice/GPU/
 display, backup, phone, containers, agent behavior, security, and the
 deliberate non-autopilot items (kernel merge, hardware validation).

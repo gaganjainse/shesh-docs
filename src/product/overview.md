@@ -186,4 +186,5 @@ The full map: **[docs/INDEX.md](https://github.com/gaganjainse/shesh-ecosystem/b
 - **Style:** [README & docs style guide](https://github.com/gaganjainse/shesh-ecosystem/blob/main/docs/README_STYLE_GUIDE.md)
 - **Desktop:** [shesh-desktop/docs/SHESH/](https://github.com/gaganjainse/shesh-desktop/tree/main/docs/SHESH)
 - **Ops:** [ATTRIBUTION.md](https://github.com/gaganjainse/shesh-ecosystem/blob/main/ATTRIBUTION.md) (upstream credits) · [CONTAINER.md](https://github.com/gaganjainse/shesh-ecosystem/blob/main/CONTAINER.md) (dev/canary container)
+- **History:** [📜 docs/history/](https://github.com/gaganjainse/shesh-ecosystem/blob/main/docs/history) — decisions (ADRs), audits, incidents, query log, attic
 - **Compiled reading:** [https://github.com/gaganjainse/shesh-docs](https://github.com/gaganjainse/shesh-docs) — the mdBook compilation of every repo's docs

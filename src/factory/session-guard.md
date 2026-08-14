@@ -32,7 +32,7 @@ python tools/session_guard.py --clean     # drop caches/veneers to shrink worksp
 
 - On threshold breach the guard writes `docs/SESSION_HOP_ALERT.md`. The file
   is **untracked by design** — a committed alert lies within hours (see
-  `.gitignore` and the archived example in `docs/attic/`).
+  `.gitignore` and the archived example in `docs/history/attic/`).
 - `--status` is read-only. The 2026-08-11 incident (session guard deleting
   the plain PAT mid-flight) is why PAT cleanup happens only on explicit
   `--handoff` — see

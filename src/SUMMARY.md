@@ -90,7 +90,7 @@
 
 # Part V: Architecture Decision Records (ADRs)
 
-- [ADR Index — 18 Decisions](./adr/README.md)
+- [ADR Index — 19 Decisions](./adr/README.md)
 - [ADR-0001 Five Languages Only](./adr/0001-five-languages.md)
 - [ADR-0002 Rootless Containers](./adr/0002-containers-and-venv.md)
 - [ADR-0003 Federated Repos + Manifest](./adr/0003-federated-repos.md)
@@ -109,6 +109,7 @@
 - [ADR-0016 Kernel Consolidation](./adr/0016-kernel-consolidation.md)
 - [ADR-0017 Naming Purge Completed](./adr/0017-naming-purge-completed.md)
 - [ADR-0018 Adopt vs Build](./adr/0018-adopt-vs-build.md)
+- [ADR-0019 shesh-core Monorepo](./adr/0019-shesh-core-monorepo.md)
 
 # Part VI: Audits & Roadmaps
 
