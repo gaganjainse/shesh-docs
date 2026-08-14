@@ -6,7 +6,7 @@
 - **Owner:** Gagan Jain ([@gaganjainse](https://github.com/gaganjainse))
 - **Built with:** [mdBook](https://rust-lang.github.io/mdBook/)
 
-![License](https://img.shields.io/badge/License-GPL--3.0--or--later-blue?style=for-the-badge) ![CI](https://img.shields.io/github/actions/workflow/status/gaganjainse/shesh-docs/ci.yml?style=for-the-badge&label=CI)
+![License](https://img.shields.io/badge/License-GPL--3.0--or--later-blue) ![CI](https://github.com/gaganjainse/shesh-docs/actions/workflows/ci.yml/badge.svg)
 
 **Why this repo exists:** User said: "Make a docs repo and copy every docs there for my reading only as I need to understand what is going on. Add that in the live update flow too. It is a copy meaning docs are updated to other places as intended but for my knowledge, they are updated in the repo, but keep one point in mind, the docs in the repo should be properly organised as they are the compilation of all the docs and I should not have issues in navigation. Do a proper deep research on it, learn from other sources as every big project makes docs, understand the structure. Steal every good point from them. Also find out what other documentations we have missed to make. Then make them and updated on both is intended place and the docs repo. And properly separate factory and the product in three docs as I don't want a messed up system."
 
