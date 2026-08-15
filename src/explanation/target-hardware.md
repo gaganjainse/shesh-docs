@@ -17,6 +17,30 @@ hardware_verified: no
 
 ---
 
+## Measured on the machine, 2026-08-15
+
+The first hardware run of `shesh-ecosystem/tools/hwverify.py` recorded what the
+reference laptop actually runs. It is not what the rest of this documentation
+assumes.
+
+| Fact | Documented | Measured |
+|---|---|---|
+| Machine | MSI Sword 16 HX B14VEKG | `Sword 16 HX B14VEKG` — matches |
+| GPU | RTX 4050 6 GB | `RTX 4050 Laptop, 6141 MiB, driver 610.43.02` — matches |
+| Session | Hyprland on CachyOS | **`wayland, ubuntu:GNOME`** |
+| Compositor tooling | `hyprctl`, `grim` | **absent** |
+| Audio tooling | PipeWire via `pactl` | **absent** |
+| Container runtime | podman, rootless | **docker 29.1.3** |
+| Model runtime | Ollama on 11434 | answering — matches |
+
+The hardware profile below is correct. The platform assumption is not: the
+machine runs Ubuntu with GNOME, so the Hyprland-specific layer of this project
+cannot run on it as written. Nine probes passed, sixteen skipped, and eight of
+those skips are a missing platform rather than missing coverage.
+
+This is recorded as failure F023. Nothing in the affected pages has been
+restamped: they keep `hardware_verified: no`, because that is the truth.
+
 ## Hardware facts (canonical)
 ```ini
 # profiles/msi-sword-cachyos/profile.conf

@@ -5,7 +5,7 @@ summary: "Audience: anyone changing security-relevant behavior (Guard policy, MC
 audience: maintainer
 status: current
 verified: 2026-08-15
-hardware_verified: no
+hardware_verified: 2026-08-15
 ---
 
 # Threat Model

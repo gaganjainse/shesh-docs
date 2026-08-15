@@ -5,7 +5,7 @@ summary: "OmniRoute catalog includes industry-used big models free, not only sma
 audience: operator
 status: current
 verified: 2026-08-15
-hardware_verified: no
+hardware_verified: 2026-08-15
 ---
 
 # Cloud model providers
