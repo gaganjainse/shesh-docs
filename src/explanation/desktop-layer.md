@@ -101,5 +101,5 @@ See `docs/desktop/02_ROADMAP.md` Phases 0–7, but filtered to **backend only, n
 
 - **Till first release (Phases 0–3 first week, 4–5 week two, 6 weeks 3–4):** **~3-4 weeks** with an AI pair-programmer, by adopting backend patterns (monitor management single `hyprctl --batch` no flicker from ekremx25, Night Light backend hyprsunset/gammastep, EQ filter-chain, SearXNG self-hosted free, agent-search MIT, notify-rs RecommendedWatcher) and **do NOT adopt/replace look** (keep illogical-impulse).
 
-**The project is on right track for Mind/Brain** (memory, harness, orchestrator, skills, audit, mind router, model-agnostic free-first) — 100+ tests, 15 ADRs, swarm via GitHub Issues atomic lock + PR auto-merge + scheduled janitor true hours, secure PAT password flow.
+**The project is on right track for Mind/Brain** (memory, harness, orchestrator, skills, audit, mind router, model-agnostic free-first) — 100+ tests, the ADR set, swarm via GitHub Issues atomic lock + PR auto-merge + scheduled janitor true hours, secure PAT password flow.
 **The project were off track for Soma/Desktop** — rebuilt what Shesh should have adopted as backend, introduced 10 new bugs, looked further along than the project is because stub files added. Now fixed: keep illogical-impulse look intact, adopt backend logic only, expand CI to lint all scripts so N-01..N-09 never slip again.
