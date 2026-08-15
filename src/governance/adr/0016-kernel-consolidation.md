@@ -17,7 +17,7 @@ verified: 2026-08-15
 
 ## Context
 
-open item §1 carried a -blocked plan to merge the archived `shesha-kernel` (Rust,
+open item §1 carried a -blocked plan to merge the archived `shesh-kernel` (Rust,
 13 crates + worker bin) into `SheshAOS` (Rust, 12 crates). Two questions were
 re-opened in review on 2026-08-12:
 
@@ -29,7 +29,7 @@ re-opened in review on 2026-08-12:
 
 ## Decision
 
-- **Withdraw the kernel-merge plan.** No crate porting. `shesha-kernel` remains
+- **Withdraw the kernel-merge plan.** No crate porting. `shesh-kernel` remains
   archived (ADR-0008). Close GitHub issues #7–13.
 - **Archive SeshaOS** (superseded by SheshAOS; folded in per open item).
 - **Adopt stock Wave Terminal** as the mission-control surface. No rewrite, no

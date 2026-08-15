@@ -14,19 +14,19 @@ verified: 2026-08-15
 actions, the kernel validates and records every state change in an append-only
 audit trail, and the whole thing runs local-first with replaceable AI providers.
 
-![CI](https://github.com/gaganjainse/SheshAOS/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/gaganjainse/shesh-aos/actions/workflows/ci.yml/badge.svg)
 
 - **License:** GPL-3.0-or-later
 - **Owner:** Gagan Jain ([@gaganjainse](https://github.com/gaganjainse))
 - **Target:** CachyOS/Arch · Linux-native · Rust
 
-[ Docs](https://github.com/gaganjainse/shesh-docs) · [ Architecture](sheshaos-architecture.md) · [ Contributing](https://github.com/gaganjainse/SheshAOS/blob/main/CONTRIBUTING.md) · [ Security](https://github.com/gaganjainse/SheshAOS/blob/main/SECURITY.md) · [ Changelog](https://github.com/gaganjainse/SheshAOS/blob/main/CHANGELOG.md)
+[ Docs](https://github.com/gaganjainse/shesh-docs) · [ Architecture](sheshaos-architecture.md) · [ Contributing](https://github.com/gaganjainse/shesh-aos/blob/main/CONTRIBUTING.md) · [ Security](https://github.com/gaganjainse/shesh-aos/blob/main/SECURITY.md) · [ Changelog](https://github.com/gaganjainse/shesh-aos/blob/main/CHANGELOG.md)
 
 ---
 
 ## Quick start
 ```bash
-git clone https://github.com/gaganjainse/SheshAOS.git
+git clone https://github.com/gaganjainse/shesh-aos.git
 cd SheshAOS
 cargo build --release
 ./target/release/shesh init
@@ -237,17 +237,17 @@ cargo bench --workspace      # 6 criterion benches
 | [ Architecture](sheshaos-architecture.md) | System diagrams & data flows |
 | [ Compiled docs](https://github.com/gaganjainse/shesh-docs) | Fleet-wide reading compilation (mdBook) |
 | [ Handover](../how-to/work-on-sheshaos.md) | Developer transition guide |
-| [ Contributing](https://github.com/gaganjainse/SheshAOS/blob/main/CONTRIBUTING.md) | Development workflow |
-| [ Security](https://github.com/gaganjainse/SheshAOS/blob/main/SECURITY.md) | Vulnerability reporting |
-| [ Changelog](https://github.com/gaganjainse/SheshAOS/blob/main/CHANGELOG.md) | Version history |
-| [ Code of Conduct](https://github.com/gaganjainse/SheshAOS/blob/main/CODE_OF_CONDUCT.md) | Community standards |
+| [ Contributing](https://github.com/gaganjainse/shesh-aos/blob/main/CONTRIBUTING.md) | Development workflow |
+| [ Security](https://github.com/gaganjainse/shesh-aos/blob/main/SECURITY.md) | Vulnerability reporting |
+| [ Changelog](https://github.com/gaganjainse/shesh-aos/blob/main/CHANGELOG.md) | Version history |
+| [ Code of Conduct](https://github.com/gaganjainse/shesh-aos/blob/main/CODE_OF_CONDUCT.md) | Community standards |
 
 ## Status
-CI green. Security: [SECURITY.md](https://github.com/gaganjainse/SheshAOS/blob/main/SECURITY.md). Compiled reading:
+CI green. Security: [SECURITY.md](https://github.com/gaganjainse/shesh-aos/blob/main/SECURITY.md). Compiled reading:
 [shesh-docs](https://github.com/gaganjainse/shesh-docs).
 
 ## License
-GPL-3.0-or-later — see [LICENSE](https://github.com/gaganjainse/SheshAOS/blob/main/LICENSE).
+GPL-3.0-or-later — see [LICENSE](https://github.com/gaganjainse/shesh-aos/blob/main/LICENSE).
 
 ---
 

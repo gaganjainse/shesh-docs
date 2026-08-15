@@ -56,6 +56,7 @@ advisory text.
 | [`clipboard`](https://github.com/gaganjainse/shesh-skills/blob/main/skills/clipboard/SKILL.md) | Read and replace the clipboard | none |
 | [`coding`](https://github.com/gaganjainse/shesh-skills/blob/main/skills/coding/SKILL.md) | Write, test, and refactor code safely | yes |
 | [`daily-briefing`](https://github.com/gaganjainse/shesh-skills/blob/main/skills/daily-briefing/SKILL.md) | Produce the morning or evening digest | yes |
+| [`desktop-automation`](https://github.com/gaganjainse/shesh-skills/blob/main/skills/desktop-automation/SKILL.md) | Read the screen and drive the desktop: accessibility tree, window targeting, screenshots, clicking, and typing | none |
 | [`disk-cleanup`](https://github.com/gaganjainse/shesh-skills/blob/main/skills/disk-cleanup/SKILL.md) | Reclaim disk space by clearing caches and reporting what is consuming storage | none |
 | [`docs-writer`](https://github.com/gaganjainse/shesh-skills/blob/main/skills/docs-writer/SKILL.md) | Write or revise documentation in the house style | yes |
 | [`file-organizer`](https://github.com/gaganjainse/shesh-skills/blob/main/skills/file-organizer/SKILL.md) | Sort files into folders by type, date, or project | none |

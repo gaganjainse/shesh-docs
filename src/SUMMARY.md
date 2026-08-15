@@ -86,3 +86,4 @@
   - [ADR-0017: Fix one naming convention across the fleet](governance/adr/0017-naming-purge-completed.md)
   - [ADR-0018: Prefer a maintained upstream over building](governance/adr/0018-adopt-vs-build.md)
   - [ADR-0019: Fold single-module services into shesh-core](governance/adr/0019-shesh-core-monorepo.md)
+  - [ADR-0020: Adopt computer-use-linux for desktop automation](governance/adr/0020-adopt-computer-use-linux.md)

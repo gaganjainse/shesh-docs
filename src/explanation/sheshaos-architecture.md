@@ -126,7 +126,7 @@ User → CLI → Kernel → Router (classify) → Policy (check) → Provider (i
 Events are the source of truth: every state change, model interaction, tool call,
 and policy decision is appended as an immutable JSON Lines (`.jsonl`) record.
 
-**The canonical `EventKind` list lives in [`crates/shesh-kernel/src/events.rs`](https://github.com/gaganjainse/SheshAOS/blob/main/crates/shesh-kernel/src/events.rs)** —
+**The canonical `EventKind` list lives in [`crates/shesh-kernel/src/events.rs`](https://github.com/gaganjainse/shesh-aos/blob/main/crates/shesh-kernel/src/events.rs)** —
 20 kinds (TaskCreated → Error) grouped as task lifecycle, model interactions,
 tool interactions, policy, and system. This doc does not duplicate the enum; the
 fuzz target `event_json` and the doc-tests pin the code as the single source of truth.

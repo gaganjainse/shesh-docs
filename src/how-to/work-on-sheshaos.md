@@ -128,7 +128,7 @@ the top-level `zig/` tree, and the dead `tests/` harness — see CHANGELOG.
 ### Setup
 ```bash
 # 1. Clone
-git clone https://github.com/gaganjainse/SheshAOS.git
+git clone https://github.com/gaganjainse/shesh-aos.git
 cd SheshAOS
 
 # 2. Build
@@ -288,10 +288,10 @@ graph LR
 | Document | Purpose | Audience |
 |----------|---------|----------|
 | [README.md](../explanation/sheshaos.md) | Project overview | Everyone |
-| [CONTRIBUTING.md](https://github.com/gaganjainse/SheshAOS/blob/main/CONTRIBUTING.md) | Contribution guide | Contributors |
-| [SECURITY.md](https://github.com/gaganjainse/SheshAOS/blob/main/SECURITY.md) | Security policy | Security researchers |
-| [CODE_OF_CONDUCT.md](https://github.com/gaganjainse/SheshAOS/blob/main/CODE_OF_CONDUCT.md) | Community standards | Everyone |
-| [CHANGELOG.md](https://github.com/gaganjainse/SheshAOS/blob/main/CHANGELOG.md) | Version history | Users |
+| [CONTRIBUTING.md](https://github.com/gaganjainse/shesh-aos/blob/main/CONTRIBUTING.md) | Contribution guide | Contributors |
+| [SECURITY.md](https://github.com/gaganjainse/shesh-aos/blob/main/SECURITY.md) | Security policy | Security researchers |
+| [CODE_OF_CONDUCT.md](https://github.com/gaganjainse/shesh-aos/blob/main/CODE_OF_CONDUCT.md) | Community standards | Everyone |
+| [CHANGELOG.md](https://github.com/gaganjainse/shesh-aos/blob/main/CHANGELOG.md) | Version history | Users |
 | [docs/architecture.md](../explanation/sheshaos-architecture.md) | System diagrams | Developers |
 
 ---
@@ -319,8 +319,8 @@ graph LR
 
 ## Getting help
 -  **Documentation**: Check this file and linked docs
--  **Issues**: [GitHub Issues](https://github.com/gaganjainse/SheshAOS/issues)
--  **Discussions**: [GitHub Discussions](https://github.com/gaganjainse/SheshAOS/discussions)
+-  **Issues**: [GitHub Issues](https://github.com/gaganjainse/shesh-aos/issues)
+-  **Discussions**: [GitHub Discussions](https://github.com/gaganjainse/shesh-aos/discussions)
 -  **Email**: gagan.jain.se@gmail.com
 
 ---
@@ -338,7 +338,7 @@ Contributors are recognized in:
 </p>
 
 <p align="center">
-  <a href="https://github.com/gaganjainse/SheshAOS"> Star on GitHub</a> •
-  <a href="https://github.com/gaganjainse/SheshAOS/fork"> Fork</a> •
-  <a href="https://github.com/gaganjainse/SheshAOS/issues"> Report Bug</a>
+  <a href="https://github.com/gaganjainse/shesh-aos"> Star on GitHub</a> •
+  <a href="https://github.com/gaganjainse/shesh-aos/fork"> Fork</a> •
+  <a href="https://github.com/gaganjainse/shesh-aos/issues"> Report Bug</a>
 </p>

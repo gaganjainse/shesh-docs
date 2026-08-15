@@ -22,8 +22,8 @@ _Not recorded._
 ## Decision
 
 - **Do NOT force-merge** the two Rust trees — would ship broken build.
-- Archive `shesh-kernel` as `shesha-kernel` (GitHub redirect) — superseded by SheshAOS.
-- Document staged rebase plan in `SheshAOS/KERNEL_MERGE_PLAN.md`:
+- Archive `shesh-kernel` as `shesh-kernel` (GitHub redirect) — superseded by SheshAOS.
+- Document staged rebase plan in `shesh-aos/KERNEL_MERGE_PLAN.md`:
   1. Leaf crates first: protocols, waveobj, wps, blockctl, wconfig.
   2. Then ai/remote/rpc/gui/kernel/vault/tui/terminal.
   3. Reconcile `NexusError`, TUI API divergence.
@@ -44,6 +44,6 @@ _Not recorded._
 
 ## References
 
-- `SheshAOS/KERNEL_MERGE_PLAN.md` (in SheshAOS repo)
+- `shesh-aos/KERNEL_MERGE_PLAN.md` (in SheshAOS repo)
 - `docs/history/AUDIT_AND_ROADMAP.md` §3.1
 - TODO.md §1

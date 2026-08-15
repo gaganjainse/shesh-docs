@@ -16,7 +16,7 @@ documentation is its own repository `README.md`; this page is the fleet index.
 ## The flagship
 | Project | What it is | Stack |
 |---|---|---|
-| [SheshAOS](https://github.com/gaganjainse/SheshAOS) | Governance-first, event-sourced AI OS — models propose, tools execute, kernel validates | Rust (9 crates + CLI), a full test suite |
+| [SheshAOS](https://github.com/gaganjainse/shesh-aos) | Governance-first, event-sourced AI OS — models propose, tools execute, kernel validates | Rust (9 crates + CLI), a full test suite |
 
 ## Languages & compilers
 | Project | What it is | Stack |
