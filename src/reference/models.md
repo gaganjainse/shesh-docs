@@ -5,6 +5,7 @@ summary: "Part of the Shesh documentation."
 audience: operator
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # Models

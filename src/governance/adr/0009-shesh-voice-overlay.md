@@ -5,6 +5,7 @@ summary: "Fork Newelle as shesh-voice with an overlay."
 audience: maintainer
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # ADR-0009: Fork Newelle as shesh-voice with an overlay

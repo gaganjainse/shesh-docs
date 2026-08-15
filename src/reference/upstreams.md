@@ -5,6 +5,7 @@ summary: "Third-party projects Shesh tracks, the licence of each, and which capa
 audience: contributor
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # Upstreams

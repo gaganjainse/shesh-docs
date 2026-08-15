@@ -5,6 +5,7 @@ summary: "The Shesh ecosystem uses these terms consistently."
 audience: operator
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # Glossary

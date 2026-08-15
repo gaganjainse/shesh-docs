@@ -5,6 +5,7 @@ summary: "actions, the kernel validates and records every state change in an app
 audience: operator
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # SheshAOS
@@ -225,7 +226,7 @@ SheshAOS/
 ## Development
 ```bash
 cargo build                  # build
-cargo test --workspace       # 877 tests
+cargo test --workspace       # the workspace test suite
 cargo clippy --all-targets -- -D warnings   # zero-warning gate
 cargo fmt --check            # formatting
 cargo bench --workspace      # 6 criterion benches

@@ -5,6 +5,7 @@ summary: "If anything differs, update profile.conf before running setup."
 audience: operator
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # Target hardware

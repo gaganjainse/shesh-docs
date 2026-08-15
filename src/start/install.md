@@ -5,6 +5,7 @@ summary: "Install the Shesh desktop and agent stack on an Arch-based system and 
 audience: operator
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # Install Shesh

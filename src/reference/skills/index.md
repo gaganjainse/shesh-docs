@@ -5,6 +5,7 @@ summary: "The agent skill library, its file format, the permission model, and th
 audience: operator
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # Skills

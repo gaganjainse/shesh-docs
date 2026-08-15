@@ -5,6 +5,7 @@ summary: "CachyOS (our OS) is rolling-release."
 audience: maintainer
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # Dependency Policy

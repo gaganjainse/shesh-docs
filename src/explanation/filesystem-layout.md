@@ -5,6 +5,7 @@ summary: "Never hand-edit these except via the package manager or the installer:
 audience: operator
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # Filesystem layout

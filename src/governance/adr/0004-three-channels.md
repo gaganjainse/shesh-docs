@@ -5,6 +5,7 @@ summary: "Promote releases through three channels."
 audience: maintainer
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # ADR-0004: Promote releases through three channels

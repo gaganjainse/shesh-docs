@@ -5,6 +5,7 @@ summary: "Run components in rootless containers and virtual environments."
 audience: maintainer
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # ADR-0002: Run components in rootless containers and virtual environments

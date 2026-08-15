@@ -71,8 +71,22 @@ summary: The three promotion channels and the gates between them.
 audience: operator       # operator | contributor | maintainer
 status: current          # current | historical
 verified: 2026-08-15     # date the claims were last checked against code
+hardware_verified: no    # or a date, from tools/hwverify.py evidence
 ---
 ```
+
+`verified` means somebody read the committed code on that date. It does **not**
+mean anything ran on hardware. A page that describes physical behaviour — GPU,
+display, audio, phone, wake word — carries `hardware_verified` as well:
+
+- `hardware_verified: no` — the claims are source-level only.
+- `hardware_verified: 2026-08-15` — backed by an evidence file from
+  `shesh-ecosystem/tools/hwverify.py --json`, in which the relevant probes
+  returned `pass`. A skipped probe verified nothing and does not count.
+
+Two dates exist because one was doing the work of both, and a reader could not
+tell a page that had been reasoned about from one that had been tested. Guard
+F021 fails a hardware page that claims more than its evidence supports.
 
 `status: historical` marks a document that records a past state. Historical
 documents are never edited to look current; they carry a banner (§7).

@@ -5,6 +5,7 @@ summary: "Part of the Shesh documentation."
 audience: operator
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # Manifest schema
@@ -256,7 +257,7 @@ license = "MIT"
 channel = "devel"
 provides = ["omniroute", "free-gateway", "big-models", "cloud-fallback"]
 upstream = { name = "OmniRoute", repo = "diegosouzapw/OmniRoute", ref = "main" }
-notes = "Forked OmniRoute 291 providers 90+ free 500+ models 1.53B free tokens/mo RTK+Caveman 15-95% compression, optional to local Ollama primary in final product, where enable is user choice (settings GUI). For making ecosystem (dev), use free big models via OmniRoute gateway http://localhost:20128/v1 — industry-used Claude/GPT/Gemini/DeepSeek/Llama/Mistral/Qwen/Kimi/GLM etc free."
+notes = "Forked OmniRoute the surveyed providers 90+ free 500+ models 1.53B free tokens/mo RTK+Caveman 15-95% compression, optional to local Ollama primary in final product, where enable is user choice (settings GUI). For making ecosystem (dev), use free big models via OmniRoute gateway http://localhost:20128/v1 — industry-used Claude/GPT/Gemini/DeepSeek/Llama/Mistral/Qwen/Kimi/GLM etc free."
 
 [component.shesh-desktop]
 layer = "soma"

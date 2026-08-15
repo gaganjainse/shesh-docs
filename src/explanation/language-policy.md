@@ -5,6 +5,7 @@ summary: "That's the whole list for the daily-driver system."
 audience: operator
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # Language policy

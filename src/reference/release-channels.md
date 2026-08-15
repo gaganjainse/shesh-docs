@@ -5,6 +5,7 @@ summary: "Channels are release filters, exactly like a distro's core / testing /
 audience: operator
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # Release channels

@@ -5,6 +5,7 @@ summary: "Define six agent roles within a fixed video-memory budget."
 audience: maintainer
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # ADR-0007: Define six agent roles within a fixed video-memory budget
