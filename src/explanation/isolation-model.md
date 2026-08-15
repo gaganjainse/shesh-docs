@@ -1,0 +1,93 @@
+---
+title: Isolation model
+type: explanation
+summary: "Each Python component (shesh- MCP servers, classifier, rag-service) is a proper uv project:."
+audience: operator
+status: current
+verified: 2026-08-15
+---
+
+# Isolation model
+
+> Shesh keeps the host clean. Every non-core language/runtime lives in a **rootless Podman** container or
+> a per-component **uv** venv. This matches the language policy in `LANGUAGE_POLICY.md` and protects
+> the daily driver — the "does not break anything" rule enforced technically, not by discipline.
+
+---
+
+## Python — astral `uv` (not pip/venv/poetry)
+Each Python component (`shesh-*` MCP servers, classifier, rag-service) is a proper uv project:
+
+```bash
+cd tools/shesh
+uv init --bare --lib            # if creating fresh
+uv add mcp[cli] fastmcp httpx
+uv add --dev pytest ruff
+uv sync                        # creates .venv, installs exactly per uv.lock
+uv run python -m pytest         # run inside the venv
+uv run ruff check .
+```
+
+Rules:
+- Commit `pyproject.toml` **and** `uv.lock`. CI runs `uv sync --frozen` (no implicit resolution).
+- One venv per component under `~/.local/state/<component>/.venv` at install time (the installer
+  uses `uv venv` + `uv pip install -r ...` only for the dotfiles bootstrap; components use `uv sync`).
+- Never `sudo pip`, never global `pip install`. Use `uvx <tool>` for one-off CLIs.
+- Pin Python ≥ 3.11 (Shesh uses 3.13 in dev/CI; CachyOS ships 3.13).
+
+## Rust — rustup + cargo
+```bash
+rustup default stable
+cargo fmt --check && cargo clippy -D warnings && cargo test
+```
+Release binaries are LTO/stripped (already set in `watcher-rs/Cargo.toml`). Install to `~/.local/bin`.
+
+## Containers — rootless podman + distrobox
+**Podman** is the engine (daemonless, rootless, user namespaces). **Distrobox** is the wrapper for
+long-lived dev environments that need host `$HOME`, Wayland, and audio.
+
+### 1 quick isolated test box (arch, throwaway)
+```bash
+podman run --rm -it archlinux:latest bash
+# inside: pacman -Syu git bash shellcheck python ...
+```
+
+### 2 persistent dev container with host integration
+```bash
+distrobox create --name shesh-dev --image archlinux:latest \
+  --additional-packages "git base-devel shellcheck python uv rustup"
+distrobox enter shesh-dev
+```
+This shares `$HOME`, the Wayland socket, and PipeWire — so you can even run GUI/ML tooling without
+polluting CachyOS. Export binaries/apps to the host with `distrobox-export`.
+
+### 3 canary / other-distro testing
+The canary gate runs components against multiple bases in CI:
+```bash
+for img in archlinux:latest fedora:40 ubuntu:24.04; do
+  podman run --rm -v "$PWD":/src:ro -w /src "$img" ./scripts/gate-in-container.sh
+done
+```
+Use this to validate the installer on Fedora/Ubuntu (guarded paths) without a VM.
+
+### 4 isolating non-core / cloud tools
+Any agent/service in a non-approved language (Go, Mojo, a Node-heavy tool) or any cloud-tier agent
+runs in a rootless container with a read-only mount of only the paths it needs, exposing MCP over a
+Unix socket. It never links into the host.
+
+## Security notes
+- Prefer rootless Podman over Docker (ArchWiki): rootful Docker containers have unrestricted host FS
+  access by default.
+- Distrobox is **not a security sandbox** — it shares your home. Use it for convenience, not for
+  isolating untrusted code (use plain podman with limited mounts for that).
+- Pin image digests in CI for reproducibility; use `:latest` only on dev boxes.
+- Keep secrets out of containers; pass via `systemd-ask-password`/secret service, never env in a
+  committed compose file.
+
+## Why this stack over alternatives
+- **uv** replaces pip-tools/poetry/virtualenv: 10–100× faster, lockfile + project metadata in one,
+  `uvx` for ephemeral tools. Best practice in 2026.
+- **Podman** over Docker: daemonless, rootless, systemd integration, OCI-compatible.
+- **Distrobox** over raw podman for interactive dev: POSIX shell, any OCI image, app/binary export.
+- No Conda/mamba (heavy, conflicts with system Python); no Nix on the host (Shesh keeps `dist-nix/` for
+  upstream parity but does not run it daily).

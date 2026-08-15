@@ -16,3 +16,31 @@
 .content li.task-list-item {
     list-style: none;
 }
+
+/* ---- Page metadata line, emitted by tools/frontmatter_preprocessor.py ---- */
+.page-meta {
+    font-size: 0.82rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    opacity: 0.62;
+    margin: -0.6rem 0 1.8rem;
+    padding-bottom: 0.7rem;
+    border-bottom: 1px solid var(--quote-border, rgba(128, 128, 128, 0.25));
+}
+
+/* Callout blockquotes: Note / Warning / Caution / Historical record */
+blockquote {
+    border-left: 3px solid var(--links, #4183c4);
+    background: var(--quote-bg, rgba(128, 128, 128, 0.06));
+    padding: 0.85rem 1.1rem;
+    margin: 1.3rem 0;
+}
+blockquote > p:first-child { margin-top: 0; }
+blockquote > p:last-child  { margin-bottom: 0; }
+
+/* Tables are used heavily in reference pages; keep them legible. */
+table { width: 100%; }
+table th {
+    text-align: left;
+    font-weight: 600;
+}
