@@ -5,6 +5,7 @@ summary: "Everything Shesh automates is unit-tested, but some things cannot be v
 audience: operator
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # Verification checklist

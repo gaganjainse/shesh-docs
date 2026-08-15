@@ -5,6 +5,7 @@ summary: "Your repo root is GPL-3.0 (matches upstream end-4/dots-hyprland)."
 audience: operator
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # Licences and sources

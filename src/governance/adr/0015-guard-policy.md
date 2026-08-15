@@ -5,6 +5,7 @@ summary: "Route every tool call through the guard."
 audience: maintainer
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # ADR-0015: Route every tool call through the guard

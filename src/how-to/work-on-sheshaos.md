@@ -5,6 +5,7 @@ summary: "SheshAOS is a production-ready, governance-first AI operating environm
 audience: operator
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # Work on SheshAOS

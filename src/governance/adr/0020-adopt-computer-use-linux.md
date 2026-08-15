@@ -5,6 +5,7 @@ summary: "Adopt computer-use-linux for desktop automation."
 audience: maintainer
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # ADR-0020: Adopt computer-use-linux for desktop automation

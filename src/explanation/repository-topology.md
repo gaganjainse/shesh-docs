@@ -5,6 +5,7 @@ summary: "Why Shesh is distributed across many repositories, and how changes mov
 audience: operator
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # Repository topology

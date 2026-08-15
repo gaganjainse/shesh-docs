@@ -5,6 +5,7 @@ summary: "Restrict implementation languages to five."
 audience: maintainer
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # ADR-0001: Restrict implementation languages to five

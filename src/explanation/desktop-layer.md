@@ -5,6 +5,7 @@ summary: "You are NOT using native Hyprland and need to customize it — you alr
 audience: operator
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # The desktop layer

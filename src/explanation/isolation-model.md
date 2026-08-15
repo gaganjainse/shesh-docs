@@ -5,6 +5,7 @@ summary: "Each Python component (shesh- MCP servers, classifier, rag-service) is
 audience: operator
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # Isolation model

@@ -5,6 +5,7 @@ summary: "actions, the kernel validates and records every state change in an app
 audience: operator
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # SheshAOS

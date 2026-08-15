@@ -5,6 +5,7 @@ summary: "An index of task-oriented guides for an installed system."
 audience: operator
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # How-to guides

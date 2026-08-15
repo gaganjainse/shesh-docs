@@ -5,6 +5,7 @@ summary: "The first automation draft used fixed wall-clock timers (Sun 03:00, 08
 audience: operator
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # Ambient behaviour
