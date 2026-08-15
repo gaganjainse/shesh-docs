@@ -5,6 +5,7 @@ summary: "Your laptop has 1 TB NVMe (Gen4) and a free Gen5 M.2 slot."
 audience: operator
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # Disk layout

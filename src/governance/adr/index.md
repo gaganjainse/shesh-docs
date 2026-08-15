@@ -5,6 +5,7 @@ summary: "Keep ADR immutable after Accepted — supersede with new ADR if needed
 audience: maintainer
 status: current
 verified: 2026-08-15
+hardware_verified: 2026-08-15
 ---
 
 # Architecture decision records

@@ -5,6 +5,7 @@ summary: "Run local first, make cloud opt-in."
 audience: maintainer
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # ADR-0005: Run local first, make cloud opt-in

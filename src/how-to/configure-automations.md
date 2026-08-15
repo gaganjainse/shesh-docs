@@ -5,6 +5,7 @@ summary: "/etc/udev/rules.d/99-shesh-power.rules:."
 audience: operator
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # 07

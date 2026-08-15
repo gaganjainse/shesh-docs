@@ -5,6 +5,7 @@ summary: "Federate repositories behind one manifest."
 audience: maintainer
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # ADR-0003: Federate repositories behind one manifest

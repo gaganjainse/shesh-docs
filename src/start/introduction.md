@@ -5,6 +5,7 @@ summary: "What Shesh is, how this book is organised, and where to start reading.
 audience: operator
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # Introduction

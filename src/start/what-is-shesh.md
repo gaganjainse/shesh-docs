@@ -5,6 +5,7 @@ summary: "The scope, design commitments, and non-goals of the Shesh agent system
 audience: operator
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # What Shesh is

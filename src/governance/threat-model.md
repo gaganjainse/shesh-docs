@@ -5,6 +5,7 @@ summary: "Audience: anyone changing security-relevant behavior (Guard policy, MC
 audience: maintainer
 status: current
 verified: 2026-08-15
+hardware_verified: 2026-08-15
 ---
 
 # Threat Model
@@ -22,7 +23,7 @@ those surfaces.
    shesh-secrets; tokens (Telegram bot, Signal account) at runtime.
 4. **The desktop machine itself** — files, camera/mic paths (media, voice),
    displays, GPU.
-5. **CI integrity** — 26 repos auto-merging outputs users run locally.
+5. **CI integrity** — every repository auto-merging outputs users run locally.
 
 ## Actors
 - Malicious/compromised **third-party dependency or Action** (supply chain).
@@ -43,7 +44,7 @@ those surfaces.
 | MCP tool defs | rug pull, poisoning | tool-pin verify at both seams (decorator + middleware middleware middleware), poisoning markers scan | shesh-audit tool_pins.py + tests |
 | MCP tool calls | destructive action | Guard allow/confirm/deny; two-phase confirmations in shesh-brain | gate.py, brain 81777f5 |
 | **Lethal trifecta** | agent with private-data + untrusted-content + external-comms simultaneously | architectural rule below | below |
-| GH Actions | tag rewrite (tj-actions) | all actions SHA-pinned; Dependabot moves pins weekly | 2026-08-13 sweep, 26 repos |
+| GH Actions | tag rewrite (tj-actions) | all actions SHA-pinned; Dependabot moves pins weekly | 2026-08-13 sweep, every repository |
 | GH Actions | fork PR RCE (pull_request_target) | trigger removed fleet-wide; same-repo guard; read-all default tokens; zizmor gate | swarm-auto-merge.yml |
 | GH Actions | injection via PR metadata | fields pass through env, never inline (actionlint-gated) | PR body handling comments |
 | Dependencies | known CVEs | Dependabot alerts + auto-security-fixes + weekly bump PRs (pip+actions); cargo-deny | org API state |

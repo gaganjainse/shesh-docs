@@ -5,6 +5,7 @@ summary: "them."
 audience: operator
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # 06

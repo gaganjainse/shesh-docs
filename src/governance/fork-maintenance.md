@@ -5,6 +5,7 @@ summary: "immutable history: QUERYLOG, ADRs, changelogs, audit snapshots) or a."
 audience: maintainer
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # Fork Gardening Policy (Decision D2

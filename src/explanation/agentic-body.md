@@ -5,6 +5,7 @@ summary: "Why Shesh separates governance, reasoning, and action into three layer
 audience: operator
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # The Agentic Body

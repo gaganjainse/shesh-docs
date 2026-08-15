@@ -5,6 +5,7 @@ summary: "Fold single-module services into shesh-core."
 audience: maintainer
 status: current
 verified: 2026-08-15
+hardware_verified: no
 ---
 
 # ADR-0019: Fold single-module services into shesh-core
