@@ -1,9 +1,6 @@
-# 09 — AI Prompts & Session Playbook
+# 09 — AI Prompts and Session Playbook
 
-> You said you'll build this **with AI assistants**. This doc is copy-paste-ready prompts organized
-> by phase and by situation. The pattern: always (1) point the AI at the exact files, (2) quote the
-> governing rule from `00_INDEX.md`/the relevant doc, (3) demand a diff + tests + checklist update,
-> and (4) require it to verify against the **real hardware facts** (not the wrong numbers).
+This chapter gives you copy-paste-ready prompts for building the Shesh ecosystem with AI assistants. The pattern stays constant: (1) point the AI at the exact files, (2) quote the governing rule from `00-index.md`/the relevant doc, (3) demand a diff + tests + checklist update, and (4) require verification against the real hardware facts (not the wrong numbers).
 
 ---
 
@@ -31,7 +28,7 @@ RULES:
 2. Give minimal, reviewable diffs (unified). Explain each change.
 3. Run/fix `bash -n`, shellcheck, py_compile, ruff, cargo check as applicable.
 4. One logical change per turn. Update docs/SHESH/checklist.md.
-5. If a task is hardware-dependent, write the code AND a verification command; don't claim success
+5. If a task is hardware-dependent, write the code AND a verification command; do not claim success
    without it.
 6. Never hardcode the wrong resolution/VRAM. Source them from profiles/msi-sword-cachyos/.
 7. Destructive operations must be guarded, dry-run capable, and logged.
@@ -42,6 +39,7 @@ RULES:
 ## 1. Phase 0 — bug-fixing prompts
 
 ### 1.1 Fix the `$AUR_HELPER` crash (N-01)
+
 ```
 Read sdata/subcmd-install/2.setups.sh and sdata/lib/functions.sh.
 The line `v "$AUR_HELPER" -S --noconfirm --needed newelle` crashes because AUR_HELPER is never set.
@@ -52,6 +50,7 @@ Show the diff, and add a shellcheck-clean guard. Do not change unrelated lines.
 ```
 
 ### 1.2 Replace `bc` version compare (N-02)
+
 ```
 In sdata/subcmd-install/2.setups.sh, find the `ollama_ver >= 0.32 | bc -l` check. Replace it with
 pure bash (IFS=. read; arithmetic compare). Remove the bc dependency assumption. Ensure it handles
@@ -59,6 +58,7 @@ output like "ollama version is 0.32.6". Show the diff and a quick test with samp
 ```
 
 ### 1.3 Fix MSI DMI detection (BUG-05)
+
 ```
 In setup_mux_switcher, the condition `[[ -f /sys/class/dmi/id/product_name ]] || grep -qi MSI
 sys_vendor` is true on almost every laptop (the file always exists). Change it to actually test
@@ -68,6 +68,7 @@ the detection logic on the target.
 ```
 
 ### 1.4 Power management + ZRAM (HIGH-05)
+
 ```
 Rewrite setup_power_management to: detect total RAM from /proc/meminfo; write
 /etc/systemd/zram-generator.conf with zram-size = ram/2 and zstd (cap 16G); enable
@@ -77,11 +78,12 @@ revert. Show the full function.
 ```
 
 ### 1.5 License, typos, quoting (batch)
+
 ```
 Make these small fixes as separate commits:
-- README.md: change "MIT - Same as upstream" to "GPL-3.0" and fix the license badge.
+- README.md: change "MIT - Same as upstream" to "GPL-3.0-or-later" and fix the license badge.
 - licenses/MIT.txt: fill <YEAR> = 2024-2026, <COPYRIGHT HOLDER> = gaganjainse (or delete it and note
-  the project is GPL-3 only).
+  the project is GPL-3.0-or-later only).
 - options.sh: fix --fisrtrun -> --firstrun in help.
 - 1.deps-router.sh: fix `2>&1>/dev/null` to `>/dev/null 2>&1`.
 - functions.sh backup_clashing_targets: replace `($(ls -A))` with mapfile.
@@ -94,6 +96,7 @@ Run shellcheck after each and report.
 ## 2. Phase 1 — CI prompts
 
 ### 2.1 Expand ShellCheck to all scripts
+
 ```
 Update .github/workflows/shellcheck.yml to find ALL shell scripts in the repo (setup, diagnose,
 test.sh, sdata/**/*.sh, tools/**/*.sh) excluding dots/ and .git/, and run shellcheck -x -s bash
@@ -102,6 +105,7 @@ run it locally equivalent and show any new findings. Do not weaken checks to mak
 ```
 
 ### 2.2 Arch container CI
+
 ```
 Add .github/workflows/arch-test.yml using container archlinux:latest, install git bash shellcheck,
 pacman -Syu, run bash -n on scripts, shellcheck, ./setup --help, and bash diagnose. It must NOT do
@@ -113,6 +117,7 @@ a real install. Keep it fast (<3 min). Provide the YAML.
 ## 3. Phase 2 — refactor prompts
 
 ### 3.1 Canonical systemd units
+
 ```
 There are 3 sources of truth for systemd units: here-docs in 2.setups.sh, here-docs in
 subcmd-smart-organizer/0.run.sh, and static files in tools/*/. Audit them, produce ONE canonical
@@ -122,6 +127,7 @@ List every file changed.
 ```
 
 ### 3.2 Real uninstall (HIGH-06 / N-06)
+
 ```
 Implement sdata/subcmd-uninstall/2.undo-setups.sh for real: revert mkinitcpio MODULES (only the
 modules we added, identified by a marker), remove our udev rules and /usr/local/bin/nvidia-run,
@@ -136,10 +142,10 @@ warnings that bootloader cmdline needs manual editing. Mirror the structure of 2
 
 ```
 Create profiles/msi-sword-cachyos/ containing profile.conf (the canonical hardware values from
-04_DEVICE_PROFILE.md), mkinitcpio.fragment, kernel-cmdline.txt, sysctl/99-shesh.conf,
+04-device-profile.md), mkinitcpio.fragment, kernel-cmdline.txt, sysctl/99-shesh.conf,
 udev/60-ioschedulers.rules, and a hypr/custom snippet that sets monitor eDP-1,1920x1200@144 and
 battery/AC visual presets. Then wire setup to apply this profile when product_name matches "Sword 16
-HX". Every file must have a comment pointing back to docs/SHESH/04_DEVICE_PROFILE.md. Provide
+HX". Every file must have a comment pointing back to docs/SHESH/04-device-profile.md. Provide
 verification commands for display, GPU renderer, zram, scheduler.
 ```
 
@@ -148,7 +154,7 @@ verification commands for display, GPU renderer, zram, scheduler.
 ## 5. Phase 4 — organizer prompts
 
 ```
-Implement smart-organizer v2 per docs/SHESH/05_SMART_ORGANIZER_V2.md:
+Implement smart-organizer v2 per docs/SHESH/05-smart-organizer.md:
 1. tools/smart-organizer/watcher-rs/ (Cargo.toml + src/main.rs) as specified, with debounce and
    JSON-lines output. It must build with cargo build --release.
 2. classifier.py reading JSON from stdin, deterministic EXT_MAP/NAME_PATTERNS first, optional phi4-mini
@@ -165,10 +171,11 @@ Show each file and the test output. Do not call the LLM in tests (mock it).
 ## 6. Phase 6 — Shesh agent prompts
 
 ### 6.1 MCP servers
+
 ```
 Fix tools/shesh: (a) correct system_control.py (fix the `decoration` typo, add get_system_status,
 trigger_backup, set_power_profile); (b) create hyprland_control.py from
-docs/SHESH/06_SHESH_AGENT.md section 5; (c) create smart_organizer.py with organize/last_moves/
+docs/SHESH/06-shesh-agent.md section 5; (c) create smart_organizer.py with organize/last_moves/
 undo_last/pause/resume; (d) change setup_ai_stack to iterate actual *.py files and create stdio units
 only for those (fix N-04); (e) replace the bogus http://localhost:87xx MCP URLs in
 dots/.config/newelle/config.toml with stdio command entries. Use fastmcp, stdio transport, and a
@@ -176,6 +183,7 @@ shared audit-log helper. Provide py_compile + a manual MCP smoke test.
 ```
 
 ### 6.2 Audit log + policy
+
 ```
 Create tools/shesh/shesh_audit.py: an append-only JSONL + SQLite writer with a chained SHA-256 hash
 (prev_hash field) like an event log, and policy.toml loading (confirm/deny/auto tool lists + denied
@@ -185,36 +193,40 @@ chain.
 ```
 
 ### 6.3 Quickshell overlay
+
 ```
 Create dots/.config/quickshell/ii/shesh/SheshOverlay.qml: a small Material-You-colored pill (reuse
 end-4's color variables) bottom-right showing idle/listening/thinking/speaking states. It should read
-state from a small file/socket the Newelle bridge updates (do not assume an API that doesn't exist;
+state from a small file/socket the Newelle bridge updates (do not assume an API that does not exist;
 propose the minimal bridge). Keep it <150 lines, no heavy dependencies. Note it must not regress
 performance at 144Hz.
 ```
 
 ---
 
-## 7. Situational prompts ("what to do when…")
+## 7. Situational prompts ("what to do when...")
 
-### 7.1 An AI gives you code you're unsure about
+### 7.1 An AI gives you code you are unsure about
+
 ```
 You are a skeptical reviewer. Here is a patch <paste>. Verify: (1) does it match the verified
-hardware/OS facts in docs/SHESH/00_INDEX.md? (2) does it introduce undefined vars, missing quoting,
-or unguarded rm? (3) is it idempotent? (4) does it duplicate something already present? (5) what's
+hardware/OS facts in docs/SHESH/00-index.md? (2) does it introduce undefined vars, missing quoting,
+or unguarded rm? (3) is it idempotent? (4) does it duplicate something already present? (5) what is
 the exact command to test it on CachyOS? List problems by severity and give corrected diffs.
 ```
 
 ### 7.2 After a failed install
+
 ```
 Read the error below <paste>. Determine which phase/script failed, find the root cause in the repo
 (not just the symptom), propose a minimal fix, and a command to resume from where it stopped without
-re-running completed steps. If it's a known issue from docs/SHESH/01_AUDIT.md, cite its ID.
+re-running completed steps. If it is a known issue from docs/SHESH/01-audit.md, cite its ID.
 ```
 
 ### 7.3 Before rebasing on upstream end-4
+
 ```
-I want to merge upstream end-4/dots-hyprland main into my fork. List the files/areas I've diverged
+I want to merge upstream end-4/dots-hyprland main into my fork. List the files/areas I have diverged
 in (sdata installer additions, tools/, dots/.config/newelle, dots/.config/shesh, profiles/) and give
 a safe rebase strategy: commit my changes, fetch upstream, merge with strategy-option, and resolve
 conflicts preferring upstream for dots/ shell/Quickshell but keeping my sdata/tools/profiles. Provide
@@ -222,6 +234,7 @@ exact git commands and a checklist to test after merge.
 ```
 
 ### 7.4 A performance or battery regression
+
 ```
 Diagnose a <battery/performance/lag> regression on this MSI + CachyOS + Hyprland + NVIDIA hybrid
 setup. Give ordered diagnostic commands (powerprofilesctl, nvidia-smi, hyprctl systeminfo,
@@ -231,6 +244,7 @@ Apply only the safest first; verify with <command> before/after.
 ```
 
 ### 7.5 "Make it look even better" without losing speed
+
 ```
 Propose visual polish for end-4 Quickshell on a 1920x1200@144, Intel iGPU + RTX 4050 setup:
 animation curves, blur passes, shadows, rounding, font (Google Sans Flex is present), and wallpaper
@@ -240,18 +254,20 @@ the iGPU or hurts battery. Give the exact custom/*.lua / QML snippets.
 ```
 
 ### 7.6 Adding a new automation
+
 ```
-I want to automate: <describe>. Following docs/SHESH/07_AUTOMATIONS.md conventions, produce a
+I want to automate: <describe>. Following docs/SHESH/07-automations.md conventions, produce a
 canonical .service + .timer under tools/<name>/units/, the script under tools/<name>/, an install
 snippet for setup, an uninstall reversal, an audit-log append, and a dry-run flag. It must not run
 destructive actions without asking for the first 7 days. Show the file tree and diffs.
 ```
 
 ### 7.7 Writing a weekly progress / resume prompt
+
 ```
-Read docs/SHESH/checklist.md and git log since last week. Summarize what's done, what's next from
-02_ROADMAP.md, any blockers, and produce the next 5 ordered tasks as copy-paste prompts in the style
-of this file. Keep me moving one phase at a time and don't let scope creep.
+Read docs/SHESH/checklist.md and git log since last week. Summarize what is done, what is next from
+02-roadmap.md, any blockers, and produce the next 5 ordered tasks as copy-paste prompts in the style
+of this file. Keep me moving one phase at a time and do not let scope creep.
 ```
 
 ---
@@ -260,8 +276,7 @@ of this file. Keep me moving one phase at a time and don't let scope creep.
 
 - One task per prompt; batch only the trivially-related (e.g., typo fixes).
 - Always paste the exact error and the relevant file path(s).
-- After each AI change: read the diff before applying; run the verification command; tick the
-  checklist; commit with a Conventional Commit (`fix:`, `feat:`, `docs:`, `chore(ci):`).
-- If an AI contradicts `00_INDEX.md` hardware facts, it's wrong — correct it.
-- Prefer asking it to *show* the plan first for anything touching bootloader/NVIDIA/partitioning.
+- After each AI change: read the diff before applying; run the verification command; tick the checklist; commit with a Conventional Commit (`fix:`, `feat:`, `docs:`, `chore(ci):`).
+- If an AI contradicts `00-index.md` hardware facts, it is wrong — correct it.
+- Prefer asking it to show the plan first for anything touching bootloader/NVIDIA/partitioning.
 - Keep `docs/SHESH/` as the spec of record; if reality changes, update the doc in the same commit.

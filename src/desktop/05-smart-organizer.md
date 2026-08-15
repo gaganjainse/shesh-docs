@@ -1,9 +1,6 @@
 # 05 — Smart-Organizer v2
 
-> Goal: a **hands-off** file organizer that reacts within a minute of a file landing in
-> Downloads/Desktop/Inbox, classifies it with deterministic rules first and a small local LLM for
-> ambiguous cases, **never deletes anything you didn't approve**, and can undo every move. It is the
-> first tool Shesh can drive by voice.
+This chapter specifies a hands-off file organizer that reacts within a minute of a file landing in Downloads/Desktop/Inbox, classifies it with deterministic rules first and a small local LLM for ambiguous cases, never deletes anything you did not approve, and can undo every move. It is the first tool Shesh can drive by voice.
 
 ---
 
@@ -15,31 +12,31 @@
  │ inotify, debounce 30s   │                         │ rules → LLM → vision  │
  └─────────────────────────┘                         └──────────┬───────────┘
    watches: Downloads, Desk, Documents/Inbox, Media/Screenshots  │ decision JSON
-                                                                 ▼
-                                              ┌──────────────────────────────┐
-                                              │ smart-organizer.sh (apply)   │
-                                              │ safety → trash/undo → move   │
-                                              │ → notify → audit log → MCP   │
-                                              └──────────────────────────────┘
+                                                                  ▼
+                                               ┌──────────────────────────────┐
+                                               │ smart-organizer.sh (apply)   │
+                                               │ safety → trash/undo → move   │
+                                               │ → notify → audit log → MCP   │
+                                               └──────────────────────────────┘
 ```
 
 - **Rust watcher** is tiny (~3 MB), zero Python startup, exact event semantics.
-- **Python classifier** uses deterministic rules (instant, private, no model) for ~90% of files;
-  only calls Ollama (`phi4-mini`) for unknown extensions/content, and `moondream2` for images.
+- **Python classifier** uses deterministic rules (instant, private, no model) for about 90% of files; only calls Ollama (`phi4-mini`) for unknown extensions/content, and `moondream2` for images.
 - **Bash apply layer** is the only thing that touches the filesystem, so safety lives in one place.
-- Everything writes to one **audit/undo log** (SQLite + JSONL under `~/.local/share/smart-organizer/`).
+- Everything writes to one audit/undo log (SQLite + JSONL under `~/.local/share/smart-organizer/`).
 
 ---
 
 ## 2. The Rust watcher (`tools/smart-organizer/watcher-rs/`)
 
 ### `Cargo.toml`
+
 ```toml
 [package]
 name = "sm-watcher"
 version = "0.2.0"
 edition = "2021"
-license = "GPL-3.0-only"
+license = "GPL-3.0-or-later"
 
 [dependencies]
 notify = "6"
@@ -55,6 +52,7 @@ strip = true
 ```
 
 ### `src/main.rs`
+
 ```rust
 use notify::{Event, EventKind, RecursiveMode, Result, Watcher};
 use serde::Serialize;
@@ -114,6 +112,7 @@ fn main() -> Result<()> {
     }
 }
 ```
+
 Build with `cargo build --release`; install `target/release/sm-watcher` to `~/.local/bin`.
 
 ---
@@ -153,6 +152,7 @@ EXT_MAP = {
     ".gguf": "AI/Models", ".safetensors": "AI/Models", ".pt": "AI/Models", ".onnx": "AI/Models",
     ".jsonl": "AI/Datasets", ".parquet": "AI/Datasets",
 }
+
 NAME_PATTERNS = [
     (re.compile(r"(?i)invoice|receipt|bill|statement"), "Documents/Personal/Finance"),
     (re.compile(r"(?i)resume|cv\b|curriculum"), "Documents/Personal"),
@@ -175,7 +175,7 @@ def decide(path: str) -> dict:
         return {"src": path, "dest": str(HOME / EXT_MAP[ext]), "method": "rule", "conf": 0.85}
     if p.suffix.lower() in EXT_MAP:
         return {"src": path, "dest": str(HOME / EXT_MAP[p.suffix.lower()]), "method": "rule", "conf": 0.8}
-    # image with unknown ext → vision
+    # image with unknown ext -> vision
     mime, _ = mimetypes.guess_type(str(p))
     if mime and mime.startswith("image/"):
         return _vision(p)
@@ -212,24 +212,23 @@ if __name__ == "__main__":
             print(json.dumps({"err": str(e)}), file=sys.stderr, flush=True)
 ```
 
-> Keep the LLM call **optional and timeout-bounded** so the organizer never stalls when Ollama is
-> busy/off. Rules cover almost everything; the LLM is a tiebreaker.
+> **Note —** Keep the LLM call optional and timeout-bounded so the organizer never stalls when Ollama is busy or off. Rules cover almost everything; the LLM is a tiebreaker.
 
 ---
 
 ## 4. The apply layer (Bash) — the only mover
 
 `smart-organizer.sh apply` reads decisions from stdin and:
+
 1. Runs `is_protected` (centralized, deduped patterns) — skip if protected.
-2. If `conf < 0.7` → `notify-send` with **Move / Leave / Always** actions (via `notify-send -A`),
-   don't move until the user picks.
+2. If `conf < 0.7` to `notify-send` with Move / Leave / Always actions (via `notify-send -A`), does not move until the user picks.
 3. Creates the destination, handles name collisions (`name (1).ext`).
-4. Records the move in `~/.local/share/smart-organizer/undo/YYYYMMDD.jsonl`:
-   `{"ts":..,"from":..,"to":..,"method":..}` and inserts a row in `history.db`.
-5. Uses **`gio trash`** for any deletes/cleanups (never `rm` on user files).
+4. Records the move in `~/.local/share/smart-organizer/undo/YYYYMMDD.jsonl`: `{"ts":..,"from":..,"to":..,"method":..}` and inserts a row in `history.db`.
+5. Uses `gio trash` for any deletes/cleanups (never `rm` on user files).
 6. Emits a Quickshell notification (`notify-send -a SmartOrganizer ...`) and a signal Shesh can read.
 
 Canonical, deduplicated safety patterns (`tools/smart-organizer/lib/safety.sh`):
+
 ```bash
 PROTECTED_FILE_PATTERNS=(
   "*.key" "*.pem" "*.secret" "*.password" "*.kdbx" "*.kdb"
@@ -238,14 +237,15 @@ PROTECTED_FILE_PATTERNS=(
   "*id_rsa*" "*id_ed25519*" "*.env" "*.env.*"
 )
 ```
-Remove the duplicate `*credentials*` and the misplaced `*backup*` (backups aren't always protected;
-that decision belongs in policy, not a glob).
+
+Remove the duplicate `*credentials*` and the misplaced `*backup*` (backups are not always protected; that decision belongs in policy, not a glob).
 
 ---
 
 ## 5. Rules file (user-editable, overrides everything)
 
 `~/.config/smart-organizer/rules.toml`:
+
 ```toml
 # Higher priority = checked first
 [[rule]]
@@ -267,14 +267,15 @@ match_ext = ".torrent"
 dest = "~/Downloads/Torrents"
 priority = 80
 ```
-The classifier loads these **before** EXT_MAP/LLM so your rules always win, and "Always do this"
-notifications append new rules here.
+
+The classifier loads these before EXT_MAP/LLM so your rules always win, and "Always do this" notifications append new rules here.
 
 ---
 
 ## 6. systemd units (canonical, no here-docs)
 
 `tools/smart-organizer/units/smart-organizer-watch.service`:
+
 ```ini
 [Unit]
 Description=Smart Organizer real-time watcher
@@ -296,15 +297,15 @@ IOSchedulingClass=idle
 [Install]
 WantedBy=graphical-session.target
 ```
-`smart-organizer-daily.timer` runs a full sweep at 03:00 on Sundays (uses the same classifier in a
-`--once --all` mode). The watch service and timer are **the only two units**; delete the three
-conflicting variants currently in the repo.
+
+`smart-organizer-daily.timer` runs a full sweep at 03:00 on Sundays (uses the same classifier in a `--once --all` mode). The watch service and timer are the only two units; delete the three conflicting variants currently in the repo.
 
 ---
 
 ## 7. MCP surface for Shesh
 
 `tools/shesh/mcp_servers/smart_organizer.py` (FastMCP stdio) exposes:
+
 - `organize(path="~/Downloads", dry_run=False)` — trigger a sweep.
 - `last_moves(n=10)` — recent activity from `history.db`.
 - `undo_last()` — reverse the most recent batch (reads undo JSONL, moves files back).
@@ -322,12 +323,11 @@ This makes "Hey Shesh, organize my downloads and undo the last thing" work by vo
 4. **Low confidence asks first** (notification action); high confidence acts and tells you.
 5. **Dry-run is the default on first run** for a week (configurable), so you build trust.
 6. **No network calls except local Ollama** — no cloud, no telemetry.
-7. **Idempotent** — re-running doesn't duplicate or move already-organized files.
+7. **Idempotent** — re-running does not duplicate or move already-organized files.
 
 ## 9. Tests
 
 - Unit: `classifier.py` against a fixture set of 100 real-ish filenames (assert destinations).
 - Safety: a test that every protected path is refused.
-- Integration (container/tmp HOME): drop files in a fake `Downloads`, run the pipeline, assert moves
-  and undo round-trips.
+- Integration (container/tmp HOME): drop files in a fake `Downloads`, run the pipeline, assert moves and undo round-trips.
 - Property: for any input, output path is always under `$HOME` and never a protected prefix.

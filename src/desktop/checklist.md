@@ -1,27 +1,29 @@
 # Shesh — Implementation Checklist
 
-Tick these as you go. IDs match `01_AUDIT.md` and `02_ROADMAP.md`.
+Tick these as you go. IDs match `01-audit.md` and `02-roadmap.md`.
 
 ## Phase 0 — Stop the bleeding (before first install)
-- [ ] N-01 `get_aur_helper()` defined; `AUR_HELPER` never empty (✅ code added)
-- [ ] N-02 `bc` removed; pure-bash version compare (✅ code added)
-- [ ] BUG-05 MSI DMI tests content with OR (✅ code added)
-- [ ] HIGH-05 ZRAM detects RAM, writes config (✅ code added)
-- [ ] N-09 `bash -n` clean across `sdata/` (✅ verified for changed files)
-- [ ] N-04 MCP install iterates real `*.py` (✅ code added)
+
+- [ ] N-01 `get_aur_helper()` defined; `AUR_HELPER` never empty (Done — code added)
+- [ ] N-02 `bc` removed; pure-bash version compare (Done — code added)
+- [ ] BUG-05 MSI DMI tests content with OR (Done — code added)
+- [ ] HIGH-05 ZRAM detects RAM, writes config (Done — code added)
+- [ ] N-09 `bash -n` clean across `sdata/` (Done — verified for changed files)
+- [ ] N-04 MCP install iterates real `*.py` (Done — code added)
 - [ ] BUG-06 mkinitcpio MODULES idempotent (review sed; use dedupe routine from 04)
-- [ ] N-07 NVIDIA tail message fixed (✅ code added)
-- [ ] MED-16 README license → GPL-3 (✅ code added)
-- [ ] MED-03 `--fisrtrun` typo (✅ code added)
-- [ ] MED-17 redirect order fixed (✅ code added)
-- [ ] MED-07 safety.sh patterns deduped (✅ code added)
-- [ ] HIGH-01/02 create `tools/lib/common.sh` + source (✅ common.sh added; still wire tools)
+- [ ] N-07 NVIDIA tail message fixed (Done — code added)
+- [ ] MED-16 README license to GPL-3.0-or-later (Done — code added)
+- [ ] MED-03 `--fisrtrun` typo (Done — code added)
+- [ ] MED-17 redirect order fixed (Done — code added)
+- [ ] MED-07 safety.sh patterns deduped (Done — code added)
+- [ ] HIGH-01/02 create `tools/lib/common.sh` + source (Done — common.sh added; still wire tools)
 - [ ] MED-10/18 quote vars + subshell font `cd`
 - [ ] MED-19 replace `ls` arrays with mapfile
 - [ ] HIGH-08 bootstrap `--skip-*` flags + generic framing
-- [ ] NEW-A `profiles/msi-sword-cachyos/` with correct 1920×1200/6GB values (✅ added)
+- [ ] NEW-A `profiles/msi-sword-cachyos/` with correct 1920x1200/6GB values (Done — added)
 
 ## Phase 1 — CI gates
+
 - [ ] ShellCheck lints ALL scripts (not just tools/)
 - [ ] Arch container CI (`archlinux:latest`)
 - [ ] Python `py_compile` + ruff for tools/shesh
@@ -30,34 +32,38 @@ Tick these as you go. IDs match `01_AUDIT.md` and `02_ROADMAP.md`.
 - [ ] Branch protection on main
 
 ## Phase 2 — Structural
+
 - [ ] Functions defined before calls in 2.setups.sh
-- [ ] Canonical units under tools/*/units/; delete here-docs (✅ units added; migrate setup)
+- [ ] Canonical units under tools/*/units/; delete here-docs (Done — units added; migrate setup)
 - [ ] subcmd-smart-organizer delegates to tools/
-- [ ] 2.undo-setups.sh implemented (✅ added; test on hardware)
+- [ ] 2.undo-setups.sh implemented (Done — added; test on hardware)
 - [ ] consolidate .updateignore
 - [ ] CONTRIBUTING.md
 - [ ] keep dist-fedora/gentoo/nix but skip via --device
 
 ## Phase 3 — Device tuning
+
 - [ ] eDP-1 1920x1200@144 in custom/general.lua
 - [ ] NVIDIA modeset + suspend services
 - [ ] iGPU compositor verified; nvidia-run works
 - [ ] sysctl + kyber + BBR applied
 - [ ] PipeWire quantum 256
 - [ ] msi-mux-switcher improved (envycontrol, JSON status, no false MUX claim)
-- [ ] on-device verification commands in 04 §7 all pass
+- [ ] on-device verification commands in 04 Section 7 all pass
 
 ## Phase 4 — Smart-organizer v2
-- [ ] watcher-rs builds and emits JSON (✅ code added; cargo build on device)
-- [ ] classifier.py rules+LLM (✅ added; test with fixtures)
+
+- [ ] watcher-rs builds and emits JSON (Done — code added; cargo build on device)
+- [ ] classifier.py rules+LLM (Done — added; test with fixtures)
 - [ ] apply path reads decisions, gio trash, undo log, SQLite
 - [ ] rules.toml + low-confidence notifications
-- [ ] units installed (✅ added)
-- [ ] MCP organize/last_moves/undo/pause/resume (✅ added)
+- [ ] units installed (Done — added)
+- [ ] MCP organize/last_moves/undo/pause/resume (Done — added)
 - [ ] tests (classifier fixtures, safety refusals, undo round-trip)
 
 ## Phase 5 — Automations
-- [ ] udev power script + rules (✅ added)
+
+- [ ] udev power script + rules (Done — added)
 - [ ] real restic backup + verify (no --dry-run)
 - [ ] maintenance timer
 - [ ] update-notify (never auto -Syu)
@@ -65,15 +71,17 @@ Tick these as you go. IDs match `01_AUDIT.md` and `02_ROADMAP.md`.
 - [ ] wallpaper/swww + matugen (optional)
 
 ## Phase 6 — Shesh agent
+
 - [ ] Newelle 1.4.5 native + Ollama models
-- [ ] 3 MCP servers (✅ system/smart-organizer/hyprland added; test in Newelle)
-- [ ] config.toml uses stdio (✅ fixed)
+- [ ] 3 MCP servers (Done — system/smart-organizer/hyprland added; test in Newelle)
+- [ ] config.toml uses stdio (Done — fixed)
 - [ ] shesh audit log + policy.toml + `shesh` CLI
 - [ ] Quickshell overlay
 - [ ] Newelle starts on login (user service)
-- [ ] voice acceptance test in 06 §10 passes offline
+- [ ] voice acceptance test in 06 Section 10 passes offline
 
 ## Phase 7 — Convergence
+
 - [ ] shesh-memory = local rag-service over Notes/Docs/Projects
 - [ ] SheshAOS event-store bridge for audit log
 - [ ] eBPF telemetry into shesh-health

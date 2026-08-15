@@ -1,133 +1,162 @@
-# Travel Mode — 1 Chat Open on Mobile, 1-2 Days No Laptop
+# Travel Mode — One Tab on a Phone, Two Days Without a Laptop
 
-> You are traveling, no laptop, only phone, can keep 1 Arena chat (orchestrator) open, maybe 2-3 workers in sidebar as long as arena.ai website not closed. You want true hours unattended.
+Away from the laptop with only a phone, a browser tab is the weakest link in the whole system:
+mobile operating systems suspend background tabs within a minute. This chapter explains honestly
+what keeps running under those conditions, what does not, and how to shift the long hours onto
+GitHub Actions instead.
 
-## What actually keeps working when you keep arena.ai open on phone?
+## Summary
 
-### Arena Agent Mode sidebar — truth
+- Agent sessions in a browser are not daemons. They advance only while the tab is alive, so a
+  locked phone stalls them.
+- A sidebar full of worker tabs is the least reliable arrangement on mobile; one orchestrator tab
+  is more useful than five stalled ones.
+- GitHub Actions runs on GitHub's infrastructure and is the only component that genuinely runs
+  unattended for days.
+- Three workflows cover continuous integration, auto-merge of swarm branches, and an hourly
+  janitor pass.
+- The practical pattern is to push branches before leaving, then let auto-merge and the janitor
+  work through them.
 
-- **Arena Agent Mode chats are NOT independent daemons.** Each chat is a server-side LLM session that makes tool calls via your browser tab's WebSocket. When your phone screen locks or browser goes background, iOS/Android throttles timers and may freeze the tab after ~30-60 sec. Safari on iPhone is aggressive — background tabs suspended quickly. Chrome Android is slightly better but still throttles setInterval.
-- **What “still keep working in sidebar” means:** Arena UI shows multiple chats in left sidebar. If you opened 5 chats earlier on laptop and left arena.ai website open on phone, those chat sessions **still exist server-side**, but their Python loops (`while True: sleep(45)`) **only progress when the LLM makes the next tool call**. The LLM only makes next tool call when the previous tool returned AND the model decides to continue. If your phone background-throttles the WebSocket, the tool return may be delayed, and the model may pause.
-- **Our tests in this repo:** Workers use `time.sleep(45)` inside Python loop + `git pull --rebase`. If browser freezes, `sh()` call hangs waiting for subprocess, LLM waits, and after ~2-5 min Arena server may mark session as idle and stop auto-advancing. You will see “Continue” button appear — you must tap it on phone to resume. So **sidebar does NOT guarantee 1-2 days unattended**.
-- **Orchestrator alone on mobile is okay:** It polls every 60 sec, but if you keep that one tab active (screen on, tap Continue when needed), it will seed Issues and heartbeat. That's better than 5 tabs fighting for background time.
+## What actually keeps running on a phone
 
-### True hours unattended: GitHub Actions
+Each agent chat is a server-side session that makes its tool calls through a WebSocket owned by
+your browser tab. That distinction is the whole story: the session's state lives on a server, but
+its forward motion depends on a socket in a tab that a mobile operating system is free to freeze.
 
-GitHub Actions runs on GitHub's infra (Ubuntu runners), **not in your browser**. It can run for hours, even days, without your phone.
+In practice, iOS and Android throttle timers and may suspend the tab within 30 to 60 seconds of
+the screen locking. Safari on iPhone is the most aggressive; Chrome on Android is somewhat better
+but still throttles interval timers.
 
-We have 3 Actions now:
+The sidebar creates a misleading impression. Chats opened earlier on a laptop still exist
+server-side and still appear in the list, but their Python loops — `while True: sleep(45)` —
+advance only when the model issues its next tool call, and the model issues that call only after
+the previous tool returns. Throttle the socket and the return is delayed; delay it long enough
+and the model simply pauses.
 
-| Action | File | Trigger | What it does for you while traveling | Needs PAT? |
-|--------|------|---------|---------------------------------------|------------|
-| **CI** | `ci.yml` | push to main/canary/devel, PR | ruff + pytest 30 + license + locks deterministic + clean check | No, uses `GITHUB_TOKEN` |
-| **Swarm Auto-Merge** | `swarm-auto-merge.yml` | PR from `swarm/*` branches | If PR from worker (e.g., `swarm/issue-5/agent-X`) has green gates, auto-approves + squash merges + deletes branch + comments issue + labels `swarm:done` | No, `GITHUB_TOKEN` |
-| **Swarm Scheduled Janitor** | `swarm-scheduled.yml` **NEW** | `cron: 0 * * * *` every hour + manual `workflow_dispatch` button | While you travel, every hour: resolve locks, sync `docs/components/` from `src/` if cached, ruff+pytest+license, seed GitHub Issues from TODO.md ⬜ (creates Issues with labels `swarm, swarm:pending, component:shesh-memory, P0`), re-queue stale claims >10 min no heartbeat, push changes to main | No, `GITHUB_TOKEN` |
+Workers in this repository make that visible. They call `time.sleep(45)` inside a loop and run
+`git pull --rebase`; if the browser freezes, the shell call hangs waiting on its subprocess, the
+model waits with it, and after roughly two to five minutes the session is marked idle and stops
+advancing on its own. A "Continue" button appears, and someone has to tap it.
 
-**Janitor is true unattended for 1-2 days:**
+> **Warning —** A sidebar of worker tabs does not provide one or two days of unattended work. Do
+> not plan around it.
 
-- You go to https://github.com/gaganjainse/shesh-ecosystem/actions → click `Swarm Scheduled Janitor` → `Run workflow` → it runs even if your phone sleeps.
-- Or it runs automatically every hour at minute 0 UTC.
-- It uses `GITHUB_TOKEN` (auto-provided by GitHub, no PAT needed), has `contents:write, issues:write, pull-requests:write`.
-- It does NOT do LLM coding (needs API key), but it does janitor work: keeps locks deterministic, docs sync, re-queues dead workers, seeds Issues so workers have work when you wake up.
-- When you open orchestrator tab on phone, you see new Issues seeded by janitor overnight.
+One orchestrator tab is a different matter. It polls every 60 seconds, and if you keep that
+single tab in the foreground and tap Continue when asked, it will keep seeding issues and
+sending heartbeats. That is strictly better than five tabs competing for background time.
 
-### What about pushing a branch `swarm/issue-N/agent-id` and letting Action merge?
+## Where the unattended hours actually live
 
-This is the pattern for **true hours unattended coding** without keeping Arena tabs open:
+GitHub Actions runs on GitHub's own Ubuntu runners, not in your browser. It can run for hours or
+days with the phone switched off entirely. Three workflows carry the load.
 
-1. **Before you travel** (on laptop or one-time in Arena): Worker (you or agent) does:
-   ```bash
-   git checkout -b swarm/issue-42/test-agent
-   # edit src/shesh-memory/... or docs/...
-   make check  # gate green
-   git add -A && git commit -m "feat(shesh-memory): implement ..."
-   git push origin swarm/issue-42/test-agent
-   gh pr create --title "[swarm] issue 42" --body "Closes #42" --base main --head swarm/issue-42/test-agent --label swarm
-   ```
+| Workflow | Trigger | What it does while you travel | Token |
+|---|---|---|---|
+| `ci.yml` | Push to main, canary, devel; pull requests | ruff, 30 tests, license gate, deterministic locks, clean check | `GITHUB_TOKEN` |
+| `swarm-auto-merge.yml` | Pull requests from `swarm/*` branches | Approves and squash-merges green worker PRs, deletes the branch, comments the issue, labels `swarm:done` | `GITHUB_TOKEN` |
+| `swarm-scheduled.yml` | `cron: 0 * * * *`, plus manual dispatch | Resolves locks, syncs `docs/components/` from `src/`, runs ruff, pytest, and the license gate, seeds issues from `TODO.md`, requeues claims stale beyond 10 minutes, pushes changes | `GITHUB_TOKEN` |
 
-2. **Then close laptop.** GitHub Action `swarm-auto-merge.yml` triggers on that PR (because `head_ref` starts with `swarm/`).
-   - It checks out that branch on GitHub runner (not your laptop)
-   - Runs `make check` (ruff, pytest, license, locks, component tests)
-   - If green, it **auto-merges** via `gh pr merge --squash --auto --delete-branch`
-   - Comments linked issue #42, labels `swarm:done`
+The janitor is the piece that genuinely runs for one or two days unattended. It needs no personal
+access token — `GITHUB_TOKEN` is provided automatically with `contents: write`, `issues: write`,
+and `pull-requests: write` — and it runs on schedule at minute zero of every hour, or on demand
+from the Actions tab. It does no model-driven coding, but it keeps locks deterministic, syncs
+docs, requeues dead workers, and seeds issues so there is work waiting when you wake up.
 
-3. Result: Your branch merged to main while you were traveling, **without any Arena tab open**. The Action ran for ~3-5 min on GitHub infra, not your phone.
+## The pattern: push branches, then close the laptop
 
-**Limitation:** Step 1 still needs someone to push branch. Janitor Action cannot write code without LLM. So for 1-2 days traveling, best is:
+The reliable way to get merges while travelling is to move the work onto GitHub before you leave
+and let the workflows finish it.
 
-- **Day 0 (before travel):** In Arena, run orchestrator → seed Issues → run 1-2 workers to push a few branches + PRs (e.g., 5 PRs for easy docs/tasks)
-- **Days 1-2 traveling:** Janitor Action every hour keeps repo healthy + auto-merges those PRs if gates green. Orchestrator tab on phone (one tab) seeds more Issues when you tap Continue occasionally.
-- **When back:** `git pull` — all janitor + auto-merged PRs are in main.
+```bash
+git checkout -b swarm/issue-42/test-agent
+# edit src/shesh-memory/... or docs/...
+make check
+git add -A && git commit -m "feat(shesh-memory): implement ..."
+git push origin swarm/issue-42/test-agent
+gh pr create --title "[swarm] issue 42" --body "Closes #42" \
+  --base main --head swarm/issue-42/test-agent --label swarm
+```
 
-### Scheduled Supervise Loop — can it run for hours?
+Because the head branch starts with `swarm/`, `swarm-auto-merge.yml` triggers on that pull
+request. It checks the branch out on a GitHub runner, runs `make check` — ruff, pytest, license,
+locks, and component tests — and if everything is green it merges with
+`gh pr merge --squash --auto --delete-branch`, comments on issue 42, and labels it `swarm:done`.
+The run takes about three to five minutes on GitHub's infrastructure, with no tab open anywhere.
 
-You asked: `scripts/supervise.sh --loop`
+The limitation is honest: someone still has to push the branch. A janitor pass cannot write code
+on its own. So the travel plan divides by day.
 
-- **In Arena:** `supervise.sh --loop` calls `next_todo()` from TODO.md ⬜, then expects agent to implement, then runs gates, commits. It **requires LLM** to implement. In Arena, it can loop as long as agent keeps calling tools, but will hit hop after 60 min.
-- **In GitHub Action:** We could run `supervise.sh --loop` in Action, but Action has no LLM to implement code — it would just loop picking TODO and failing to implement. So we made janitor Action do **non-LLM janitor tasks** (locks, docs sync, re-queue) which CAN run for hours unattended.
+| Phase | What happens |
+|---|---|
+| Day 0, before leaving | Run the orchestrator, seed issues, and have one or two workers push a handful of branches and pull requests |
+| Days 1–2, travelling | The hourly janitor keeps the repository healthy; auto-merge lands the pushed pull requests as gates pass; one orchestrator tab seeds more issues when you tap Continue |
+| On return | `git pull` — every janitor and auto-merge result is already on `main` |
 
-If you want true LLM coding for hours in GitHub Actions, you need to add an LLM API key secret (e.g., `OPENAI_API_KEY`) and a script that calls LLM to implement tasks — that's possible but not yet built. I can add `tools/llm_worker.py` that calls OpenAI/Anthropic/Ollama API to implement TODO, then Action could run it hourly.
+## Why the supervise loop is not the answer
 
-### Recommended travel setup (1-2 days, phone only, one chat)
+`scripts/supervise.sh --loop` reads the next unchecked item from `TODO.md`, expects an agent to
+implement it, then runs the gates and commits. In a chat session it loops as long as the agent
+keeps making tool calls, and hits the hop threshold after roughly 60 minutes.
 
-1. **Before leaving laptop:**
-   ```bash
-   python tools/secure_pat.py --handoff  # deletes plain, keeps enc
-   git push origin main
-   ```
+Inside a workflow the loop has a different problem: the runner has no model to do the
+implementing, so it would pick tasks it cannot complete. That is exactly why the janitor workflow
+was scoped to non-model work — locks, doc sync, requeueing — which can genuinely run for hours
+unattended.
 
-2. **On phone — open 1 orchestrator tab (keep arena.ai open, screen on when possible, tap Continue when appears):**
-   ```
-   Read docs/NEXT_SESSION_PROMPT.md FIRST
-   cd /home/user && git pull
-   python tools/session_guard.py --status
-   # Will say NEED_PASSWORD — ask_user appears → give <YOUR_ENCRYPTION_PASSWORD>
-   GITHUB_PAT_PASSWORD="<YOUR_ENCRYPTION_PASSWORD>" python tools/secure_pat.py --prompt
-   python tools/github_auth.py --check
-   make check
-   SWARM_USE_GITHUB=1 python tools/swarm/orchestrator.py --seed TODO.md --dashboard
-   python tools/swarm/orchestrator.py --monitor
-   ```
-   Leave this tab open. It seeds Issues hourly (when you tap Continue).
+> **Note —** This chapter originally closed by proposing a model-driven workflow as future work.
+> That workflow now exists as `swarm-llm-worker.yml`, running every two hours on the free GitHub
+> Models tier through `GITHUB_TOKEN`; see [Factory Overview](overview.md) and
+> [Swarm](swarm/README.md). No paid provider key is required, though setting `OPENAI_API_KEY` or
+> `ANTHROPIC_API_KEY` remains an option.
 
-3. **Optional: Open 1-2 worker tabs in sidebar (if phone can keep them):**
-   - Worker-Mind: `python tools/swarm/worker_github.py --component shesh-memory --github --poll 60`
-   - Worker-Platform: `python tools/swarm/worker_github.py --component general --github --poll 60`
-   - **Truth:** On mobile, background tabs may pause after 30-60 sec screen lock. Keep phone plugged, disable battery optimization for browser, keep arena.ai foreground. Even then, expect to tap Continue every 10-20 min. Not true hours, but better than nothing.
+## The recommended travel setup
 
-4. **Enable Janitor Action (true hours):**
-   - Go to GitHub repo → Actions → `Swarm Scheduled Janitor` → Enable
-   - It will run every hour automatically, even with phone locked, even for 2 days
-   - It will seed Issues from TODO ⬜, re-queue stale claims, push locks/docs sync
-   - Check runs at https://github.com/gaganjainse/shesh-ecosystem/actions
+Before leaving the laptop, hand off cleanly and push.
 
-5. **When back on laptop:**
-   ```bash
-   git pull origin main
-   python tools/session_guard.py --status
-   make check
-   python tools/swarm/orchestrator.py --dashboard  # see what janitor seeded and what workers did
-   ```
+```bash
+python tools/secure_pat.py --handoff   # delete the plain token, keep the encrypted one
+git push origin main
+```
 
-### If you want me to add true LLM hours-unattended Action
+On the phone, open one orchestrator tab, keep the site in the foreground where possible, and tap
+Continue when it appears.
 
-I can add `.github/workflows/swarm-llm-worker.yml` that:
-- Runs every 2 hours via cron
-- Uses secret `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` (you add in repo Settings → Secrets)
-- Calls `tools/llm_worker.py` (I would write) that picks one pending Issue, calls LLM API to generate patch, runs `make check`, pushes branch, opens PR
-- Then auto-merge Action merges it
+```bash
+cd /home/user && git pull
+python tools/session_guard.py --status
+# reports NEED_PASSWORD → supply the encryption password through the interface prompt
+python tools/secure_pat.py --prompt
+python tools/github_auth.py --check
+make check
+SWARM_USE_GITHUB=1 python tools/swarm/orchestrator.py --seed TODO.md --dashboard
+python tools/swarm/orchestrator.py --monitor
+```
 
-That would be **true hours unattended coding** without any Arena tab open — runs purely on GitHub. It would use `GITHUB_TOKEN` + your LLM API key, not PAT.
+Worker tabs are optional and unreliable. If you open one or two —
+`python tools/swarm/worker_github.py --component shesh-memory --github --poll 60` — keep the
+phone plugged in, disable battery optimization for the browser, and expect to tap Continue every
+10 to 20 minutes.
 
-Do you want me to add that? If yes, tell me which LLM provider (OpenAI, Anthropic, local Ollama via tunnel) and I will implement.
+Enable the janitor from the repository's Actions tab. It then runs hourly regardless of the
+phone's state, seeding issues from `TODO.md`, requeueing stale claims, and pushing refreshed
+locks and doc syncs.
 
----
+Back at the laptop, pick the state up from GitHub:
 
-**Bottom line for travel 1-2 days phone-only:**
+```bash
+git pull origin main
+python tools/session_guard.py --status
+make check
+python tools/swarm/orchestrator.py --dashboard
+```
 
-- Keep **1 orchestrator tab** open on phone, tap Continue when needed — it seeds Issues.
-- **Don't rely on 4-5 sidebar workers on phone** — mobile OS will throttle them, they will pause.
-- **Rely on GitHub Actions Janitor + Auto-Merge** for true hours — they run every hour on GitHub infra, no phone needed, seed Issues, re-queue stale, auto-merge PRs you pushed before travel.
-- When back, `git pull` — everything janitor + auto-merge did is in main.
+## The honest bottom line
 
-This is the honest best possible given Arena limits.
+Keep one orchestrator tab and tap Continue when it asks. Do not depend on four or five sidebar
+workers, because the mobile operating system will pause them. Rely on the janitor and auto-merge
+workflows for the real unattended hours, and on `git pull` when you return.
+
+That is the best arrangement the platform's limits allow. For the efficiency measures that make
+each session last longer, see [Efficiency](efficiency.md); for the handoff itself, see
+[Session Protocol](session-protocol.md).

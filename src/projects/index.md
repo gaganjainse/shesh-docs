@@ -1,7 +1,7 @@
-# Standalone Projects — Index
+# Standalone projects — index
 
-Projects that are part of the gaganjainse portfolio but live outside the Shesh
-ecosystem body (product/factory/gateway/desktop). Each project's canonical
+Projects that belong to the gaganjainse portfolio but live outside the Shesh
+ecosystem body (product, factory, gateway, desktop). Each project's canonical
 documentation is its own repository `README.md`; this page is the fleet index.
 
 ## The flagship
@@ -10,11 +10,11 @@ documentation is its own repository `README.md`; this page is the fleet index.
 |---|---|---|
 | [SheshAOS](https://github.com/gaganjainse/SheshAOS) | Governance-first, event-sourced AI OS — models propose, tools execute, kernel validates | Rust (9 crates + CLI), 877 tests |
 
-## Languages & compilers
+## Languages and compilers
 
 | Project | What it is | Stack |
 |---|---|---|
-| [Vyakrti](https://github.com/gaganjainse/Vyakrti) | Sanskrit-oriented programming language with a complete compiler pipeline (lexer → parser → type checker → bytecode) | Rust |
+| [Vyakrti](https://github.com/gaganjainse/Vyakrti) | Sanskrit-oriented programming language with a complete compiler pipeline (lexer to parser to type checker to bytecode) | Rust |
 | [vyakrti-ide](https://github.com/gaganjainse/vyakrti-ide) | Browser IDE for Vyakrti — syntax highlighting, autocomplete, diagnostics | React + Monaco + Rust (axum) |
 
 ## Production applications
@@ -26,12 +26,12 @@ documentation is its own repository `README.md`; this page is the fleet index.
 | [grievance-portal](https://github.com/gaganjainse/grievance-portal) | Citizen grievance redressal portal with a status workflow | Laravel |
 | [ClinicLedger](https://github.com/gaganjainse/ClinicLedger) | Clinic ledger Android app with a bilingual voice-intent parser | Kotlin + Compose |
 
-## AI / ML tooling
+## AI and ML tooling
 
 | Project | What it is | Stack |
 |---|---|---|
 | [rag-service](https://github.com/gaganjainse/rag-service) | FastAPI RAG with hybrid retrieval (dense embeddings + BM25, RRF) over ChromaDB | Python + FastAPI |
-| [llm-eval-harness](https://github.com/gaganjainse/llm-eval-harness) | Golden-set LLM evaluation — LLM-as-judge + lexical fallbacks, CI-ready JSON/Markdown reports | Python |
+| [llm-eval-harness](https://github.com/gaganjainse/llm-eval-harness) | Golden-set LLM evaluation — LLM-as-judge plus lexical fallbacks, CI-ready JSON/Markdown reports | Python |
 
 ---
 

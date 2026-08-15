@@ -1,40 +1,63 @@
 # ADR-0001: Five Languages Only
 
-**Date:** 2026-08-09
-**Status:** Accepted
-**Decision makers:** Gagan Jain, Shesh Autopilot
-**Tags:** language, ffi, complexity
+Shesh builds its body in just five languages, and it keeps them apart at process
+boundaries rather than in a shared memory space. That rule trades away a few exotic
+runtimes for a build that is reproducible, auditable, and approachable for newcomers.
+
+## Status
+
+- **Date:** 2026-08-09
+- **Status:** Accepted
+- **Decision makers:** Gagan Jain, Shesh Autopilot
+- **Tags:** language, ffi, complexity
 
 ## Context
-The ecosystem spans a governance kernel, AI glue, desktop compositor config, UI shell, and installer scripts. Earlier prototypes mixed Rust, Python, Go, Zig, C, Lua, QML, TypeScript — leading to FFI nightmares, cross-toolchain build failures (e.g., `russh::Error::msg` API break, Zig required by terminal crate), and hard-to-audit unsafe boundaries.
 
-We need to cover:
-- Systems/performance + safety → Rust
-- AI orchestration, MCP, RAG, embeddings → Python
-- Hyprland config → Lua (required by Hyprland ≥0.55)
-- Quickshell UI → QML/JS (Qt6 declarative)
-- Installer/glue → Bash 5+
+The ecosystem spans a governance kernel, AI glue, desktop compositor configuration, UI
+shell, and installer scripts. Early prototypes mixed Rust, Python, Go, Zig, C, Lua, QML,
+and TypeScript. The blend produced foreign-function-interface (FFI) nightmares, cross-toolchain
+build failures — a `russh::Error::msg` API break and a terminal crate that demanded Zig — and
+unsafe boundaries that were hard to audit.
+
+Five languages cover every job the fleet has:
+
+- Systems work, performance, and safety call for **Rust**.
+- AI orchestration, MCP, retrieval-augmented generation (RAG), and embeddings call for **Python**.
+- Hyprland configuration requires **Lua** (Hyprland 0.55 and later).
+- The Quickshell UI is **QML/JS** (Qt6 declarative).
+- Installer and glue scripts are **Bash 5+**.
 
 ## Decision
-We allow **only five core languages** in-tree:
-- **Rust** (brain, kernel, watchers)
-- **Python 3.11+** (mind, MCP servers)
-- **Lua** (Hyprland config only)
-- **QML/JS** (Quickshell)
-- **Bash** (installer)
 
-No Zig, C, Mojo, Go in the main build. Cross-language communication is **MCP/JSON over process boundaries**, never in-process FFI.
+The tree permits only those five core languages:
 
-Exotic runtimes (Node for some MCP servers, Go tools) run in **rootless Podman/Distrobox**, not on host.
+- **Rust** for the brain, kernel, and watchers.
+- **Python 3.11+** for the mind and MCP servers.
+- **Lua** for Hyprland configuration only.
+- **QML/JS** for Quickshell.
+- **Bash** for the installer.
+
+No Zig, C, Mojo, or Go belongs in the main build. Cross-language communication happens over
+**MCP/JSON at process boundaries**, never through in-process FFI. Exotic runtimes — Node for
+some MCP servers, Go tools — run inside **rootless Podman or Distrobox**, not on the host
+(see [ADR-0002](0002-containers-and-venv.md)).
 
 ## Consequences
-- ✅ Build matrix is 2 toolchains (Rust + Python) on host; reproducible.
-- ✅ Auditable unsafe boundary: only MCP stdio/JSONL.
-- ✅ New contributors learn 2 languages to be productive.
-- ❌ Some upstream MCP servers need Node (`npx`) — we proxy them via `shesh-mcp-bundle` behind the Guard, not link.
-- ❌ Zig/C experiments must live in containers; can't be first-class.
+
+### Benefits
+
+- The host build matrix shrinks to two toolchains, Rust and Python, and stays reproducible.
+- The only auditable unsafe boundary is the MCP stdio/JSONL link.
+- A new contributor needs to learn two languages to become productive.
+
+### Costs
+
+- Some upstream MCP servers need Node (`npx`); Shesh proxies them behind the Guard through
+  `shesh-mcp-bundle` rather than linking them.
+- Zig and C experiments must live in containers and can never be first-class citizens.
 
 ## Links
+
 - `docs/architecture/LANGUAGE_POLICY.md`
 - `docs/CONTAINERS_AND_VENV.md`
-- D2 (containers)
+- [ADR-0002: Rootless Containers for Exotic Runtimes](0002-containers-and-venv.md)

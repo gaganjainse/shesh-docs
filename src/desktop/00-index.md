@@ -1,127 +1,111 @@
-# Shesh Ecosystem — Master Index
+# Master Index: The Verified Desktop Baseline
 
-> **Owner:** Gagan Jain (`gaganjainse`) · Jaipur, IN (Asia/Kolkata)
-> **Device:** MSI Sword 16 HX **B14VEKG-210IN**
-> **OS:** CachyOS **260628** (Arch-based, Linux 6.18 live / 7.1 installed, BORE scheduler)
-> **Desktop:** Hyprland ≥0.55 (Lua config era) + Quickshell (`ii`), on top of `end-4/dots-hyprland`
+Before a single installer command runs, a project needs an agreed set of facts. This chapter sets that agreement for the Shesh desktop: it states the exact hardware, the exact operating system, the model budget the GPU can sustain, and a map of the ten documents that build on them.
+
+## Summary of the verified baseline
+
+- Every figure in this chapter was independently verified against the manufacturer product page and the CachyOS release notes on 2026-08-09, and supersedes two earlier AI-written audits.
+- The two prior audits stated the wrong display resolution and the wrong GPU; the corrected values are 1920x1200 at 144 Hz and an RTX 4050 with 6 GB.
+- The 6 GB VRAM ceiling, not ambition, sets the local model roster. One GPU model runs at a time.
+- Ten numbered documents run in dependency order, so each is read, applied, and checked before the next begins.
+- Seven design principles govern every future decision; a proposal that breaks one needs an explicit, written exception.
+
+> **Owner:** Gagan Jain (`gaganjainse`), Jaipur, India (Asia/Kolkata)
+> **Device:** MSI Sword 16 HX B14VEKG-210IN
+> **Operating system:** CachyOS 260628 (Arch-based, Linux 6.18 live and 7.1 installed, BORE scheduler)
+> **Desktop:** Hyprland 0.55 or newer (the Lua configuration era) with Quickshell `ii`, on top of `end-4/dots-hyprland`
 > **Last reconciled:** 2026-08-09
 
-This folder is the single source of truth for the **Shesh** ecosystem — the production-grade,
-AI-first, hands-off desktop built on top of your `shesh-desktop` fork. Every document here was
-independently verified against the live repo on 2026-08-09; it supersedes the two prior AI audits
-(`uploads/shesh-desktop-audit.md` and the 63-page `shesh-desktop_Master_Plan_90p.pdf`), both of
-which contained factual errors catalogued in `01_AUDIT.md`.
+This folder is the reference of record for the Shesh desktop: the production-grade, AI-first, hands-off environment built on the `shesh-desktop` fork. Every document here was verified against the live repository on 2026-08-09. Together they supersede two prior AI-produced audits — an uploaded `shesh-desktop-audit.md` and a 63-page master-plan PDF — both of which contained factual errors now catalogued in [the audit chapter](./01-audit.md).
 
----
+> **Warning —** The later fleet-wide audit of 2026-08-15 confirmed that earlier AI-written audits across this project contained factual errors. Trust the verified tables below and the audit chapter; treat any figure from an undated source as unverified.
 
-## 0. How to use these documents
+## How to read these documents
 
-You said you will be driving the build **with AI assistants**. The docs are therefore written in a
-specific order so you can paste them into an AI one at a time, check the result, and move on:
+The build is driven with AI assistants, so the documents are ordered to be applied one at a time: open one, act on it, verify the result, then move to the next.
 
 | # | Document | What it gives you | When to open it |
 |---|----------|-------------------|-----------------|
-| 00 | `00_INDEX.md` (this) | Map of everything, verified facts, status legend | Always start here |
-| 01 | `01_AUDIT.md` | Independent audit of the **current** repo + every issue, with exact fixes | Before touching code |
-| 02 | `02_ROADMAP.md` | Phased, dependency-ordered execution plan with effort/risks | Planning each session |
-| 03 | `03_DISK_STRUCTURE.md` | Full on-disk layout (work vs personal vs job) + bootstrap script | When you install CachyOS |
-| 04 | `04_DEVICE_PROFILE.md` | MSI Sword + CachyOS tuning: GPU/MUX, 144 Hz, power, kernel | Hardware setup |
-| 05 | `05_SMART_ORGANIZER_V2.md` | Real-time, AI-assisted file organizer spec + code | Beating clutter |
-| 06 | `06_SHESH_AGENT.md` | The Shesh agent: Newelle + Ollama + MCP, local-first | Building the assistant |
-| 07 | `07_AUTOMATIONS.md` | Catalog of every autonomous job + units + udev rules | Set-and-forget |
-| 08 | `08_ECOSYSTEM_TOOLS.md` | The broader tool ecosystem (incl. Android phone harness) | Expanding the system |
-| 09 | `09_AI_PROMPTS.md` | **Copy-paste prompts for AI assistants**, per phase/situation | Every work session |
-| 10 | `10_LICENSES_AND_SOURCES.md` | License manifest + every link, version-pinned | Legal / upgrades |
+| 00 | This chapter | The map, the verified facts, the status vocabulary | Always start here |
+| 01 | [Audit — Current Truth](./01-audit.md) | An independent audit of the live repository, with exact fixes | Before touching code |
+| 02 | [Roadmap — Phases 0 through 7](./02-roadmap.md) | A dependency-ordered plan with effort and risk | When planning a session |
+| 03 | [Disk Structure](./03-disk-structure.md) | The on-disk layout separating work, personal, and job data, plus a bootstrap script | When you install CachyOS |
+| 04 | [Device Profile](./04-device-profile.md) | MSI Sword and CachyOS tuning: GPU, MUX, 144 Hz, power, kernel | During hardware setup |
+| 05 | [Smart Organizer v2](./05-smart-organizer.md) | The real-time, AI-assisted file organizer specification | When clutter becomes the problem |
+| 06 | [Shesh Agent](./06-shesh-agent.md) | The agent itself: Newelle, Ollama, and MCP, local-first | When building the assistant |
+| 07 | [Automations](./07-automations.md) | Every autonomous job, systemd unit, and udev rule | When making the system hands-off |
+| 08 | [Ecosystem Tools](./08-ecosystem-tools.md) | The broader tool set, including the Android phone harness | When expanding the system |
+| 09 | [AI Prompts](./09-ai-prompts.md) | Copy-paste prompts per phase and per situation | Every work session |
+| 10 | [Licenses and Sources](./10-licenses-sources.md) | The license manifest and every version-pinned link | For legal review and upgrades |
 
-A parallel set of **machine-actionable files** lives in this repo:
+A parallel set of machine-actionable files lives alongside them: the [implementation checklist](./checklist.md), one line per task, plus the real code the documents reference in `tools/lib/common.sh`, `profiles/msi-sword-cachyos/`, and their neighbours.
 
-- `docs/SHESH/checklist.md` — one-line-per-task checklist you tick off.
-- `tools/lib/common.sh`, `profiles/msi-sword-cachyos/`, etc. — actual code referenced by the docs.
+## The verified hardware and software baseline
 
----
+These values were checked against the manufacturer product page and the CachyOS release notes on 2026-08-09. Use them everywhere, and source them from the profile rather than retyping them.
 
-## 1. Verified hardware & software baseline (do not trust anything else)
+| Component | Verified value | Notes |
+|-----------|----------------|-------|
+| CPU | Intel Core i7-14700HX (20 cores, 28 threads, Raptor Lake-HX) | The `-march=native` target |
+| Integrated GPU | Intel Arc / UHD, integrated in the 14700HX | Primary Wayland renderer, to save power |
+| Discrete GPU | NVIDIA RTX 4050 Laptop, 6 GB GDDR6, 96-bit bus | Not a 4070, and not 8 GB |
+| Display | 16-inch FHD+, 1920x1200 (16:10), 144 Hz, IPS | Not 2560x1600; connector `eDP-1` |
+| RAM | 16 GB DDR5-5600 (one 16 GB module, one SODIMM slot free, 96 GB maximum) | An upgrade to 32 or 64 GB is strongly advised for local models |
+| Storage | 1 TB NVMe Gen4, with one Gen4 and one Gen5 M.2 slot | The second slot is free |
+| Network | Wi-Fi 6E (likely AX211) and 2.5 G Ethernet | |
+| Ports | One Thunderbolt/USB-C with DisplayPort and power delivery, three USB-A, HDMI 2.1 (8K60 or 4K120), RJ45, audio | |
+| Operating system | CachyOS 260628, Linux 6.18 live and 7.1 installed, GCC 14.1, Python 3.13 | BORE scheduler; `chwd` handles drivers |
+| AUR helper | Shelly is the default; paru was removed but can be reinstalled, as can yay | The installer must auto-detect |
+| Hyprland | 0.55 or newer, Lua configuration; 0.56 is in git and rolling will pull it | The dotfiles already use Lua |
+| Display manager | SDDM is recommended for Hyprland on CachyOS | greetd remains optional |
 
-These were verified against the manufacturer product page and CachyOS release notes on 2026-08-09.
-**Two prior AI reports got the display resolution and GPU wrong.** Use these numbers everywhere.
+### The model budget imposed by 6 GB of VRAM
 
-| Component | Correct value | Notes |
-|-----------|---------------|-------|
-| CPU | Intel Core **i7-14700HX** (20C/28T, Raptor Lake-HX) | `-march=native` target |
-| iGPU | Intel **Arc / UHD** (integrated in 14700HX) | Primary Wayland renderer to save power |
-| dGPU | NVIDIA **RTX 4050 Laptop, 6 GB GDDR6**, 96-bit bus | **NOT 4070 / 8 GB** |
-| Display | 16" **FHD+ 1920×1200 (16:10), 144 Hz, IPS** | **NOT 2560×1600**; connector `eDP-1` |
-| RAM | **16 GB DDR5-5600** (1×16 GB, one SODIMM free; max 96 GB) | Upgrade to 32/64 GB strongly advised for local LLM |
-| Storage | 1 TB NVMe Gen4; **1× Gen4 + 1× Gen5 M.2 slot** | Second slot free |
-| Network | Wi-Fi 6E (likely **AX211**), 2.5G Ethernet | |
-| Ports | 1× TB/USB-C (DP/PD), 3× USB-A, **HDMI 2.1 (8K60/4K120)**, RJ45, audio | |
-| OS | **CachyOS 260628** — Linux 6.18 live / 7.1 installed, GCC 14.1, Python 3.13 | BORE scheduler; `chwd` for drivers |
-| AUR helper | **Shelly** is default (paru removed). You can still install `paru`/`yay`. | Your installer must auto-detect |
-| Hyprland | ≥ **0.55** (Lua config). 0.56 is git; rolling will pull it | Dotfiles already use Lua ✅ |
-| Display mgr | SDDM recommended for Hyprland on CachyOS | greetd optional |
+A Q4_K_M model needs roughly its file size plus 1 to 1.5 GB of KV-cache headroom at a 4k context. That arithmetic, not preference, decides the roster below. Run one GPU model at a time, and push vision offload to the integrated GPU or CPU where it is supported.
 
-### AI model budget (RTX 4050, 6 GB) — hard ceiling
+| Role | Model | VRAM | Why it earns the slot |
+|------|-------|------|-----------------------|
+| Primary reasoning and chat | phi4-mini (3.8B Q4) | ~3.2 GB | The best quality-to-size ratio that fits 6 GB |
+| Code | qwen2.5-coder:3b Q4 | ~2.8 GB | Fast, and strong on code |
+| Embeddings and retrieval | nomic-embed-text | <0.5 GB | Small enough to co-reside with the primary model |
+| Vision, for screenshots | moondream2 Q4 | ~2.5 GB | The smallest usable vision model |
+| Occasional heavy work | qwen2.5:7b Q4 | ~4.6 GB | Needs partial CPU offload, and is slower |
+| Avoid entirely | qwen3:14b, llava:13b, mistral:7b at 8k | 6–9 GB | Overflows 6 GB, causing thrashing or an out-of-memory failure |
 
-Rule of thumb: a Q4_K_M model needs ≈ (file size) + 1–1.5 GB KV cache headroom at 4k context.
-**Run one GPU model at a time.** Use the iGPU/CPU for vision offload where supported.
+> **Note —** With 16 GB of system RAM you can offload 7B layers to the CPU, but expect only 5 to 15 tokens per second. A 32 GB memory upgrade is the single largest quality improvement available for local AI on this machine, because it makes 7B to 9B models comfortable.
 
-| Role | Model | VRAM | Why |
-|------|-------|------|-----|
-| Primary brain / chat | **phi4-mini** (3.8B Q4) | ~3.2 GB | Best quality/size for 6 GB |
-| Code | **qwen2.5-coder:3b** Q4 | ~2.8 GB | Fast, strong at code |
-| Embeddings / RAG | **nomic-embed-text** | <0.5 GB | Runs alongside main model |
-| Vision (screenshots) | **moondream2** Q4 | ~2.5 GB | Smallest usable vision model |
-| Heavy (occasional) | qwen2.5:7b Q4 | ~4.6 GB | Partial CPU offload, slower |
-| ❌ Do NOT pull | qwen3:14b, llava:13b, mistral:7b@8k | 6–9 GB | Overflows 6 GB → thrash/OOM |
+## The status vocabulary
 
-> With 16 GB system RAM you can offload 7B layers to CPU, but expect 5–15 tok/s. A 32 GB RAM upgrade
-> is the single biggest quality upgrade for local AI (enables 7–9B models comfortably).
+Every issue in this document set carries one of five states. The authoritative issue list with current status lives in [the audit](./01-audit.md).
 
----
+| Status | Meaning |
+|---|---|
+| **Broken** | Fails on a clean CachyOS 260628 install today |
+| **Bug or risk** | Works sometimes, but is wrong or fragile |
+| **Incomplete** | Scaffolded by a prior AI pass, but never finished |
+| **Done** | Verified present and correct in the live repository |
+| **New** | Proposed, not yet started |
 
-## 2. Status legend
+## Seven principles that govern every decision
 
-- 🔴 **BROKEN** — fails on a clean CachyOS 260628 install today
-- 🟠 **BUG/RISK** — works sometimes but wrong or fragile
-- 🟡 **INCOMPLETE** — scaffolded by a prior AI but not finished
-- 🟢 **DONE** — verified present and correct in the live repo
-- ⚪ **NEW** — proposed, not yet started
+These principles are drawn from the project's own history: the SheshAOS design work (governance-first, event-sourced, with an append-only audit trail), SeshaOS (archived, now SHESH) and its local-first specialist models, Vyakrti as a Sanskrit programming language, a RAG service, and an LLM evaluation harness.
 
-The authoritative issue list with current status is in `01_AUDIT.md`.
+> **Note —** SheshAOS as a public upstream is unpublished and conceptual. Treat `gaganjainse/SheshOS` as a design reference, not as a reachable repository to clone or depend on.
 
----
+1. **Local-first and private.** Voice, files, memory, and models run on the device. Cloud access is an opt-in fallback in the OmniRoute style, never the default.
+2. **Governance and auditability.** Borrowing the SheshAOS append-only event log, every autonomous action Shesh takes is recorded, replayable, and reversible, and policy gates destructive actions.
+3. **Performance without compromise.** Appearance (end-4's Material You with Quickshell polish) and speed (144 Hz, the CachyOS BORE scheduler, NVMe kyber) are both first-class, and bloat inherited from other distributions or devices is pruned.
+4. **Hands-off.** If something can be automated safely, it is automated. You speak; the system acts.
+5. **Composable rather than monolithic.** Small tools — the organizer, the MUX switcher, the backup job — are exposed over MCP and IPC, and one agent orchestrates them. There is no giant binary.
+6. **The right language for each layer.** Rust for systems, watchers, and kernel-adjacent work; Python for AI glue; Lua and QML for the shell; Bash for the installer. This matches the existing Rust, Python, and TypeScript skill set.
+7. **Indian-rooted identity.** The names — Shesh, Vyakrti, Nexus — and the Sanskrit and Indic framing are deliberate, and stay consistent across the system.
 
-## 3. Your philosophy (read this before changing anything)
+Every future decision aligns to these seven. A proposal that violates one needs an explicit exception recorded in this chapter.
 
-From your chats, GitHub profile (`AI/LLM Engineer, VIT Vellore 2025, author of SheshAOS`), and
-repos (SheshAOS — governance-first, event-sourced, append-only audit trail; SeshaOS (archived; now SHESH) — local-first
-specialist models; Vyākṛti — a Sanskrit programming language; RAG service; LLM eval harness), the
-design principles for this ecosystem are:
+## The vision in one paragraph
 
-1. **Local-first & private.** Voice, files, memory, and models run on-device. Cloud is an
-   opt-in fallback (OmniRoute-style), never the default.
-2. **Governance & auditability.** Borrow SheshAOS's append-only event log: every autonomous action
-   Shesh takes is recorded, replayable, and reversible. Policy gates destructive actions.
-3. **Performance without compromise.** Looks (end-4 Material You + Quickshell polish) and speed
-   (144 Hz, CachyOS BORE, NVMe kyber) are first-class; bloat from other distros/devices is pruned.
-4. **Hands-off.** If it can be automated safely, it is automated. You speak; the system acts.
-5. **Composable over monolithic.** Small tools (smart-organizer, mux-switcher, backup) exposed over
-   MCP/IPC; one agent orchestrates them — not one giant binary.
-6. **Rust where it matters (systems, watchers, kernel-adjacent); Python for AI glue; Lua/QML for
-   the shell; Bash for the installer.** Matches your existing skill set (Rust + Python + TS).
-7. **Indian-rooted identity.** The names (Shesh, Vyākṛti, Nexus) and the Sanskrit/Indic framing are
-   intentional — keep them consistent across the system.
+Shesh is the local AI layer between you and a CachyOS/Hyprland machine. It watches folders and organizes them, switches GPU and power profiles according to what you are doing, backs up and maintains the system in the background, and answers by voice through a Quickshell overlay — while writing every action to a SheshAOS-style audit log, so nothing it does is invisible or irreversible. Over time it becomes the desktop expression of the SheshAOS and SHESH thesis: an AI-first operating environment built on a fast, attractive, trustworthy open base.
 
-Keep every future decision aligned to these seven principles. If a proposal violates one, it needs
-an explicit exception in this file.
+## Where this fits
 
----
-
-## 4. The one-paragraph vision
-
-**Shesh** is the local AI layer that sits between you and your CachyOS/Hyprland machine: it watches
-your folders and organizes them, switches GPU/power profiles based on what you're doing, backs up
-and maintains the system in the background, and answers you by voice through a Quickshell overlay —
-all while writing every action to a SheshAOS-style audit log so nothing it does is invisible or
-irreversible. Over time it becomes the desktop manifestation of your SheshAOS/SHESH thesis:
-an AI-first operating environment built on a fast, beautiful, trustworthy open base.
+Read [the audit](./01-audit.md) next for the current defect list, then [the roadmap](./02-roadmap.md) for the order in which to fix it. The vocabulary used across the whole book is defined in the [glossary](../glossary.md).

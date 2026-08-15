@@ -1,28 +1,23 @@
 # 03 — Disk Structure: Work vs Personal vs Job
 
-> A clean, XDG-compliant, backup-friendly layout that separates your **job** (employed work),
-> **personal projects** (SheshAOS, SHESH, Vyākṛti, shesh-desktop), and **personal life**, while
-> giving the smart-organizer and Shesh predictable roots to operate on.
+This chapter defines a clean, XDG-compliant, backup-friendly layout that separates your job (employed work), your personal projects (SheshAOS, SHESH, Vyakrti, shesh-desktop), and your personal life, while giving the smart-organizer and Shesh predictable roots to operate on.
 
 ---
 
 ## 1. Top-level partition strategy
 
-Your laptop has **1 TB NVMe (Gen4)** and a free **Gen5 M.2 slot**. Recommended partitioning on the
-Gen4 drive; use the Gen5 slot later for a second disk (projects/VMs) or a larger replacement.
+Your laptop has 1 TB NVMe (Gen4) and a free Gen5 M.2 slot. Recommended partitioning on the Gen4 drive; use the Gen5 slot later for a second disk (projects/VMs) or a larger replacement.
 
 | Mount | Size | FS | Purpose |
 |-------|------|----|---------|
 | `/boot` (or `/efi`) | 1 GiB | FAT32 | EFI system partition |
 | `/boot` (XBOOTLDR if needed) | — | ext4 | CachyOS kernels |
 | `/` | 80–120 GiB | **btrfs** (zstd, snapshots) | System; use `@` subvols |
-| `swap` | 8 GiB (≈½ RAM) | swap | Hibernate support with 16 GB RAM (zram handles the rest) |
+| `swap` | 8 GiB (about half RAM) | swap | Hibernate support with 16 GB RAM (zram handles the rest) |
 | `/home` | remaining | **btrfs** (zstd, snapshots) | User data; split into subvolumes below |
 | *(future Gen5)* | 1–2 TB | btrfs/ext4 | `~/Projects` + VMs/datasets (heavy I/O) |
 
-> Use **btrfs snapshots** (snapper/timeshift) for `/` and `/home` but **exclude** the large,
-> regenerable, or private subvolumes below from snapshots to save space. ZRAM handles swap; the
-> 8 GiB swap partition is for hibernate (s2idle/s2disk) only.
+> **Note —** Use btrfs snapshots (snapper/timeshift) for `/` and `/home` but exclude the large, regenerable, or private subvolumes below from snapshots to save space. ZRAM handles swap; the 8 GiB swap partition is for hibernate (s2idle/s2disk) only.
 
 ### Btrfs subvolume layout (under `/home/gagan`)
 
@@ -61,7 +56,7 @@ Gen4 drive; use the Gen5 slot later for a second disk (projects/VMs) or a larger
 │
 ├── Projects/                  ← ALL code, clearly split
 │   ├── job/                   ← work repos (cloned with work git identity)
-│   ├── personal/              ← your own repos
+│   ├── personal/               ← your own repos
 │   │   ├── shesh-desktop/
 │   │   ├── SheshAOS/
 │   │   ├── SHESH/
@@ -74,7 +69,7 @@ Gen4 drive; use the Gen5 slot later for a second disk (projects/VMs) or a larger
 │   ├── forks/                 ← upstream forks you're studying/PRing
 │   └── _archive/              ← completed/abandoned (cold, excluded from recent-projects)
 │
-├── AI/                        ← local AI assets (excluded from snapshots — large)
+├── AI/                        ← local-AI assets (excluded from snapshots — large)
 │   ├── Models/                ← safetensors, GGUF, LoRAs
 │   ├── Datasets/
 │   ├── Vectors/               ← Chroma/SQLite-vss stores
@@ -96,25 +91,21 @@ Gen4 drive; use the Gen5 slot later for a second disk (projects/VMs) or a larger
 
 ### Why this shape
 
-- **`Desk/` stays empty.** It's a staging area, not storage. Smart-organizer sweeps anything older than
-  a threshold into `Documents/Inbox` → sorted.
+- **`Desk/` stays empty.** It is a staging area, not storage. Smart-organizer sweeps anything older than a threshold into `Documents/Inbox` then sorts it.
 - **Job vs personal is a hard boundary** at `Projects/job` and `Documents/Job`. Separate:
-  - git identity (`includeIf "gitdir:~/Projects/job/"` → work `user.email`),
+  - git identity (`includeIf "gitdir:~/Projects/job/"` to work `user.email`),
   - cloud-sync (job accounts never touch personal sync),
   - backup encryption keys (job data encrypted with employer-approved tooling, not your personal key),
-  - Shesh permissions (the agent is **denied** write to `~/Documents/Job` and `~/Projects/job` by default).
-- **One `Media/` root** instead of XDG's Pictures/Music/Videos split — easier for the organizer and
-  for queries like "find that screenshot". Set XDG dirs to point here (or symlink).
-- **`AI/` is one big, snapshot-excluded tree.** Models and datasets are regenerable and huge; never
-  let them bloat btrfs snapshots or restic backups.
+  - Shesh permissions (the agent is denied write to `~/Documents/Job` and `~/Projects/job` by default).
+- **One `Media/` root** instead of XDG's Pictures/Music/Videos split — easier for the organizer and for queries like "find that screenshot". Set XDG dirs to point here (or symlink).
+- **`AI/` is one big, snapshot-excluded tree.** Models and datasets are regenerable and huge; never let them bloat btrfs snapshots or restic backups.
 - **`Notes/` is a git-backed vault** — versioned, diffable, queryable by Shesh RAG.
 
 ---
 
-## 3. XDG + environment variables
+## 3. XDG and environment variables
 
-Put this in `dots/.config/environment.d/99-shesh.conf` (systemd environment generator, works across
-Hyprland/Quickshell/SSH):
+Put this in `dots/.config/environment.d/99-shesh.conf` (systemd environment generator, works across Hyprland/Quickshell/SSH):
 
 ```ini
 # XDG base
@@ -145,6 +136,7 @@ Then `systemctl --user import-environment` or relog.
 ### Git identity separation
 
 `~/.gitconfig`:
+
 ```ini
 [user]
     name = Gagan Jain
@@ -156,15 +148,14 @@ Then `systemctl --user import-environment` or relog.
 [url "git@github.com-work:"]
     insteadOf = https://github.com/<work-org>/
 ```
-`~/.config/git/job.gitconfig` holds the work email + work SSH host alias. This guarantees you never
-commit personal identity to job repos (and vice versa) — a real risk when juggling both.
+
+`~/.config/git/job.gitconfig` holds the work email + work SSH host alias. This guarantees you never commit personal identity to job repos (and vice versa) — a real risk when juggling both.
 
 ---
 
 ## 4. The directory bootstrap script
 
-Save as `tools/setup-dirs.sh` in the repo and run once after first boot. It is **idempotent** (safe to
-re-run) and sets permissions. (A copy is also written to the repo by the doc build.)
+Save as `tools/setup-dirs.sh` in the repo and run once after first boot. It is idempotent (safe to re-run) and sets permissions. (A copy is also written to the repo by the doc build.)
 
 ```bash
 #!/usr/bin/env bash
@@ -191,36 +182,33 @@ command -v chattr >/dev/null && chattr +C "$home/AI/Models" "$home/AI/Datasets" 
 mkdir -p "$home"/Vaults/{Passwords,Keys} "$home"/Backups/{external,nas,restic-repo}
 
 # XDG state
-mkdir -p "$home"/.local/share "$home"/.config "$home"/.cache "$home"/.local/state
+mkdir -p "$home"/.local/share "$home"/.config "$home"/.cache "$home"/.local/share
 
 # Permissions for secrets
 chmod 700 "$home/Vaults" "$home/Vaults/Keys"
 
-echo "✅ Shesh directory structure created under $home"
+echo "Shesh directory structure created under $home"
 ```
 
-> **btrfs + CoW:** `chattr +C` on `AI/Models` and `AI/Datasets` disables copy-on-write for those
-> huge files (better write performance, no fragmentation); snapshot them anyway only if you want, but
-> they're regenerable.
+> **Note —** btrfs + CoW: `chattr +C` on `AI/Models` and `AI/Datasets` disables copy-on-write for those huge files (better write performance, no fragmentation); snapshot them anyway only if you want, but they are regenerable.
 
 ---
 
-## 5. Backup & snapshot policy
+## 5. Backup and snapshot policy
 
 | Data | Snapshot (btrfs) | Local backup (restic) | Offsite/cloud | Encryption |
 |------|------------------|-----------------------|---------------|------------|
-| `Documents/Personal` | hourly/daily | ✅ external | ✅ rclone→cloud | restic repo key |
-| `Documents/Job` | ❌ (per employer policy) | ✅ employer tool only | employer-approved only | employer key |
-| `Projects/personal` | hourly | ✅ | ✅ (GitHub + restic) | restic |
-| `Projects/job` | ❌ | employer tool only | employer only | employer |
-| `Notes` | hourly | ✅ | ✅ git remote | git + restic |
-| `AI/Models`, `Datasets` | ❌ | ❌ | ❌ (regenerable) | — |
-| `Vaults/Keys` | ❌ never snapshot | ❌ never auto | manual LUKS offline copy only | LUKS |
-| `.config`, `.local/share` | daily | ✅ | ✅ | restic |
-| `Downloads`, `.cache` | ❌ | ❌ | ❌ | — |
+| `Documents/Personal` | hourly/daily | Yes external | Yes rclone to cloud | restic repo key |
+| `Documents/Job` | No (per employer policy) | Employer tool only | employer-approved only | employer key |
+| `Projects/personal` | hourly | Yes | Yes (GitHub + restic) | restic |
+| `Projects/job` | No | employer tool only | employer only | employer |
+| `Notes` | hourly | Yes | Yes git remote | git + restic |
+| `AI/Models`, `Datasets` | No | No | No (regenerable) | — |
+| `Vaults/Keys` | Never snapshot | Never auto | manual LUKS offline copy only | LUKS |
+| `.config`, `.local/share` | daily | Yes | Yes | restic |
+| `Downloads`, `.cache` | No | No | No | — |
 
-Restic excludes file should skip: `AI/`, `.cache/`, `Downloads/`, `node_modules/`, `target/`,
-`__pycache__/`, `.venv/`, `*.gguf`, `*.safetensors`.
+Restic excludes file should skip: `AI/`, `.cache/`, `Downloads/`, `node_modules/`, `target/`, `__pycache__/`, `.venv/`, `*.gguf`, `*.safetensors`.
 
 ---
 
@@ -228,23 +216,15 @@ Restic excludes file should skip: `AI/`, `.cache/`, `Downloads/`, `node_modules/
 
 The repo already uses the `dots/` tree + `setup` (rsync/cp with auto-backup). Recommended hardening:
 
-- Adopt a **bare git repo / GNU stow** approach for anything you want to version precisely:
-  `git init --bare $HOME/.cfg` (the "bare dotfiles" pattern) so `~` is never itself a git repo.
-- Keep machine-specific overrides in `~/.config/hypr/custom/*.lua` (already provided) and in
-  `profiles/msi-sword-cachyos/` for system-level files.
-- Never commit `Vaults/`, `.ssh/`, `*.kdbx`, cloud tokens, or Newelle/LLM API keys. Add to a global
-  `.gitignore` (the repo `.gitignore` should include `.env`, `*.secret`, `config.toml` with keys).
-- Symlink `~/.config` into the repo's `dots/.config` via the installer; keep an `INSTALLED_LISTFILE`
-  so uninstall can revert (this is the feature `3.files.sh` already attempts — make it robust).
+- Adopt a bare git repo / GNU stow approach for anything you want to version precisely: `git init --bare $HOME/.cfg` (the "bare dotfiles" pattern) so `~` is never itself a git repo.
+- Keep machine-specific overrides in `~/.config/hypr/custom/*.lua` (already provided) and in `profiles/msi-sword-cachyos/` for system-level files.
+- Never commit `Vaults/`, `.ssh/`, `*.kdbx`, cloud tokens, or Newelle/LLM API keys. Add to a global `.gitignore` (the repo `.gitignore` should include `.env`, `*.secret`, `config.toml` with keys).
+- Symlink `~/.config` into the repo's `dots/.config` via the installer; keep an `INSTALLED_LISTFILE` so uninstall can revert (this is the feature `3.files.sh` already attempts — make it robust).
 
 ---
 
 ## 7. Integration points for the other docs
 
-- **Smart-organizer** watches `Desk`, `Downloads`, `Documents/Inbox`, `Media/Screenshots` and sorts
-  into the folders above using `rules.toml`. It is **forbidden** (via `safety.sh`) to touch
-  `Projects/`, `Vaults/`, `Documents/Job`, `.ssh`, `.gnupg`, `.config`.
-- **Shesh** gets a permission profile (in Newelle's per-file permissions + your MCP policy):
-  read-only for `Documents/Personal`, `Notes`, `Projects/personal`; write only to `Downloads`,
-  `Documents/Inbox`, `AI/Sessions`; **deny** on `Documents/Job`, `Projects/job`, `Vaults`.
-- **Backup tool** reads the policy table in §5 to decide what to snapshot/back up.
+- **Smart-organizer** watches `Desk`, `Downloads`, `Documents/Inbox`, `Media/Screenshots` and sorts into the folders above using `rules.toml`. It is forbidden (via `safety.sh`) to touch `Projects/`, `Vaults/`, `Documents/Job`, `.ssh`, `.gnupg`, `.config`.
+- **Shesh** gets a permission profile (in Newelle's per-file permissions + your MCP policy): read-only for `Documents/Personal`, `Notes`, `Projects/personal`; write only to `Downloads`, `Documents/Inbox`, `AI/Sessions`; deny on `Documents/Job`, `Projects/job`, `Vaults`.
+- **Backup tool** reads the policy table in Section 5 to decide what to snapshot/back up.

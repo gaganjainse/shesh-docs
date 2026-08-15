@@ -1,4 +1,22 @@
-# Query Log — All Agents Aggregated (Live Update Automatic)
+# Query Log — All Agents Aggregated
+
+This file aggregates the query logs from five parallel agents plus the main
+agent during the 2026-08-11 swarm, and records the ledger and worker reports
+that emerged. It is the raw evidence behind the multi-tab incident.
+
+> **Historical record —** Generated 2026-08-12 via `tools/live_update.py
+> --swarm` and preserved as a factual record. It is retained as a record, not as
+> live reference. The authoritative factual baseline is the
+> [2026-08-15 fleet audit](../../../FLEET_AUDIT_2026-08-15.md): the body is
+> **GPL-3.0-or-later**, and `gaganjainse/SheshOS` is an unpublished, conceptual
+> project rather than a live upstream.
+
+## Summary
+
+- The swarm ledger shows seed and heartbeat events from the orchestrator and the per-layer workers on 2026-08-11.
+- The attached PDF transcript (five tabs) documents the weakest-link fixes: the `do_work()` placebo, git identity, credential auth, and lint debt.
+- Worker reports confirm clean-workspace boots, a queue-fallback defect that was caught and released, and a PAT exposure that required rotation.
+- The file is auto-updated by the orchestrator and workers; it contains no manual steps.
 
 > Aggregates query logs from 5 other agents that user worked with for some time + main agent
 > Generated: 2026-08-12T03:05:42.960521+00:00 via tools/live_update.py --swarm

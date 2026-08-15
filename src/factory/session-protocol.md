@@ -1,80 +1,93 @@
-# Session Protocol — Hot Hopping Without Losing Flow
+# Session Protocol — Retiring a Session Before It Slows You Down
+
+An agent session degrades on a schedule you can predict: roughly an hour in, or once the
+workspace passes 100 MB, tool latency climbs and context starts to overflow. This chapter gives
+the 60-second handoff that moves work to a fresh session with nothing lost and nothing
+re-explained.
 
 Status: living · last verified 2026-08-13
 
-> **Problem:** shesh-ecosystem is massive (53-repo fleet, 230+ component tests, ~115 tracked docs — see [INDEX](https://github.com/gaganjainse/shesh-ecosystem/blob/main/docs/INDEX.md)). One Arena.ai session slows down after ~60 min / 100 MB / 8000 files / many tool calls. Context overflows, tool latency spikes, and we get interrupted.
+## Summary
 
-This doc makes session hopping **perfect** — zero loss, zero re-explaining.
+- The fleet is large — a 53-repository federation with 230-plus component tests and roughly 115
+  tracked documents, per the ecosystem index — so one session cannot finish the backlog.
+- `tools/session_guard.py` watches six health metrics and declares HOP before quality drops.
+- The handoff is six commands and about a minute: status, handoff, gate, commit, push, close.
+- `docs/NEXT_SESSION_PROMPT.md` is generated, not written; pasting it bootstraps the next
+  session in full.
+- GitHub is the source of truth, so an interrupted session loses at most one task.
 
----
+## Why a session has to be retired
 
-## 1. The 60-second handoff (you do this)
+Think of a session as a workshop bench. Work accumulates on it — cloned repositories, caches,
+build artifacts, a long conversation history — and for a while that accumulation is useful,
+because everything is within reach. Past a certain point the bench is covered, and finding a
+tool takes longer than using it.
 
-When guard says **HOP NOW** or you feel lag:
+The failure is gradual rather than sudden, which is what makes it dangerous. Latency creeps up,
+answers get vaguer as context is truncated, and the session appears to be working right up to
+the moment it is not. The protocol exists to make retirement a routine, cheap, scheduled act
+instead of an emergency.
+
+## The 60-second handoff
+
+When the guard reports HOP NOW, or when you simply feel lag, run the sequence below and close
+the chat.
 
 ```bash
 cd ~/shesh-ecosystem   # or /home/user
 python tools/session_guard.py --status
-python tools/session_guard.py --handoff   # generates NEXT_SESSION_PROMPT + handoff.json
+python tools/session_guard.py --handoff   # writes NEXT_SESSION_PROMPT + handoff.json
 make check
-git status
 git add -A
-git commit -m "chore: handoff $(date -Iseconds) — $(cat docs/SESSION_HANDOFF.md | head -n1)"
+git commit -m "chore: handoff $(date -Iseconds)"
 git push origin main
 ```
 
-Then close this chat. You are done.
+Then open a new agent session and paste the contents of `docs/NEXT_SESSION_PROMPT.md`. The new
+session knows the project, the state, and the next task.
 
-Open a **new Agent Mode chat** and paste the content of `docs/NEXT_SESSION_PROMPT.md` (see §3). That's it — the new AI knows everything.
+> **Tip —** When the guard says HOP, do not argue with it. A 60-second handoff is far cheaper
+> than 30 minutes of degraded work.
 
-**Time:** ~60 seconds. No re-explaining.
+## How the guard decides to hop
 
----
+`tools/session_guard.py` runs on every autopilot tick and appends to
+`~/.local/share/shesh/session_guard.jsonl`. Any single threshold breach is enough to raise the
+alert.
 
-## 2. How the guard decides to hop (automatic)
+| Metric | HOP threshold |
+|---|---|
+| Workspace size (`du -sh /home/user`) | > 100 MB |
+| File count | > 8000 |
+| Session age (first guard log to now) | > 60 min |
+| Average tool latency, last 10 calls | > 5 s |
+| Uncommitted changes | > 20 files |
+| `make check` failing | Immediate HOP plus rollback |
 
-`tools/session_guard.py` runs on every autopilot tick and logs to `~/.local/share/shesh/session_guard.jsonl`:
+On a breach the guard writes `docs/SESSION_HOP_ALERT.md` with a banner and prints a summary:
 
-| Metric | Threshold → HOP alert |
-|--------|-----------------------|
-| Workspace size `du -sh /home/user` | >100 MB |
-| File count `find /home/user -type f \| wc -l` | >8000 |
-| Session age (first guard log → now) | >60 min |
-| Avg tool latency last 10 calls | >5s (Arena slowdown) |
-| Uncommitted changes | >20 files |
-| `make check` fails | Immediate HOP + rollback |
-
-When threshold hit, it creates `docs/SESSION_HOP_ALERT.md` with red banner and prints:
-
-```
+```text
 🚨 SESSION HOP RECOMMENDED — reason: workspace 112 MB >100 MB, 94 min old
 👉 Run: python tools/session_guard.py --handoff && git push
 ```
 
-The autopilot runner `tools/autopilot/runner.py` calls guard before each task — if HOP needed, it finishes current task, commits, pushes, and exits cleanly instead of starting new big task.
+The autopilot runner calls the guard before each task. If a hop is due, it finishes the current
+task, commits, pushes, and exits cleanly rather than starting something large. The same check
+runs from `scripts/supervise.sh` on each loop, from `tools/autopilot/gate.py` after tests, and
+from the autopilot `seed` and `run` commands.
 
-Integration points:
-- `scripts/supervise.sh` — loop calls `session_guard.py --tick`
-- `tools/autopilot/gate.py` — gate calls guard after tests
-- `tools/autopilot/cli.py` seed/run — checks guard
+## What the next session receives
 
----
+`docs/NEXT_SESSION_PROMPT.md` is generated by `session_guard.py --handoff`, so its numbers are
+live rather than remembered. It records the GitHub owner (`gaganjainse`, owner of 27
+repositories as generated), the project shape (19 components, three channels, the
+`manifests/components.toml` manifest, the `channels/*.lock` locks, 30 ecosystem tests and 182
+component tests in `src/`), the stack (Rust, Python, Lua/QML/Bash, rootless Podman, uv, and
+pipx-installed `shesh-*-mcp` servers), the reading order, this protocol, and the first commands
+to run.
 
-## 3. What you paste in next session (zero explanation)
-
-File `docs/NEXT_SESSION_PROMPT.md` is **auto-generated** by `session_guard.py --handoff`. It contains:
-
-- Your GitHub: `gaganjainse` (owner of 27 repos)
-- Project: shesh-ecosystem federation (19 components, 3 channels, manifest `manifests/components.toml`, locks `channels/*.lock`, 30 ecosystem tests, 182 component tests in `src/`)
-- Stack: Rust + Python + Lua/QML/Bash, rootless Podman, uv, pipx MCP servers `shesh-*-mcp`
-- Workflow: read `docs/SESSION_HANDOFF.md` FIRST, then `AUDIT_AND_ROADMAP.md`, `TODO.md`, `MANUAL_VERIFICATION.md`, `queries/QUERYLOG.md`
-- Session protocol: this doc, how to hop
-- PAT: **NOT included** but instructions how to provide: set env `GITHUB_PAT` or file `~/.config/shesh/github.pat` with 0600, or `gh auth login`. The tool `tools/github_auth.py` reads it securely.
-- Commands: `cd /home/user && git pull && make check && python tools/session_guard.py --status`
-
-You don't type anything else. Just paste that file.
-
-Example NEXT_SESSION_PROMPT (template, generated file has live numbers):
+The template below shows the shape; the generated file carries current figures.
 
 ```md
 You are continuing Shesh — local-first AI body for CachyOS/Hyprland on MSI Sword 16 HX.
@@ -85,52 +98,50 @@ Run: git pull origin main && make check && python tools/session_guard.py --statu
 Then pick next ⬜ from TODO.md and continue autopilot.
 ```
 
-**Why other AIs didn't know your profile before:** Arena resets workspace each session. Without this protocol, every session starts empty. With it, GitHub is source of truth and NEXT_SESSION_PROMPT bootstraps context in 1 paste.
+The prompt never contains the personal access token. It explains how to supply one instead:
+set `GITHUB_PAT`, place a mode-0600 file at `~/.config/shesh/github.pat`, or authenticate the
+GitHub CLI. See [github_auth.py](github-auth.md) for the loader and
+[secure_pat.py](secure-pat.md) for the encrypted-at-rest flow.
 
----
+Earlier sessions started blank because the session workspace resets each time. With this
+protocol, GitHub holds the state and a single paste restores context.
 
-## 4. Files that make hopping work
+## The files that make hopping work
 
-- `docs/SESSION_HANDOFF.md` — live anchor, updated after each task. Contains repo list, done/remains, commands.
-- `docs/SESSION_PROTOCOL.md` — this file (durable protocol)
-- `docs/NEXT_SESSION_PROMPT.md` — auto-generated, copy-paste for next session
-- `docs/SESSION_HOP_ALERT.md` — transient hop alert written by the guard; **untracked on purpose** (a committed copy goes stale instantly — archived example: `docs/history/attic/2026-08-11-session-hop-alert.md`)
-- `docs/history/queries/QUERYLOG.md` — every user prompt + answer, newest first
-- `TODO.md` — single source of tasks ⬜/✅/🟡/🔴
-- `tools/session_guard.py` — health monitor + handoff generator
-- `tools/github_auth.py` — secure PAT loader (env/file/gh, 0600 check, refuses world-readable)
-- `tools/autopilot/` — ledger at `~/.local/share/shesh/autopilot/ledger.jsonl` persists across sessions via GitHub push
+Seven artifacts carry the state across the boundary, and all of them are committed to `main`
+before a hop so no state is local-only.
 
-All are committed to `main` before hop — no local-only state.
+| Artifact | Role |
+|---|---|
+| `docs/SESSION_HANDOFF.md` | Live anchor: repository list, done and remaining, commands |
+| `docs/SESSION_PROTOCOL.md` | This durable protocol |
+| `docs/NEXT_SESSION_PROMPT.md` | Generated paste for the next session |
+| `docs/SESSION_HOP_ALERT.md` | Transient alert, untracked on purpose |
+| `docs/history/queries/QUERYLOG.md` | Every prompt and answer |
+| `TODO.md` | Single source of tasks (⬜ ✅ 🟡 🔴) |
+| `tools/session_guard.py`, `tools/github_auth.py`, `tools/autopilot/` | Monitor, credential loader, and the append-only ledger |
 
----
+The hop alert stays untracked because a committed alert is stale within hours; an archived
+example lives at `docs/history/attic/2026-08-11-session-hop-alert.md`.
 
-## 5. Emergency: session interrupted mid-work
+## Recovering from an interrupted session
 
-Arena can kill session without warning (workspace-over-budget). Mitigation:
+A session can be killed without warning when the workspace goes over budget, so the protocol
+assumes interruption rather than hoping against it. Every autopilot task commits after its gate
+passes, and the append-only JSONL ledger is pushed with each task, so the next session replays
+`ledger.next_pending()`. A task left in the `running` state is rolled back with a soft reset and
+redone. With autopilot pushing roughly every five minutes, the exposure is one task.
 
-- Every autopilot task commits after gate green (`safe_commit` + `safe_push`)
-- Ledger is append-only JSONL, pushed each task — next session replays `ledger.next_pending()`
-- If interrupted: new session runs `git pull`, `ledger` finds last task `running` → `rollback()` soft resets and redoes
-
-No data loss if you push frequently (autopilot does every ~5 min).
-
----
-
-## 6. Quick reference
+## Quick reference
 
 ```bash
-# Check health anytime
-python tools/session_guard.py --status
-# -> {workspace_mb: 61, file_count: 3421, age_min: 23, avg_latency_ms: 120, hop: false}
-
-# Force handoff file
-python tools/session_guard.py --handoff
-cat docs/NEXT_SESSION_PROMPT.md  # copy this
-
-# Clean to reduce size before hop
-python tools/session_guard.py --clean
-# removes __pycache__, .pytest_cache, .ruff_cache, .venv, .cache, target/
+python tools/session_guard.py --status   # {workspace_mb: 61, file_count: 3421, hop: false}
+python tools/session_guard.py --handoff  # then copy docs/NEXT_SESSION_PROMPT.md
+python tools/session_guard.py --clean    # drop caches to shrink the workspace
 ```
 
-**Rule:** When guard says HOP, don't argue — 60s handoff is cheaper than 30 min slowdown.
+## Where this fits
+
+[session_guard.py](session-guard.md) documents the monitor itself, [Efficiency](efficiency.md)
+explains how to keep the workspace small enough that hops are rare, and
+[Swarm](swarm/README.md) covers hopping while several sessions share one work queue.

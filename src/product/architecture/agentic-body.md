@@ -1,17 +1,29 @@
-# The Agentic Body: Brain + Mind + Soma
+# The Agentic Body: Brain, Mind, and Soma
 
-> The unifying thesis behind the Shesh ecosystem, derived from your SheshAOS/SheshOS/shesh-kernel
-> work. **An agent is not a chatbot — it is a body.** A body has a *mind* (reasoning/planning),
-> a *brain* (reflexes, coordination, governance), and a *soma* (sensors and actuators in the real
-> world). We build each layer as a replaceable component, then compose them.
+Shesh treats an agent as a body, not a chatbot. This chapter sets out the unifying
+metaphor — Mind, Brain, and Soma — that every other architecture document in the fleet
+references, and it shows how those layers map to real repositories and protocols.
 
-This is the conceptual map every other document in the ecosystem references.
+Think of the body the way you would think of a person. The **Mind** reasons and plans; the
+**Brain** coordinates and governs; the **Soma** is the flesh that senses and acts in the
+world. Shesh builds each layer as a replaceable component, then composes them into one
+agent.
+
+- **Summary**
+  - The agent splits into Mind (deliberation), Brain (governance), and Soma (sensors/actuators).
+  - The Brain is deterministic and local; the Mind may be nondeterministic and swappable.
+  - Two protocols connect the layers: the Shesh Kernel Protocol and MCP.
+  - Nothing the Mind proposes runs until the Brain validates it and writes an audit event.
+  - The small models run locally; larger specialist models remain a target for bigger hardware.
 
 ---
 
-## 1. The three layers
+## The three layers
 
-```
+The diagram shows the stack top to bottom: a slow, model-driven Mind, a fast deterministic
+Brain beneath it, and the Soma where cognition meets the machine.
+
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │  MIND — deliberative cognition                              │
 │  Planner · reasoner · critic · long-term memory · theory    │
@@ -23,7 +35,7 @@ This is the conceptual map every other document in the ecosystem references.
 │  router · audit/replay · resource budgets · tool broker.    │
 │  Fast, deterministic, local. Models propose; brain disposes.│
 ├─────────────────────────────────────────────────────────────┤
-│  SOMA — the living body (shesh-desktop + MCP + devices)   │
+│  SOMA — the living body (shesh-desktop + MCP + devices)      │
 │  Sensors: screen, mic, files, input, phone, telemetry.      │
 │  Actuators: hyprctl, shell, apps, GPU, voice, ADB phone.    │
 │  The "nervous system": MCP servers, watchers, automations.  │
@@ -31,48 +43,58 @@ This is the conceptual map every other document in the ecosystem references.
 ```
 
 ### Why split it this way
-- **MIND** is allowed to be nondeterministic, slow, model-bound, and swappable (Gemma/Qwen/phi4).
-- **BRAIN** must be deterministic, auditable, crash-proof, and local. This is exactly SheshAOS:
-  *"models propose actions; the kernel validates and records."* It is the immune system — it stops
-  the mind from doing damage.
-- **SOMA** is where cognition meets the machine. It is the biggest surface and where most of the
-  best open-source projects (Newelle, MCP servers, computer-use agents) already live. We don't
-  rebuild it; we integrate it, behind the brain's policy gate.
+
+The **Mind** is allowed to be nondeterministic, slow, model-bound, and swappable — today
+Gemma, Qwen, or phi4, tomorrow something else. The **Brain** must be deterministic,
+auditable, crash-proof, and local. This is exactly SheshAOS: "models propose actions; the
+kernel validates and records." It is the immune system — it stops the Mind from doing
+damage. The **Soma** is where cognition meets the machine, and it is the largest surface.
+Most of the best open-source projects (Newelle, MCP servers, computer-use agents) already
+live here, so Shesh integrates them behind the Brain's policy gate rather than rebuilding
+them.
 
 ---
 
-## 2. Mapping to your existing repositories
+## Mapping to the existing repositories
 
-| Layer | Your repo | Role in the Body | Status |
+| Layer | Repository | Role in the body | Status |
 |---|---|---|---|
-| **BRAIN** | `SheshAOS` (12-crate Rust workspace, 981 tests) | Governance kernel: event store, policy, scheduler, router, tool broker, RPC/terminal | production-ready core, Ubuntu-targeted |
-| **MIND** | `SheshOS` (SheshAOS v2) | Specialist-model routing: planner (Gemma 4 12B), coder (Qwen3-Coder 30B), vision (Qwen3.5 9B) | architecture brief + bootstrap |
-| **BRAIN (low-level)** | `shesh-kernel` | Alpha microkernel track; same crate family + protocols crate; deeper kernel design | alpha |
-| **SOMA (desktop)** | `shesh-desktop` | CachyOS/Hyprland body: dotfiles, MCP servers, smart-organizer, GPU, automations | this ecosystem's main integration target |
-| **SOMA (memory)** | `rag-service` | Sensory memory: hybrid RAG (dense+BM25+RRF) over ChromaDB | production API |
-| **MIND (quality)** | `llm-eval-harness` | Reflection/self-check loop for the mind (LLM-as-judge) | CI-ready |
-| **SOMA (language)** | `Vyākṛti` | (separate creative project) Sanskrit programming language/IDE — not part of the body but dogfoods the agent | 123 tests |
+| **Brain** | `SheshAOS` (12-crate Rust workspace, 981 tests) | Governance kernel: event store, policy, scheduler, router, tool broker, RPC/terminal | production-ready core, Ubuntu-targeted |
+| **Mind** | `SheshOS` (SheshAOS v2) | Specialist-model routing: planner (Gemma 4 12B), coder (Qwen3-Coder 30B), vision (Qwen3.5 9B) | conceptual — see note below |
+| **Brain (low-level)** | `shesha-kernel` | Alpha microkernel track; same crate family plus a protocols crate; deeper kernel design | archived |
+| **Soma (desktop)** | `shesh-desktop` | CachyOS/Hyprland body: dotfiles, MCP servers, smart-organizer, GPU, automations | this ecosystem's main integration target |
+| **Soma (memory)** | `rag-service` | Sensory memory: hybrid RAG (dense + BM25 + RRF) over ChromaDB | production API |
+| **Mind (quality)** | `llm-eval-harness` | Reflection/self-check loop for the Mind (LLM-as-judge) | CI-ready |
+| **Soma (language)** | `Vyākṛti` | A separate creative project — a Sanskrit programming language and IDE; it dogfoods the agent but is not part of the body | 123 tests |
 
-> Note: `SheshOS` README targets Ubuntu/GNOME and 16 GB RAM with three large models (12B/30B/9B).
-> Your actual machine (RTX 4050 6 GB) cannot resident those simultaneously. The ecosystem resolves
-> this by making the **Mind layer model-routed**: on the laptop, use small models
-> (phi4-mini / qwen2.5-coder:3b / moondream2); the same protocols target the larger SheshOS models on
-> a future bigger box or when offloaded. The Brain doesn't care which model answers.
+> **Note —** `SheshOS` is an unpublished, conceptual specification (the "SheshAOS v2" mind
+> design). Do not treat `gaganjainse/SheshOS` as a live, reachable upstream; the working
+> mind today is `shesh-mind` plus `shesh-memory` and `shesh-orchestrator`. The kernel
+> research track lives in the archived `shesha-kernel` repository.
+
+The `SheshOS` brief targets Ubuntu/GNOME with 16 GB RAM and three large models
+(12B/30B/9B). The actual machine (RTX 4050 6 GB) cannot keep those resident at once. The
+ecosystem resolves this by making the **Mind layer model-routed**: on the laptop it uses
+small models (phi4-mini, qwen2.5-coder:3b, moondream2), and the same protocols target the
+larger SheshOS models on a future bigger box or when offloaded. The Brain does not care
+which model answers.
 
 ---
 
-## 3. The nervous system: how layers talk
+## The nervous system: how the layers talk
 
-Two protocols only (everything else is an adapter):
+Two protocols carry everything; everything else is an adapter.
 
-1. **Shesh Kernel Protocol** (from `shesh-rpc`, JSON-RPC over Unix socket) — Brain-internal and
-   Brain↔Mind. Strongly typed, append-only event semantics, policy-checked.
-2. **Model Context Protocol (MCP 2026-07-28)** — Brain↔Soma. Every actuator/sensor is an MCP
-   server (stdio locally; HTTP only when explicitly bridged). This lets us reuse the entire MCP
-   ecosystem (Newelle, Goose, Hermes, pi, etc.) as interchangeable Soma organs.
+1. **Shesh Kernel Protocol** (from `shesh-rpc`, JSON-RPC over a Unix socket) — Brain-internal
+   and Brain↔Mind. Strongly typed, append-only event semantics, policy-checked.
+2. **Model Context Protocol (MCP 2026-07-28)** — Brain↔Soma. Every actuator and sensor is an
+   MCP server (stdio locally; HTTP only when explicitly bridged). This lets Shesh reuse the
+   entire MCP ecosystem (Newelle, Goose, Hermes, pi) as interchangeable Soma organs.
 
-Data flow for "Hey Shesh, organize my downloads and switch to performance mode":
-```
+The flow for "Hey Shesh, organize my downloads and switch to performance mode" runs like
+this:
+
+```text
 mic (Soma) → STT (Soma/Newelle) → text
   → MIND: parse intent, propose tool calls {organize_downloads, set_power(performance)}
   → BRAIN: policy check (both auto-allowed), append events, assign task IDs
@@ -80,38 +102,43 @@ mic (Soma) → STT (Soma/Newelle) → text
   → Soma sensors observe result (file list, powerprofilesctl)
   → MIND: formulates confirmation → TTS (Soma) → audit event committed
 ```
-Every arrow is an event in the append-only log. Nothing the mind proposes is executed until the brain
-validates it. This is the governance guarantee inherited from SheshAOS.
+
+Every arrow is an event in the append-only log. Nothing the Mind proposes executes until
+the Brain validates it. That governance guarantee is inherited from SheshAOS.
 
 ---
 
-## 4. Build order (body grows bottom-up, but is safe top-down)
+## Build order
 
-Per `shesh-kernel`'s own phased plan (event store → kernel runtime → resource budgets → model
-providers → tool broker → IPC/MCP/ACP):
+The body grows bottom-up but is safe top-down, following `shesh-kernel`'s phased plan
+(event store → kernel runtime → resource budgets → model providers → tool broker →
+IPC/MCP/ACP):
 
-1. **Soma first (this ecosystem):** make the body reliable — dotfiles, MCP servers, organizer,
-   automations, voice. A body you can trust.
-2. **Brain wiring:** connect Shesh's audit log to SheshAOS's event store; route MCP tool calls
-   through `shesh-kernel` policy instead of Newelle executing directly.
-3. **Mind specialists:** plug SheshOS model routing into `shesh-ai`'s provider abstraction; use
-   `llm-eval-harness` to grade each specialist.
-4. **Reflection loop:** the mind uses the audit log + eval harness to propose improvements to skills
-   (the "Continual Harness" idea — small, evidence-backed updates, never mutating the base prompt).
+1. **Soma first (this ecosystem):** make the body reliable — dotfiles, MCP servers,
+   organizer, automations, voice. A body you can trust.
+2. **Brain wiring:** connect Shesh's audit log to SheshAOS's event store; route MCP tool
+   calls through `shesh-kernel` policy instead of Newelle executing directly.
+3. **Mind specialists:** plug SheshOS model routing into `shesh-ai`'s provider abstraction;
+   use `llm-eval-harness` to grade each specialist.
+4. **Reflection loop:** the Mind uses the audit log plus the eval harness to propose
+   improvements to skills — the "Continual Harness" idea: small, evidence-backed updates,
+   never mutating the base prompt.
 5. **Kernel track (research):** eBPF sensing for Soma, then `shesh-kernel` experiments on the side.
 
-We never block step 1 on step 4. The body ships and is useful immediately; the brain plugs in
+Step 1 never blocks on step 4. The body ships and is useful immediately; the Brain plugs in
 behind it without changing how Soma works.
 
 ---
 
-## 5. Naming conventions (everything is ours)
+## Naming conventions
 
 - **No "Jarvis".** The agent is **Shesh** (शेष) across all layers.
-- **Kernel family** = the brain/kernel family (SheshAOS, shesh-kernel, shesh-* crates) — formerly 'Nexus', renamed per SHESH canon.
-- **Shesh** = the whole body / the user-facing agent (SheshOS = the mind spec, shesh-* MCP organs).
-- **Soma** = the bodily/device layer codename (soma-* sensors/actuators).
-- Components we integrate keep their **upstream names** in `sources/upstream/` (attribution), but our
-  forks and wrappers are renamed: `shesh-voice` (wraps Newelle voice), `shesh-files` (organizer),
-  `shesh-shell`, `shesh-memory`, `shesh-phone`, etc.
+- **Kernel family** is the brain/kernel family (SheshAOS, shesh-kernel, shesh-* crates) —
+  formerly "Nexus", renamed per Shesh canon.
+- **Shesh** is the whole body and the user-facing agent (SheshOS is the mind spec; shesh-*
+  are the MCP organs).
+- **Soma** is the bodily/device-layer codename (soma-* sensors/actuators).
+- Components we integrate keep their **upstream names** in `sources/upstream/` (attribution),
+  but our forks and wrappers are renamed: `shesh-voice` (wraps Newelle voice), `shesh-files`
+  (organizer), `shesh-shell`, `shesh-memory`, `shesh-phone`, and so on.
 - Every MCP server is `shesh-<organ>-mcp`. Every systemd unit is `shesh-<organ>.service`.

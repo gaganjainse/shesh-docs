@@ -1,18 +1,163 @@
-/* Shesh Docs theme tweaks — referenced from book.toml [output.html].
-   Keep restrained: legibility and brand accent only; mdbook's default
-   themes do the heavy lifting. */
+/* Shesh Docs — professional reading theme.
+   A restrained, publication-grade typographic layer on top of mdBook's default
+   themes. The goal is comfortable long-form reading: a measured line length, a
+   quiet serif body, decisive headings, and callouts that read as editorial notes
+   rather than alert boxes. */
 
 :root {
-    --links: #2f6f8f;
+    --shesh-ink: #1c1f24;
+    --shesh-soft: #4a5159;
+    --shesh-faint: #8a929c;
+    --shesh-line: #e4e7ec;
+    --shesh-accent: #2f6f8f;
+    --shesh-accent-soft: #e8f1f5;
+    --shesh-warn: #8a5a00;
+    --shesh-warn-bg: #fbf3e2;
+    --shesh-note-bg: #eef3f6;
+    --shesh-tip-bg: #eef5ee;
 }
 
-.content .warning {
-    padding: 0.6rem 1rem;
-    border-left: 4px solid #b58900;
-    background: rgba(181, 137, 0, 0.08);
+.content {
+    font-family: "Iowan Old Style", "Palatino Linotype", "Charter", Georgia, "Times New Roman", serif;
+    color: var(--shesh-ink);
+    font-size: 1.04rem;
+    line-height: 1.72;
 }
 
-/* Checklist pages (manual verification fissions) read better tighter. */
+.content p,
+.content li,
+.content blockquote {
+    max-width: 46rem;
+}
+
+.content h1,
+.content h2,
+.content h3,
+.content h4 {
+    font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+    color: var(--shesh-ink);
+    font-weight: 650;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+}
+
+.content h1 {
+    font-size: 2.05rem;
+    margin-bottom: 0.2rem;
+}
+
+.content h2 {
+    font-size: 1.5rem;
+    margin-top: 2.4rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid var(--shesh-line);
+}
+
+.content h3 {
+    font-size: 1.18rem;
+    margin-top: 1.8rem;
+    color: var(--shesh-soft);
+}
+
+.content a, .content a:visited {
+    color: var(--shesh-accent);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(47, 111, 143, 0.25);
+}
+
+.content a:hover {
+    border-bottom-color: var(--shesh-accent);
+}
+
+.content code {
+    font-family: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    font-size: 0.88em;
+    background: #f3f5f7;
+    padding: 0.12em 0.38em;
+    border-radius: 4px;
+    color: #2a3b44;
+}
+
+.content pre {
+    background: #1b1f24;
+    color: #e6edf3;
+    border-radius: 8px;
+    padding: 1rem 1.15rem;
+    line-height: 1.55;
+    font-size: 0.86rem;
+}
+
+.content pre code {
+    background: transparent;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
+}
+
+.content blockquote {
+    border-left: 3px solid var(--shesh-accent);
+    background: var(--shesh-accent-soft);
+    margin: 1.4rem 0;
+    padding: 0.75rem 1.15rem;
+    color: var(--shesh-soft);
+    font-style: normal;
+    border-radius: 0 6px 6px 0;
+}
+
+.content blockquote strong {
+    color: var(--shesh-ink);
+}
+
+.content .warning,
+.content blockquote.warning {
+    border-left-color: var(--shesh-warn);
+    background: var(--shesh-warn-bg);
+}
+
+.content blockquote.note {
+    border-left-color: var(--shesh-accent);
+    background: var(--shesh-note-bg);
+}
+
+.content blockquote.tip {
+    border-left-color: #3a7d44;
+    background: var(--shesh-tip-bg);
+}
+
+.content table {
+    max-width: 46rem;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    font-size: 0.95rem;
+}
+
+.content table th {
+    text-align: left;
+    background: #f6f8fa;
+    border-bottom: 2px solid var(--shesh-line);
+    padding: 0.55rem 0.8rem;
+    font-family: "Inter", system-ui, sans-serif;
+    font-weight: 600;
+}
+
+.content table td {
+    border-bottom: 1px solid var(--shesh-line);
+    padding: 0.5rem 0.8rem;
+    vertical-align: top;
+}
+
+.content table tr:hover td {
+    background: #fafbfc;
+}
+
 .content li.task-list-item {
     list-style: none;
+}
+
+.sidebar {
+    font-family: "Inter", system-ui, sans-serif;
+}
+
+.content .page {
+    padding-top: 0.5rem;
 }

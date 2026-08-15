@@ -1,92 +1,132 @@
-# Workspace Separation — Product vs Factory (Fixed 2026-08-11)
+# The Factory Plane — Keeping the Workshop Out of the Product
 
-> You reported: "Make one repo that is the workspace or maybe you already made that handles our messy works and systems so that they don't get embedded in our ecosystem. Make that separation proper as we are already starting to get issues in this matter where both are combined in new chats."
+![License](https://img.shields.io/badge/License-GPL--3.0--or--later-blue)
 
-## Problem before
+Until 2026-08-11 the fleet's shippable product and the tooling used to build it lived in one
+repository, and every fresh agent session read both at once. This chapter explains the split
+that separated them, what belongs on each side of the line, and which repository you open for
+a given task.
 
-`shesh-ecosystem` contained both:
-- **Product** — clean: manifest `components.toml`, locks `channels/*.lock`, architecture docs, gates `resolve_manifest.py`, `check_licenses.py`
-- **Factory** — messy dev tooling: `tools/session_guard.py`, `secure_pat.py`, `github_auth.py`, `setup_worker.py`, `llm_adapter.py`, `model_router.py`, `swarm/`, `autopilot/`, `docs/SESSION_PROTOCOL.md`, `SWARM.md`, `TRAVEL_MODE.md`, `EFFICIENCY.md`, `MODEL_AGNOSTIC.md`, `.github/workflows/swarm-*.yml`, `Containerfile`, etc.
+## Summary
 
-In new Arena chats, AI read both and mixed them — e.g., tried to apply session protocol to component READMEs, or cloned 22 repos for platform work.
+- One repository held two incompatible things: a clean installable product and a messy
+  development harness. Agents mixed them, applying session protocol to component READMEs and
+  cloning the whole fleet for platform work.
+- The fleet now separates concerns across three owned repositories — product, factory, and
+  gateway — plus a pinned upstream fork.
+- `shesh-ecosystem` is the **Product** plane: manifest, channel locks, architecture docs, and
+  gates. `shesh-workspace` is the **Factory** plane: session protocol, swarm, credentials,
+  efficiency tooling.
+- Development work and the shipped runtime use different model tiers on purpose: big free
+  hosted models to build the system, small local models to run it.
+- Unattended build work runs on GitHub Actions using free tiers only, with no paid API key.
 
-## Solution now — 3 repos
+## Why the planes had to split
 
-| Repo | Purpose | Clean? | URL |
-|------|---------|--------|-----|
-| **shesh-ecosystem** | **Product** — what user installs on MSI Sword 16 HX | Clean, 63 tests GATE OK, no session protocol | https://github.com/gaganjainse/shesh-ecosystem |
-| **shesh-workspace** | **Factory** — messy dev works handling session protocol, swarm, secure PAT, efficiency, model-agnostic, travel mode, etc. Keeps ecosystem clean | Messy, dev tooling, session hopping | https://github.com/gaganjainse/shesh-workspace |
-| **shesh-omniroute** | **Gateway** — wrapper for OmniRoute free big models, optional to local AI in final product | Clean wrapper | https://github.com/gaganjainse/shesh-omniroute |
-| **OmniRoute fork** | **Upstream** — 291 providers 90+ free 500+ models 1.53B tokens/mo | Original MIT 38.9k★ | https://github.com/gaganjainse/OmniRoute (forked from diegosouzapw/OmniRoute) |
+A factory and a showroom serve opposite purposes. A showroom stays clean, labelled, and
+predictable; a factory floor accumulates jigs, fixtures, and half-finished experiments because
+that is how work gets done. Putting both in one room does not save space — it simply makes the
+showroom unusable.
 
-### What goes where
+That is precisely what happened inside `shesh-ecosystem`. The repository carried the product
+side — the `components.toml` manifest, the `channels/*.lock` files, the architecture documents,
+and the `resolve_manifest.py` and `check_licenses.py` gates. It also carried the factory side:
+`tools/session_guard.py`, `secure_pat.py`, `github_auth.py`, `setup_worker.py`,
+`llm_adapter.py`, `model_router.py`, the `swarm/` and `autopilot/` trees, the session and swarm
+documents, the `swarm-*.yml` workflows, and the `Containerfile`.
 
-**shesh-ecosystem (product) — keep:**
-- `manifests/components.toml` + `models.toml` (now with shesh-omniroute component)
-- `channels/*.lock` (stable/canary/devel)
-- `docs/architecture/` (AGENTIC_BODY, REPO_TOPOLOGY, LANGUAGE_POLICY, MULTI_AGENT)
-- `docs/GETTING_STARTED.md`, `MANUAL_VERIFICATION.md`, `AUDIT_AND_ROADMAP.md`, `SESSION_HANDOFF.md`, `GLOSSARY.md`, `TOOLING_CATALOG.md`
-- `docs/history/adr/` (19 ADRs)
-- `docs/components/` (synced READMEs)
-- `scripts/` (resolve_manifest, check_licenses)
-- `policies/` (SKILLS_POLICY)
-- `Makefile`, `pyproject.toml`, `README.md`
-- Maybe `docs/MODEL_AGNOSTIC.md` (product feature) and `OMNIROUTE_STUDY.md` (study for product)
+The consequence showed up in every new agent session. The model read both halves and could not
+tell which rules applied, so it did things like enforce the session hopping protocol on a
+component README, or clone 22 repositories to edit a single platform document.
 
-**shesh-workspace (factory) — move dev tooling:**
-- `tools/session_guard.py`, `secure_pat.py`, `github_auth.py`, `setup_worker.py`, `llm_adapter.py`, `model_router.py`, `llm_worker.py`, `swarm/`, `autopilot/`, `install.sh`
-- `docs/SESSION_PROTOCOL.md`, `SWARM.md`, `SWARM_STARTUP_GUIDE.md`, `TRAVEL_MODE.md`, `EFFICIENCY.md`, `MODEL_AGNOSTIC.md` (duplicate for dev), `NEXT_SESSION_PROMPT.md`, `SESSION_HOP_ALERT.md`
-- `.github/workflows/swarm-auto-merge.yml`, `swarm-scheduled.yml`, `swarm-llm-worker.yml`
-- `Containerfile`, `distrobox.ini`, `scripts/sign_artifacts.py`, `export_traces_otlp.py`, `eval_model_agnostic.py`
-- `swarm/` queue/claims/heartbeats/artifacts/ledger
-- `manifests/models.toml` (copy for dev)
+## The three-repository split
 
-**Current state 2026-08-11:** We have created `shesh-workspace` and pushed dev tooling there (`fbb77e3` main). Ecosystem still contains dev tooling (we have not yet deleted), but we document separation here and will clean ecosystem in next commit (remove dev tooling from ecosystem, keep only product).
+Each repository now has one job, and its expected level of tidiness is stated up front.
 
-**For new chats:**
-- If task is **ecosystem/component** (e.g., implement shesh-memory): open chat, read `shesh-ecosystem/docs/SESSION_HANDOFF.md` only, work on component, `make check`, push to `shesh-ecosystem`
-- If task is **dev tooling** (session protocol, swarm, PAT, efficiency, model-agnostic): open chat, read `shesh-workspace/README.md` + `docs/SESSION_PROTOCOL.md`, work, push to `shesh-workspace`
-- No mixing.
+| Repository | Plane | Purpose | Tidiness |
+|---|---|---|---|
+| `shesh-ecosystem` | Product | What the owner installs on the MSI Sword 16 HX | Clean; 63 tests, gate OK; no session protocol |
+| `shesh-workspace` | Factory | Session protocol, swarm, secure PAT, efficiency, model-agnostic work, travel mode | Deliberately messy dev tooling |
+| `shesh-omniroute` | Gateway | Wrapper over the OmniRoute fork; optional to the local model stack | Clean wrapper |
+| `gaganjainse/OmniRoute` | Upstream fork | 291 providers, 90-plus free, 500-plus models, 1.53B tokens per month | Pinned fork of `diegosouzapw/OmniRoute`, upstream's own permissive license |
 
-## Local models vs making system — clarification (you asked)
+> **Note —** The Shesh fleet itself is licensed GPL-3.0-or-later; upstream forks keep their own
+> licenses, and `scripts/check_licenses.py` refuses combinations that are incompatible.
 
-> "Why are you considering local models, i am not running any local models for the work i am doing, those models will run in the final system i.e. shesh ecosystem we are making, not doing the work to make it. But still including them in making the system will help us in the future so the local models despite being small does not decrease our quality very much."
+## What belongs in each repository
 
-**You are right — separation:**
+The product repository keeps everything a user's installation depends on: the
+`manifests/components.toml` and `models.toml` files (the latter now including the
+`shesh-omniroute` component), the three channel locks for stable, canary, and devel, the
+architecture set (agentic body, repo topology, language policy, multi-agent), the
+getting-started, manual-verification, audit-and-roadmap, session-handoff, glossary, and
+tooling-catalog documents, 19 architecture decision records, synced component READMEs, the
+`scripts/` gates, the skills policy, and the build files. The model-agnostic strategy and the
+OmniRoute study belong here too, because both describe product behavior.
 
-- **For making ecosystem (dev work in Arena):** We should use **free big industry models via OmniRoute** — Claude (via Kiro free), GPT (via Pollinations/Requesty), Gemini 60M, DeepSeek V3.2/R1, Llama 3.1 70B, Mistral Large 3 1B, Qwen3-Max, Kimi K2 1M, GLM-4-Flash permanently free, etc. — 291 providers, 90+ free, 500+ models, 1.53B tokens/mo, RTK+Caveman 15-95% compression. These are **not small local**, they are industry-used big models.
+The factory repository takes the development harness: the `tools/` scripts named above plus
+`llm_worker.py`, the `swarm/` and `autopilot/` trees, `install.sh`, the session and swarm
+documents, the three `swarm-*.yml` workflows, the `Containerfile` and `distrobox.ini`, the
+signing and tracing scripts, `eval_model_agnostic.py`, the swarm queue, claims, heartbeats,
+artifacts, and ledger, and a development copy of `models.toml`.
 
-- **For final system (Shesh on MSI Sword 16 HX):** Local models `phi4-mini, qwen2.5-coder:3b, moondream2, nomic-embed-text` 6GB VRAM offline, no API key, primary. Where you enable OmniRoute cloud free fallback in finished product is your choice (settings GUI).
+> **Note —** As recorded on 2026-08-11, `shesh-workspace` exists and carries the development
+> tooling at commit `fbb77e3` on `main`, while `shesh-ecosystem` still contained its copies
+> pending a cleanup commit. Treat this chapter as the intended boundary.
 
-- **Including local in design helps future quality not decrease much:** Our model-agnostic workflow (`tools/llm_adapter.py` 5-layer guard: strict JSON schema, uniform prompt, validation+repair loop 3 retries, fallback chain free-first→stub, LLM-as-judge score >=0.7) ensures same output shape regardless of model — small local + big free via same adapter, quality consistent, variance <0.1, valid 100%. So including local in design does not decrease quality much.
+## Which repository a session opens
 
-**Implementation:**
+The routing rule is short enough to memorize, which is the point.
 
-- `manifests/models.toml` now has two sections conceptually:
-  - Dev (making): Groq free, OpenRouter :free, GitHub Models free, HuggingFace free — big models
-  - Prod (final): Ollama local phi4-mini etc — small local
-  - Both in same file with priority: dev picks big free first (prio 2-3), prod picks local first (prio 1), but adapter can handle both
+For component or ecosystem work — implementing `shesh-memory`, for example — open a session,
+read only `shesh-ecosystem/docs/SESSION_HANDOFF.md`, do the work, run `make check`, and push to
+`shesh-ecosystem`. For development tooling — session protocol, swarm, credentials, efficiency,
+model-agnostic work — read `shesh-workspace/README.md` and its session protocol document, then
+push to `shesh-workspace`. No session does both.
 
-- `shesh-omniroute` component: wraps OmniRoute fork, provides `omniroute_generate` MCP tool with same model-agnostic adapter, optional to local AI, enabled via settings GUI.
+## Development models versus product models
 
-## True hours unattended — you asked about this
+The two planes deliberately draw on different model tiers, and conflating them caused real
+confusion. Building the system does not require the small local models; those exist to run the
+finished product.
 
-> "If you want true LLM coding for hours with zero tabs: I can add swarm-llm-worker.yml Action that uses secret OPENAI_API_KEY (you add in repo Settings → Secrets) + tools/llm_worker.py picks pending Issue, calls LLM API, generates patch, runs make check, pushes branch, opens PR — then auto-merge merges. That would be real hours unattended coding on GitHub, no phone needed. Tell me provider (OpenAI/Anthropic) and I will implement."
+| Purpose | Models | Why |
+|---|---|---|
+| Building the fleet | Free hosted models via the gateway: Groq free, OpenRouter `:free`, GitHub Models free, HuggingFace free | Industry-scale models at no cost, used only in development |
+| Running the fleet | Local Ollama: `phi4-mini`, `qwen2.5-coder:3b`, `moondream2`, `nomic-embed-text` | 6 GB VRAM, offline, no API key, primary by default |
 
-We implemented **free version** (no OpenAI API key, no money):
+Including the small local models in the design does not degrade quality, because every caller
+goes through the same guarded adapter. The five-layer guard in
+[llm_adapter.py](llm-adapter.md) — strict JSON schema, uniform prompt, a validate-and-repair
+loop with three retries, a free-first fallback chain ending in a deterministic stub, and a
+judge score of at least 0.7 — holds the output shape constant regardless of which model
+answers. Measured variance stays under 0.1 with 100 percent JSON validity.
 
-- `.github/workflows/swarm-llm-worker.yml` — cron every 2 hours + workflow_dispatch
-- Uses **GitHub Models free** via `GITHUB_TOKEN` (already have via PAT) — `gpt-4o-mini`, `Phi-3-medium`, etc. — free for public repos, no money
-- Plus optional free: `GROQ_API_KEY` free, `OPENROUTER_API_KEY` free `:free` models, `HF_TOKEN` free
-- Flow: picks pending Issue `swarm:pending`, calls `tools/llm_adapter.py` + `tools/llm_worker.py` with free model, generates patch JSON `{"patch":..., "summary":...}`, writes `swarm/artifacts/llm-issue-N.md`, pushes branch `swarm/issue-N/llm-worker-<model>`, opens PR `Closes #N`, auto-merge Action `swarm-auto-merge.yml` merges if `make check` green
-- True hours unattended while traveling, no Arena tab needed, uses `GITHUB_TOKEN` not PAT for merge
+Implementation follows the same idea. `manifests/models.toml` describes both tiers with
+priorities: development picks big free models first, production picks local first, and the
+adapter handles either. The `shesh-omniroute` component wraps the fork and exposes an
+`omniroute_generate` tool through the same adapter, optional to the local stack and enabled in
+the settings interface.
 
-If you want OpenAI/Anthropic paid, set secret `OPENAI_API_KEY`/`ANTHROPIC_API_KEY` and change `model` input to `openai/gpt-4o` etc — but free GitHub Models already works, no money.
+## Unattended build work without a paid key
 
-## What to do next
+Long unattended runs do not need a paid API key. The free implementation uses
+`.github/workflows/swarm-llm-worker.yml`, triggered by cron every two hours and by manual
+dispatch, and calls GitHub Models through the `GITHUB_TOKEN` the runner already provides —
+`gpt-4o-mini`, `Phi-3-medium`, and similar, free for public repositories. Optional free keys
+for Groq, OpenRouter, and HuggingFace extend the chain.
 
-1. **For ecosystem work:** Use `shesh-ecosystem` repo, read `SESSION_HANDOFF.md`, `make check`, selective clone via `tools/setup_worker.py --component shesh-memory` (2M not 36M)
-2. **For dev tooling work:** Use `shesh-workspace` repo, read its `README.md` + `docs/SESSION_PROTOCOL.md`
-3. **For OmniRoute:** Use fork `gaganjainse/OmniRoute` or wrapper `shesh-omniroute`, gateway `http://localhost:20128/v1`, dashboard `http://localhost:20128`, free tiers dashboard `/dashboard/free-tiers`
+The flow is mechanical: pick an issue labelled `swarm:pending`, call `tools/llm_adapter.py` and
+`tools/llm_worker.py` with a free model, produce a patch as `{"patch": ..., "summary": ...}`,
+write `swarm/artifacts/llm-issue-N.md`, push branch `swarm/issue-N/llm-worker-<model>`, open a
+pull request that says `Closes #N`, and let `swarm-auto-merge.yml` merge it once `make check`
+is green. Paid providers remain possible by setting `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` and
+changing the model input, but the free path already works.
 
-Separation proper now — no more mixing in new chats.
+## Where this fits
+
+Read [Session Protocol](session-protocol.md) for the handoff discipline that keeps factory
+sessions productive, [Efficiency](efficiency.md) for the selective-clone strategy that shortens
+setup, and [Swarm](swarm/README.md) for the multi-session coordination bus. The cloud side is
+documented under [Gateway](../gateway/overview.md), and the product side begins at
+[Product Overview](../product/overview.md).

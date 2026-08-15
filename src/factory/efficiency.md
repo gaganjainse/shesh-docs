@@ -1,156 +1,165 @@
-# Efficiency — How to Work Longer and Faster for Free
+# Efficiency — Longer Sessions for No Money
 
-> **Problem you reported:** Cloning 22 repos in every chat is useless when work is divided, and you have no money for OpenAI API. You travel on phone, can keep 1 orchestrator tab open.
+Cloning 22 repositories into every session cost minutes of setup and cut session life to under
+an hour, all to edit one component. This chapter collects the free techniques that took the
+working set from 36 MB to 2 MB and stretched a session from 60 minutes to two or three hours,
+with no paid API involved.
 
-This doc lists **free** strategies to make sessions last longer (60 min → 120-180 min) and avoid waste.
+## Summary
 
-## 1. Selective clone — biggest win (36M → 2M)
+- Selective, shallow, blob-filtered cloning is the single largest win: 36 MB and about 3000
+  files become 2 MB and a few hundred.
+- Running only the gates that matter for the component you touched saves roughly 80 percent of
+  gate time.
+- Deterministic stubs keep every component testable offline, so no session ever needs a paid
+  model.
+- Offline file queues beat the GitHub Issues API on a phone with poor network.
+- GitHub Actions carries the long unattended work for free on public repositories, so browser
+  tabs do not have to.
 
-**Before:** Every worker did `git clone https://github.com/gaganjainse/shesh-*` for all 22 repos:
+## The core problem: a workspace that outgrows its session
 
-```
-shesh-voice 41M, shesh-desktop 22M, SheshAOS 7.5M, SheshAOS 7.5M, shesha-kernel 4.5M
-Total src/ 36M + 3000 files → workspace 88-113 MB → HOP after 30-60 min
-```
+A session workspace behaves like a suitcase with a weight limit. Everything you pack is
+available, but past a certain weight the airline stops cooperating — and in this case the
+airline is the sandbox, which slows down and eventually declares the workspace over budget.
 
-**After:** `tools/setup_worker.py` clones ONLY needed repos, shallow `--depth 1 --single-branch --filter=blob:none`
+Before selective cloning, every worker ran a full clone of all 22 repositories, including the
+largest: `shesh-voice` at 41 MB, `shesh-desktop` at 22 MB, `SheshAOS` at 7.5 MB, and
+`shesha-kernel` at 4.5 MB. The `src/` tree reached 36 MB across roughly 3000 files, the workspace
+reached 88–113 MB, and the guard called a hop after 30 to 60 minutes.
 
-| Role | Before (22 repos) | After (selective) | Size | File count | Session length |
-|------|-------------------|-------------------|------|------------|----------------|
-| Brain | 22 repos 36M | `shesh-audit, shesh-secrets, SheshAOS` 3 repos ~8M | 8M | ~600 | 120-180 min |
-| Mind | 22 repos 36M | `audit + memory,mind,harness,orchestrator,skills,calendar` 7 repos ~2M | 2M | ~500 | 120 min |
-| Soma | 22 repos 36M | `audit + files,shell,system,backup,phone,containers,mcp-bundle,acp` 9 repos ~2M | 2M | ~700 | 120 min |
-| Platform | 22 repos 36M | **0 repos** — only ecosystem itself (manifest, docs, Containerfile) | 0M | 0 extra | 150 min |
-| Single component e.g., `shesh-memory` | 22 repos | `audit + memory` 2 repos ~600K | 0.6M | ~200 | 150 min |
+## Selective clone: the largest single win
 
-**Usage:**
+`tools/setup_worker.py` clones only the repositories a role touches, using
+`--depth 1 --single-branch --filter=blob:none`. The blob filter matters most for the large
+repositories, because it fetches commits and trees while deferring file contents until something
+actually reads them.
+
+| Role | Before | After | Size | Files | Session length |
+|---|---|---|---|---|---|
+| Brain | 22 repos, 36 MB | `shesh-audit`, `shesh-secrets`, `SheshAOS` — 3 repos | ~8 MB | ~600 | 120–180 min |
+| Mind | 22 repos, 36 MB | audit plus memory, mind, harness, orchestrator, skills, calendar — 7 repos | ~2 MB | ~500 | 120 min |
+| Soma | 22 repos, 36 MB | audit plus files, shell, system, backup, phone, containers, mcp-bundle, acp — 9 repos | ~2 MB | ~700 | 120 min |
+| Platform | 22 repos, 36 MB | none — only the ecosystem repository itself | 0 MB | no extra | 150 min |
+| Single component (`shesh-memory`) | 22 repos | audit plus memory — 2 repos | ~0.6 MB | ~200 | 150 min |
 
 ```bash
-# Instead of cloning all 22:
 python tools/setup_worker.py --role mind --clean
-# or
 python tools/setup_worker.py --component shesh-memory
-
-# Check size
 du -sh src/ && find src/ -type f | wc -l
 ```
 
-**Integrate into swarm workers:** `worker_github.py` now calls `setup_worker` before work (if you pass `--setup`).
+The swarm worker calls `setup_worker` before starting work when you pass `--setup`. Full detail
+lives in [setup_worker.py](setup-worker.md).
 
-## 2. Other free efficiency strategies
+## Keeping the toolchain out of the sandbox
 
-### a) Shallow clone always
+A Rust toolchain — `~/.cargo` plus `~/.rustup` — costs roughly 1 GB and puts the workspace over
+budget immediately. The session handoff document therefore forbids installing Rust in the
+sandbox; CI has it instead. Brain work that genuinely needs `cargo test` runs in the
+`Containerfile` image, or tests only the component that changed rather than the whole workspace.
 
-```bash
-git clone --depth 1 --single-branch --filter=blob:none https://github.com/gaganjainse/shesh-memory.git
-# vs full clone --depth full = 10x bigger
-```
-
-Our `setup_worker.py` does this by default. For large repos (`shesh-voice 41M`, `shesh-desktop 22M`) we use `--filter=blob:none` which downloads only commit+tree, not blobs until needed.
-
-### b) No Rust toolchain in Arena
-
-Rust toolchain `~/.cargo` + `~/.rustup` = ~1 GB → immediate workspace-over-budget. Our `SESSION_HANDOFF.md` says do NOT install Rust in sandbox — CI has Rust. For Brain work that needs `cargo test`, use `Containerfile` (Arch container with Rust) or run tests only on component that changed, not `cargo test --workspace`.
-
-### c) Clean caches aggressively
+## Cleaning caches, and cleaning them often
 
 ```bash
 python tools/session_guard.py --clean
 # removes __pycache__, .pytest_cache, .ruff_cache, .venv, src/*/target, src/*/dist
 ```
 
-`session_guard.py --tick` logs workspace size and file count; when > thresholds it says HOP. Cleaning resets it.
+`session_guard.py --tick` logs workspace size and file count and calls a hop when either passes
+its threshold; cleaning resets both. `setup_worker.py --clean` performs the same cleanup as part
+of workspace setup.
 
-`tools/setup_worker.py --clean` does same.
+## Running only the gates that apply
 
-### d) Run only relevant gates, not `make check` full
-
-`make check` does: ruff + 30 ecosystem tests + license + resolve 3 locks = ~10 sec.
-
-If you work on `shesh-memory` only:
+The full `make check` runs ruff, 30 ecosystem tests, the license gate, and resolution of three
+channel locks in about 10 seconds. When work is confined to one component, a narrower set answers
+the same question far faster.
 
 ```bash
-# Instead of make check (63 tests)
-python -m pytest tests/test_manifest.py -q   # 1 sec
-python -m ruff check src/shesh-memory/       # 0.5 sec
-cd src/shesh-memory && python -m pytest tests/ -q   # 1 sec
+python -m pytest tests/test_manifest.py -q       # ~1 s
+python -m ruff check src/shesh-memory/           # ~0.5 s
+cd src/shesh-memory && python -m pytest tests/ -q  # ~1 s
 ```
 
-Saves 80% time.
+That saves roughly 80 percent of the time. Workers accept a `--component` filter so they run
+only the tests for the component they claimed.
 
-Our workers now have `--component` filter to run only that component's tests.
+> **Note —** Narrow gates are for iteration. The full `make check` still runs before a push,
+> and the auto-merge workflow runs it again on GitHub.
 
-### e) File queue vs GitHub Issues API — choose offline when traveling
+## File queue versus the Issues API
 
-- **GitHub Issues API** needs PAT + network, rate limited 5000 req/hour, adds latency, but true atomicity and UI.
-- **File queue** `swarm/queue/*.json` + atomic `git push` is offline, no API calls, faster, no rate limit — better for phone with poor network.
+The two swarm backends trade differently, and the right choice depends on the network you are
+on rather than on which is more sophisticated.
 
-While traveling on mobile with 1 tab, use file queue: `python tools/swarm/worker.py --component shesh-memory` (not `--github`). It uses only git push, no API.
+| Backend | Strengths | Costs |
+|---|---|---|
+| GitHub Issues API | True atomicity, visible in the web interface | Needs a token and network; 5000 requests per hour; added latency |
+| File queue (`swarm/queue/*.json`) | Offline, no API calls, no rate limit, faster | Coordination relies on atomic `git push` |
 
-Janitor Action `swarm-scheduled.yml` uses file queue re-queue logic too (no API needed for that part).
+Travelling with one tab on a weak connection, prefer the file queue:
+`python tools/swarm/worker.py --component shesh-memory`, without `--github`. It uses only
+`git push`. The hourly janitor workflow uses the file-queue requeue logic for the same reason.
+See [Swarm](swarm/README.md) for both backends in full.
 
-### f) PAT encryption — no rewrite, free
+## Credentials that survive a hop without being rewritten
 
-You already have encrypted PAT at `~/.config/shesh/github.pat.enc` (600) with password `<YOUR_ENCRYPTION_PASSWORD>`. Plain deleted on handoff for security. Next session auto-prompts via `ask_user` UI — you give password once per new tab, not every tool call. No need to rewrite PAT each session.
+The encrypted token at `~/.config/shesh/github.pat.enc` (mode 600) persists across sessions,
+because `.gitignore` only excludes it from Git, not from the workspace snapshot. The plain copy
+is deleted on handoff, so the next session reports `need_password=true` and prompts once through
+the interface rather than on every tool call. No external secret manager is needed; see
+[secure_pat.py](secure-pat.md).
 
-- Encrypted file persists across sessions (workspace snapshot includes `~/.config/shesh/` because .gitignore only ignores it from git, not from snapshot)
-- Plain deleted on handoff → next session `need_password=true` → prompt
+## Free models, and no model at all
 
-Free, no external secret manager needed.
-
-### g) Free LLM — no OpenAI API cost
-
-**Current system already free:** All components have deterministic stubs that work offline without any LLM API.
-
-- `shesh-orchestrator`: `LLMAgents` calls Ollama if available, else falls back to deterministic stub that returns JSON steps — tests green without LLM.
-- `shesh-memory`: local hash embedder offline, Ollama `nomic-embed-text` if available
-- `shesh-harness`: `make_ollama_responder()` if Ollama, else stub
-
-**Ollama is free and local** — on your MSI Sword (when back from travel) you run:
+Every component ships a deterministic stub, which is why the test suite is green with no model
+available. `shesh-orchestrator` calls Ollama when it is present and otherwise falls back to a
+stub that returns valid JSON steps; `shesh-memory` uses a local hash embedder offline and
+`nomic-embed-text` when available; `shesh-harness` uses `make_ollama_responder()` when Ollama is
+reachable and a stub when it is not.
 
 ```bash
 ollama pull phi4-mini qwen2.5-coder:3b moondream2 nomic-embed-text
-# All 6 GB-safe, free, no API key
+# all 6 GB-safe, free, no API key
 ```
 
-In Arena sandbox (no GPU), stubs keep system working — no cost.
+In a sandbox with no GPU, the stubs keep the system working at zero cost. GitHub Models is the
+other free path: the inference endpoint at `https://models.github.ai/inference` accepts
+`GITHUB_TOKEN` and is free for public repositories, and a small `tools/llm_free.py` calling
+`https://models.inference.ai.azure.com` with that token would need no paid key at all. The
+gateway chapter on [free providers](../gateway/free-providers.md) surveys the rest.
 
-**GitHub Models free tier** (alternative, no money): GitHub now offers free Models API `https://models.github.ai/inference` with `GITHUB_TOKEN` (no PAT needed) —  free for public repos. We could add `tools/llm_free.py` that calls `https://models.inference.ai.azure.com` with `GITHUB_TOKEN` — free, no OpenAI key.
+## Two habits that cost nothing
 
-You said you do everything free — we already do. No need for OpenAI API.
+A platform worker — docs, decision records, `Containerfile`, `install.sh`, CI, swarm tooling —
+needs no `src/` clones whatsoever, and works directly in the ecosystem repository. That is the
+most efficient configuration available, and `ROLE_MAP["platform"] = []` encodes it.
 
-### h) Platform worker needs zero src clones
+The workspace also persists between sessions apart from caches, so a repository cloned once is
+still there next time. `clone_repo()` checks for an existing directory and runs
+`git pull --ff-only --depth 1` instead of cloning again. The first worker to run a selective
+clone pays the cost; every later session reuses it.
 
-If you are Worker-Platform (docs, ADR, Containerfile, install.sh, CI), you don't need any `src/` clones. Just work on ecosystem repo itself. That's most efficient: 0 extra MB, 0 extra files → longest session.
+## Unattended hours on GitHub, not in a browser tab
 
-Our `ROLE_MAP["platform"] = []` reflects this.
+GitHub Actions is free for public repositories at 2000 Ubuntu minutes per month.
+`swarm-scheduled.yml` runs hourly for three to five minutes on `GITHUB_TOKEN` rather than a
+personal token, so it costs nothing. Three workflows do useful unattended work: `ci.yml` for
+ruff, tests, license, and locks; `swarm-auto-merge.yml` to merge green `swarm/*` pull requests;
+and `swarm-scheduled.yml` to seed issues, requeue stale claims, and push refreshed locks and
+docs. Keep one orchestrator tab and let the workflows carry the hours — see
+[Travel Mode](travel-mode.md).
 
-### i) Use GitHub Actions for true hours (free for public repos)
+## The travelling checklist
 
-GitHub Actions free for public repos: 2000 min/month Ubuntu. Our `swarm-scheduled.yml` runs every hour, 3-5 min each, uses `GITHUB_TOKEN` not PAT, no cost.
+- Use `tools/setup_worker.py --role mind --clean` rather than cloning 22 repositories.
+- Prefer the file-queue worker when the network is poor.
+- Run only the relevant tests while iterating on a single component.
+- Keep the token encrypted and enter the password once per session.
+- Rely on deterministic stubs offline; use free local Ollama models on the laptop.
+- Keep one orchestrator tab open and let Actions handle the janitor and merge work.
+- On handoff, run `session_guard --handoff` to delete the plain token and clean caches.
 
-While traveling with phone, **don't keep 5 Arena tabs** — keep 1 orchestrator + let Actions do janitor work. Actions run even if phone sleeps, for 1-2 days.
-
-Actions that work free and unattended:
-
-- `ci.yml`: ruff + pytest + license + locks
-- `swarm-auto-merge.yml`: auto-merge `swarm/*` PRs if green
-- `swarm-scheduled.yml`: every hour seed Issues, re-queue stale, push locks/docs
-
-### j) Don't clone in every chat — share via `src/` persistence
-
-Workspace `/home/user` persists across sessions (except `.cache`, `__pycache__`, etc). If you clone `shesh-memory` once via `setup_worker.py --component shesh-memory`, next session `src/shesh-memory` still exists — no need to re-clone. Our `clone_repo()` checks `if dest.exists(): git pull --ff-only --depth 1` — fast.
-
-So first worker to run selective clone pays cost, others reuse.
-
-## Summary checklist for traveling phone-only, free
-
-- [ ] Use `tools/setup_worker.py --role mind --clean` instead of cloning 22 repos → 36M → 2M
-- [ ] Use file queue `worker.py` not `worker_github.py --github` when network poor (saves API calls)
-- [ ] Run only relevant tests, not full `make check` when working on single component
-- [ ] Keep PAT encrypted, auto-prompt password once per new tab (no rewrite)
-- [ ] Use deterministic stubs offline — no OpenAI cost, Ollama free on MSI when back
-- [ ] Keep 1 orchestrator tab open on phone, let GitHub Actions janitor + auto-merge handle hours while phone sleeps
-- [ ] On handoff, `session_guard --handoff` deletes plain PAT and cleans caches → next session starts fresh, longer
-
-Result: Session length 60 min → 120-180 min, workspace 113 MB → 40-60 MB, file count 3400 → 800, no money spent.
+Together these take a session from 60 minutes to 120–180 minutes, the workspace from 113 MB to
+40–60 MB, and the file count from about 3400 to about 800 — with no money spent.

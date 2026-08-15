@@ -1,10 +1,6 @@
 # 06 — Shesh: the local, voice-first desktop agent
 
-> **Shesh** (शेष) is the name of the agent layer — your Shesh/Friday/Ultron. It is deliberately
-> **not** a from-scratch agent framework. As of 2026-08, the fastest path to a working,
-> production-grade voice assistant on CachyOS/Hyprland is **Newelle 1.4.5 (frontend/voice/MCP host)
-> + Ollama ≥0.32 (local models) + your own MCP servers (device skills) + a SheshAOS-style audit log
-> (governance).** This doc specifies exactly that, corrected for RTX 4050 6 GB and the FHD+ panel.
+This chapter specifies Shesh (शेष), the agent layer — your local desktop assistant. It deliberately avoids a from-scratch agent framework. As of 2026-08, the fastest path to a working, production-grade voice assistant on CachyOS/Hyprland is Newelle 1.4.5 (frontend/voice/MCP host) + Ollama 0.32 or newer (local models) + your own MCP servers (device skills) + a SheshAOS-style audit log (governance). This doc specifies exactly that, corrected for RTX 4050 6 GB and the FHD+ panel.
 
 ---
 
@@ -13,7 +9,7 @@
 | Component | Choice | Why |
 |-----------|--------|-----|
 | Frontend / voice / chat | **Newelle 1.4.5** (native, not Flatpak) | Already has wake word, STT (faster-whisper), TTS (Piper/Kokoro/Edge), MCP client (stdio+http as of 1.4.5), subagents, skills, file permissions, scheduled tasks, OpenAI-compatible API. Building this yourself is months of work. |
-| LLM runtime | **Ollama ≥0.32** | v0.32 has an interactive agent CLI, OpenAI-compatible endpoint, flash attention, model library; one `systemctl` unit. |
+| LLM runtime | **Ollama 0.32 or newer** | v0.32 has an interactive agent CLI, OpenAI-compatible endpoint, flash attention, model library; one `systemctl` unit. |
 | Primary model | **phi4-mini** (3.8B Q4, ~3.2 GB) | Best quality that fits 6 GB with KV headroom. |
 | Code model | **qwen2.5-coder:3b** Q4 | Strong at shell/code for tool calls. |
 | Vision | **moondream2** Q4 (~2.5 GB) | Screenshots/OCR. |
@@ -22,48 +18,45 @@
 | Governance | **Shesh audit log** (your SheshAOS pattern) | Append-only JSONL/SQLite of every tool call + result; policy gates destructive actions. |
 | Overlay | **Quickshell QML** (the shell you already run) | Mic/thinking/speaking indicator; no new dependency. |
 
-**Do not build** a custom wake-word daemon, STT pipeline, chat UI, or agent loop — Newelle ships all of
-them. **Do build** the MCP servers that know *your* machine (GPU, organizer, Hyprland, backups) and the
-audit/policy layer that makes autonomy safe. That is where your unique value is.
+**Do not build** a custom wake-word daemon, STT pipeline, chat UI, or agent loop — Newelle ships all of them. **Do build** the MCP servers that know your machine (GPU, organizer, Hyprland, backups) and the audit/policy layer that makes autonomy safe. That is where your unique value is.
 
 ---
 
 ## 2. Process topology
 
 ```
-                       ┌──────────────────────────────┐
-                       │   Newelle 1.4.5 (GTK4)       │
-                       │  - wake word "Hey Shesh"     │
-                       │  - STT faster-whisper        │
-                       │  - TTS piper/kokoro           │
-                       │  - MCP client (stdio)        │
-                       │  - OpenAI-compatible API :xxxx│
-                       └───────┬───────────┬───────────┘
-                  stdio MCP    │           │   HTTP API
-            ┌──────────────────┘           └──────────────────┐
-            ▼                                                   ▼
-   ┌────────────────────┐                          ┌───────────────────────┐
-   │ system_control     │                          │  Quickshell overlay    │
-   │ smart_organizer    │                          │  (SheshOverlay.qml)    │
-   │ hyprland_control   │                          │  listens on Newelle    │
-   │ (FastMCP servers)  │                          │  API / DBus            │
-   └─────────┬──────────┘                          └───────────────────────┘
-             │ every tool call + result
-             ▼
-   ┌──────────────────────────────────────────────────────┐
-   │ shesh-audit  (append-only JSONL + SQLite)            │
-   │ ~/.local/share/shesh/audit/events.db                 │
-   │ policy.toml: which tools need confirmation / are denied│
-   └──────────────────────────────────────────────────────┘
-             │
-             ▼
-   ┌────────────────────┐
-   │ Ollama :11434      │  phi4-mini / qwen2.5-coder:3b / moondream2 / nomic
-   └────────────────────┘
+                        ┌──────────────────────────────┐
+                        │   Newelle 1.4.5 (GTK4)       │
+                        │  - wake word "Hey Shesh"     │
+                        │  - STT faster-whisper        │
+                        │  - TTS piper/kokoro           │
+                        │  - MCP client (stdio)        │
+                        │  - OpenAI-compatible API :xxxx│
+                        └───────┬───────────┬───────────┘
+                   stdio MCP    │           │   HTTP API
+             ┌──────────────────┘           └──────────────────┐
+             ▼                                                   ▼
+    ┌────────────────────┐                          ┌───────────────────────┐
+    │ system_control     │                          │  Quickshell overlay    │
+    │ smart_organizer    │                          │  (SheshOverlay.qml)    │
+    │ hyprland_control   │                          │  listens on Newelle    │
+    │ (FastMCP servers)  │                          │  API / DBus            │
+    └─────────┬──────────┘                          └───────────────────────┘
+              │ every tool call + result
+              ▼
+    ┌──────────────────────────────────────────────────────┐
+    │ shesh-audit  (append-only JSONL + SQLite)            │
+    │ ~/.local/share/shesh/audit/events.db                 │
+    │ policy.toml: which tools need confirmation / are denied│
+    └──────────────────────────────────────────────────────┘
+              │
+              ▼
+    ┌────────────────────┐
+    │ Ollama :11434      │  phi4-mini / qwen2.5-coder:3b / moondream2 / nomic
+    └────────────────────┘
 ```
 
-Newelle runs as a user service. The MCP servers are launched by Newelle over stdio (no open ports,
-no auth surface). The audit log is written by a thin wrapper the MCP servers call.
+Newelle runs as a user service. The MCP servers are launched by Newelle over stdio (no open ports, no auth surface). The audit log is written by a thin wrapper the MCP servers call.
 
 ---
 
@@ -90,15 +83,14 @@ ollama pull moondream2
 # DO NOT pull qwen3:14b / llava:13b / mistral:7b@8k — they overflow 6 GB.
 ```
 
-> `paru` is not on the 260628 ISO (Shelly is). For scripting reliability, install `paru`
-> (`sudo pacman -S --needed paru`) or adapt commands to `shelly`. The installer must auto-detect.
+> **Note —** `paru` is not on the 260628 ISO (Shelly is). For scripting reliability, install `paru` (`sudo pacman -S --needed paru`) or adapt commands to `shelly`. The installer must auto-detect.
 
 ---
 
 ## 4. Newelle configuration
 
-`~/.config/newelle/config.toml` (the repo ships a corrected template at
-`dots/.config/newelle/config.toml`):
+`~/.config/newelle/config.toml` (the repo ships a corrected template at `dots/.config/newelle/config.toml`):
+
 ```toml
 [model]
 provider = "ollama"
@@ -125,8 +117,8 @@ ask_before  = ["~/"]           # anything else prompts
 deny        = ["~/Documents/Job", "~/Projects/job", "~/Vaults", "~/.ssh", "~/.gnupg"]
 ```
 
-MCP servers are registered in Newelle's settings as **stdio commands** (not the bogus HTTP URLs from
-the prior config):
+MCP servers are registered in Newelle's settings as stdio commands (not the bogus HTTP URLs from the prior config):
+
 ```toml
 [mcp.shesh_system]
 command = "~/.local/state/shesh/.venv/bin/python"
@@ -143,11 +135,11 @@ args = ["~/.local/bin/shesh-hyprland-control-mcp"]
 
 ---
 
-## 5. MCP server: `hyprland_control.py` (NEW — fixes N-04)
+## 5. MCP server: `hyprland_control.py` (new — fixes N-04)
 
 ```python
 #!/usr/bin/env python3
-"""MCP server: control Hyprland via hyprctl. License: GPL-3.0"""
+"""MCP server: control Hyprland via hyprctl. License: GPL-3.0-or-later"""
 import json, subprocess
 from mcp.server.fastmcp import FastMCP
 
@@ -194,23 +186,23 @@ if __name__ == "__main__":
     mcp.run(transport="stdio")
 ```
 
-`smart_organizer.py` exposes `organize`, `last_moves`, `undo_last`, `pause`, `resume` per
-`05_SMART_ORGANIZER_V2.md` §7. `system_control.py` already exists (fix the `hyprland` typo
-`decoration` and add battery/GPU/backup/status tools).
+`smart_organizer.py` exposes `organize`, `last_moves`, `undo_last`, `pause`, `resume` per `05-smart-organizer.md` Section 7. `system_control.py` already exists (fix the `hyprland` typo `decoration` and add battery/GPU/backup/status tools).
 
 ---
 
-## 6. Governance: the Shesh audit log + policy
+## 6. Governance: the Shesh audit log and policy
 
 Every MCP tool call is wrapped to append an event:
+
 ```jsonl
 {"ts":"2026-08-09T18:11:02+05:30","server":"system_control","tool":"switch_gpu_mode",
  "args":{"mode":"gaming"},"result":"ok","session":"newelle-...","hash":"sha256:..."}
 ```
-Stored in `~/.local/share/shesh/audit/events.db` (SQLite) + a hash-chained JSONL (each line includes
-the previous line's hash, à la SheshAOS append-only log — tamper-evident).
+
+Stored in `~/.local/share/shesh/audit/events.db` (SQLite) + a hash-chained JSONL (each line includes the previous line's hash, in the SheshAOS append-only style — tamper-evident).
 
 `~/.config/shesh/policy.toml`:
+
 ```toml
 [confirm]
 # these tools require an in-chat "yes" before running
@@ -225,45 +217,45 @@ paths = ["~/Documents/Job", "~/Projects/job", "~/Vaults", "~/.ssh", "~/.gnupg"]
 # safe to run without asking
 tools = ["get_system_status", "last_moves", "switch_workspace", "get_active_window"]
 ```
+
 A `shesh` CLI wraps queries:
+
 ```bash
 shesh log --since 1h          # what did Shesh do
 shesh undo                    # undo the last reversible action
 shesh replay --from <hash>    # replay the event log (SheshAOS-style)
 ```
 
-This is the bridge to your **SheshAOS** thesis: the desktop agent becomes the first *client* of the
-governance/event-sourcing layer you already built in Rust. Later, replace the SQLite/JSONL shim with a
-real SheshAOS event-store connection.
+This is the bridge to your SheshAOS thesis: the desktop agent becomes the first client of the governance/event-sourcing layer you already built in Rust. Later, replace the SQLite/JSONL shim with a real SheshAOS event-store connection.
+
+> **Note —** SheshAOS as a public upstream is unpublished and conceptual. Treat `gaganjainse/SheshOS` as a design reference, not as a reachable repository to clone or depend on.
 
 ---
 
 ## 7. Quickshell overlay
 
-`dots/.config/quickshell/ii/shesh/SheshOverlay.qml` — a small floating pill, bottom-right above the
-bar, showing idle / listening / thinking / speaking with a pulsing arc. It subscribes to Newelle's
-OpenAI-compatible/interface API (1.4.0+) or watches the audit log via a QML `FolderListView`/timer.
-Bind:
-- mic active → cyan + waveform scale
-- LLM thinking → amber spinner
-- TTS speaking → green equalizer bars
-- error/needs-confirmation → red pulse + raises Newelle window
+`dots/.config/quickshell/ii/shesh/SheshOverlay.qml` — a small floating pill, bottom-right above the bar, showing idle / listening / thinking / speaking with a pulsing arc. It subscribes to Newelle's OpenAI-compatible/interface API (1.4.0+) or watches the audit log via a QML `FolderListView`/timer. Bind:
 
-Reuse end-4's existing color tokens (`matugen`) so it matches Material You. Do **not** add a heavy
-separate UI; the overlay is status only, interaction is by voice or Newelle.
+- mic active to cyan + waveform scale
+- LLM thinking to amber spinner
+- TTS speaking to green equalizer bars
+- error/needs-confirmation to red pulse + raises Newelle window
+
+Reuse end-4's existing color tokens (`matugen`) so it matches Material You. Do not add a heavy separate UI; the overlay is status only, interaction is by voice or Newelle.
 
 ---
 
 ## 8. Persona ("SOUL")
 
 `~/.config/shesh/SOUL.md` (fed as Newelle's system prompt):
+
 ```
 You are Shesh, Gagan's local AI desktop agent on CachyOS Linux + Hyprland.
 - You are private-first: all models run locally; never send personal data to the cloud.
 - You are brief and precise. Prefer acting over explaining. One short sentence + the action.
 - You control the system through MCP tools (GPU, power, files, Hyprland, organizer).
 - Every action is logged; destructive actions require Gagan's confirmation per policy.toml.
-- Gagan is an AI/LLM engineer who builds SheshAOS, SHESH, and Vyākṛti. Be technical when asked.
+- Gagan is an AI/LLM engineer who builds SheshAOS, SHESH, and Vyakrti. Be technical when asked.
 - Speak English by default; respond in the language Gagan uses.
 - If unsure, ask one short question rather than guessing.
 ```
@@ -272,21 +264,21 @@ You are Shesh, Gagan's local AI desktop agent on CachyOS Linux + Hyprland.
 
 ## 9. What you explicitly do NOT need (cut the bloat)
 
-- ❌ Custom agent framework / `pi` / `prime-agent` integration — Newelle is the agent host.
-- ❌ `openWakeWord` as a separate daemon — Newelle 1.3.0+ has wake word built in.
-- ❌ ChromaDB-heavy memory on day one — start with Newelle's semantic memory; add your RAG service later.
-- ❌ OmniRoute/cloud routing by default — local-first; add cloud only as an explicit, labeled fallback.
-- ❌ Newelle Flatpak — use native AUR for stdio MCP + mic + filesystem.
-- ❌ 14B/13B models on the 4050 — they thrash.
+- Skip a custom agent framework / `pi` / `prime-agent` integration — Newelle is the agent host.
+- Skip `openWakeWord` as a separate daemon — Newelle 1.3.0+ has wake word built in.
+- Skip ChromaDB-heavy memory on day one — start with Newelle's semantic memory; add your RAG service later.
+- Skip OmniRoute/cloud routing by default — local-first; add cloud only as an explicit, labeled fallback.
+- Skip Newelle Flatpak — use native AUR for stdio MCP + mic + filesystem.
+- Skip 14B/13B models on the 4050 — they thrash.
 
 ---
 
 ## 10. Acceptance test (voice)
 
-1. Boot → Newelle starts, Ollama running, overlay idle.
-2. Say **"Hey Shesh"** → overlay pulses, STT activates.
-3. "Organize my downloads." → confirmation prompt → organizer runs → "Moved 12 files" spoken.
-4. "Switch to performance mode." → `powerprofilesctl set performance` + notification.
-5. "What was my GPU temp an hour ago?" → audit log / `nvidia-smi` query answered.
-6. "Undo the last move." → files restored from undo log.
-7. Pull the network → all of the above still works (proves local-first).
+1. Boot to Newelle started, Ollama running, overlay idle.
+2. Say "Hey Shesh" to pulse the overlay and activate STT.
+3. "Organize my downloads." to prompt confirmation, run the organizer, and speak "Moved 12 files".
+4. "Switch to performance mode." to run `powerprofilesctl set performance` + notification.
+5. "What was my GPU temp an hour ago?" to answer from the audit log / `nvidia-smi` query.
+6. "Undo the last move." to restore files from the undo log.
+7. Pull the network to confirm all of the above still works (proves local-first).

@@ -1,8 +1,8 @@
-# 🐍 Shesh Ecosystem
+# The Shesh Ecosystem
 
-> **The federated, local-first AI body for CachyOS/Hyprland.** An agent is a body — a
-> **Mind** (models/planning/memory), a **Brain** (SheshAOS governance kernel), and a
-> **Soma** (sensors & actuators on the desktop). This repo is the **orchestrator**:
+> The federated, local-first AI body for CachyOS/Hyprland. An agent is a body — a
+> **Mind** (models, planning, memory), a **Brain** (SheshAOS governance kernel), and a
+> **Soma** (sensors and actuators on the desktop). This repository is the **orchestrator**:
 > it pins forks, resolves components through quality gates, and promotes them
 > `devel → canary → stable`, like a miniature Linux distribution.
 
@@ -19,18 +19,28 @@
 
 ---
 
-## Why this repo exists
+## Why the fleet is built as a federation
 
-We fork every upstream we depend on and keep those forks rolling; we integrate the
-best parts as **Shesh components** and only let tested combinations reach the daily
-driver. That gives us **latest upstream** without waiting for releases, **safety**
-(breakage is caught in canary, not on your machine), **coherence** (one manifest, one
-lockfile, one audit log, one policy engine), and **ownership** (the integrated whole
-is *Shesh*, not a pile of someone else's brands).
+Most AI desktops are a loose pile of other people's tools. Shesh takes a different path:
+it forks every upstream it depends on, keeps those forks rolling with upstream, and
+integrates the best parts as first-class Shesh components. Only combinations that survive
+testing reach the daily driver.
 
-Conceptual foundation: [`docs/architecture/AGENTIC_BODY.md`](architecture/agentic-body.md) ·
-Federation model: [`docs/architecture/REPO_TOPOLOGY.md`](architecture/repo-topology.md) ·
-Language policy: [`docs/architecture/LANGUAGE_POLICY.md`](architecture/language-policy.md)
+This discipline buys four things. *Latest upstream* — new work lands without waiting for a
+release. *Safety* — breakage is caught in canary, not on your machine. *Coherence* — one
+manifest, one lockfile, one audit log, one policy engine. And *ownership* — the integrated
+whole is Shesh, not a collection of other brands.
+
+- **Summary**
+  - Shesh is a federation of pinned forks, not a single application.
+  - Every change travels through gates from fork to the machine on your desk.
+  - The Brain's policy engine governs every tool action the agent takes.
+  - The 23-organ body is promoted `devel → canary → stable` behind quality gates.
+  - The whole body is licensed GPL-3.0-or-later; components keep upstream-compatible terms.
+
+Conceptual foundation: [The Agentic Body](architecture/agentic-body.md) ·
+Federation model: [Repository Topology](architecture/repo-topology.md) ·
+Language policy: [Language & FFI Policy](architecture/language-policy.md)
 
 ---
 
@@ -51,28 +61,32 @@ python scripts/resolve_manifest.py --channel canary
 make upstream
 ```
 
-`make check` must pass before anything is promoted.
+`make check` must pass before anything is promoted. See
+[Getting Started](getting-started.md) for the full install and the per-organ setup.
 
 ---
 
-## The body
+## The agentic body
+
+The diagram below maps the three layers — Brain, Mind, and Soma — to the components that
+make up the body, with the desktop runtime sitting beneath the Soma organs.
 
 ```mermaid
 ---
 title: Shesh agentic body — brain / mind / soma
 ---
 graph TB
-    subgraph brain["🧠 Brain — governance"]
+    subgraph brain["Brain — governance"]
         A["shesh-audit<br/>policy + event log"]
         S["shesh-secrets"]
         B["shesh-brain<br/>kernel bridge"]
     end
-    subgraph mind["🧠 Mind — models & memory"]
+    subgraph mind["Mind — models & memory"]
         M["shesh-mind<br/>routing"]
         ME["shesh-memory<br/>hierarchy + habits"]
         O["shesh-orchestrator<br/>multi-agent RLM"]
     end
-    subgraph soma["💪 Soma — sensors & actuators"]
+    subgraph soma["Soma — sensors & actuators"]
         SH["shesh-shell"]
         SY["shesh-system"]
         FI["shesh-files"]
@@ -100,7 +114,7 @@ graph TB
 ```
 
 > **Where the code lives (post-consolidation, ADR-0019):** the 16 small organs ship
-> from one repo — **`shesh-core`** (audit, secrets, brain, mind, shell, system, files,
+> from one repository — **`shesh-core`** (audit, secrets, brain, mind, shell, system, files,
 > media, messaging, calendar, backup, containers, ebpf, skills, mcp-bundle, acp).
 > Independently versioned services stay separate: `shesh-memory`,
 > `shesh-orchestrator`, `shesh-harness`, `shesh-phone`, `shesh-omniroute`.
@@ -118,19 +132,22 @@ See `manifests/components.toml` for the full 23-organ list and
 
 ## Promotion flow
 
+The diagram shows how a change travels from an upstream fork to the laptop on your desk.
+Every step is a gate, so breakage never reaches your machine untested.
+
 ```mermaid
 ---
 title: Shesh promotion pipeline
 ---
 graph LR
-    U["① upstream forks<br/>track main"] --> C["② component repos<br/>tests + semver"]
-    C --> I["③ ecosystem integration<br/>manifest + gates"]
-    I --> K["④ canary<br/>soak / VM"]
-    K --> ST["⑤ stable<br/>your laptop"]
+    U["upstream forks<br/>track main"] --> C["component repos<br/>tests + semver"]
+    C --> I["ecosystem integration<br/>manifest + gates"]
+    I --> K["canary<br/>soak / VM"]
+    K --> ST["stable<br/>your laptop"]
 ```
 
-Every arrow is a gate in `scripts/` (CI runs them). Nothing reaches ⑤ without a
-green gate and a btrfs snapshot before apply. The policy engine governs every tool
+Every arrow is a gate in `scripts/` (CI runs them). Nothing reaches `stable` without a
+green gate and a btrfs snapshot taken before apply. The policy engine governs every tool
 action the agent takes — see `policies/SKILLS_POLICY.md`.
 
 ---
@@ -163,28 +180,29 @@ the license gate, channel filtering, determinism, and upstream parsing.
 python -m pytest tests/ -q     # 63 tests
 ```
 
-Component repos carry their own tests; hardware tests (GPU/display/audio) run only in
-the canary gate on real or VM hardware.
+Component repositories carry their own tests; hardware tests (GPU/display/audio) run only
+in the canary gate on real or VM hardware.
 
 ---
 
 ## Status
 
 Ecosystem-wide CI is green: one reusable component pipeline (D1) covers all 23
-components with `-W error`; silent-failure audit 0 errors; every third-party Action
-is SHA-pinned with Dependabot moving the pins weekly. See [SECURITY.md](../policies/security-policy.md)
-for the posture and [docs/THREAT_MODEL.md](../policies/threat-model.md) for the threat model.
+components with `-W error`; the silent-failure audit reports zero errors; every
+third-party Action is SHA-pinned with Dependabot moving the pins weekly. See
+[SECURITY.md](../policies/security-policy.md) for the posture and
+[docs/THREAT_MODEL.md](../policies/threat-model.md) for the threat model.
 
 ## Documentation index
 
 The full map: **[docs/INDEX.md](https://github.com/gaganjainse/shesh-ecosystem/blob/main/docs/INDEX.md)** (generated, CI-checked).
 
-- **Start here:** [TODO.md](https://github.com/gaganjainse/shesh-ecosystem/blob/main/TODO.md) · [docs/GETTING_STARTED.md](getting-started.md) · [docs/GLOSSARY.md](../glossary.md)
+- **Start here:** [TODO.md](https://github.com/gaganjainse/shesh-ecosystem/blob/main/TODO.md) · [Getting Started](getting-started.md) · [Glossary](../glossary.md)
 - **Security:** [SECURITY.md](../policies/security-policy.md) · [docs/THREAT_MODEL.md](../policies/threat-model.md) · [docs/RECOVERY.md](../policies/recovery.md)
 - **Architecture:** [Agentic Body](architecture/agentic-body.md) · [Repo topology](architecture/repo-topology.md) · [Languages](architecture/language-policy.md) · [Dependency graph](https://github.com/gaganjainse/shesh-ecosystem/blob/main/docs/architecture/DEPENDENCY_GRAPH.md)
 - **Components:** [docs/components/](https://github.com/gaganjainse/shesh-ecosystem/blob/main/docs/components) — one page per component, generated cross-links
 - **Style:** [README & docs style guide](https://github.com/gaganjainse/shesh-ecosystem/blob/main/docs/README_STYLE_GUIDE.md)
 - **Desktop:** [shesh-desktop/docs/SHESH/](https://github.com/gaganjainse/shesh-desktop/tree/main/docs/SHESH)
 - **Ops:** [ATTRIBUTION.md](https://github.com/gaganjainse/shesh-ecosystem/blob/main/ATTRIBUTION.md) (upstream credits) · [CONTAINER.md](https://github.com/gaganjainse/shesh-ecosystem/blob/main/CONTAINER.md) (dev/canary container)
-- **History:** [📜 docs/history/](https://github.com/gaganjainse/shesh-ecosystem/blob/main/docs/history) — decisions (ADRs), audits, incidents, query log, attic
-- **Compiled reading:** [https://github.com/gaganjainse/shesh-docs](https://github.com/gaganjainse/shesh-docs) — the mdBook compilation of every repo's docs
+- **History:** [docs/history/](https://github.com/gaganjainse/shesh-ecosystem/blob/main/docs/history) — decisions (ADRs), audits, incidents, query log, attic
+- **Compiled reading:** [https://github.com/gaganjainse/shesh-docs](https://github.com/gaganjainse/shesh-docs) — the mdBook compilation of every repository's docs

@@ -1,61 +1,75 @@
 # ADR-0013: Hierarchical Memory + Token-Bounded Context Assembly
 
-**Date:** 2026-08-09
-**Status:** Accepted
-**Tags:** memory, rag, context-window, token-budget
+Shesh stores memory in distinct tiers and assembles context within a hard token budget, so the
+agent never overflows its window and never drops the mannerisms that make it sound like itself.
+The design treats memory like a well-indexed filing cabinet: recent, frequent, and
+personally important papers sit on top.
+
+> **Summary —**
+> - Memory splits into working, episodic, semantic, intentions, mannerisms, habits, and skills.
+> - A ContextAssembler assembles context by priority and trims the lowest priority first.
+> - Retrieval uses full-text search plus a pluggable embedder, offline or online.
+> - A compaction step summarizes old episodes to keep growth bounded.
+
+## Status
+
+- **Date:** 2026-08-09
+- **Status:** Accepted
+- **Tags:** memory, rag, context-window, token-budget
 
 ## Context
-Agent needs:
-- Episodic memory (what happened today + yesterday).
-- Semantic memory (facts that persist).
-- Working memory (current goal steps).
-- Intentions (long-term goals), mannerisms (tone), habits (frequently done).
 
-LLM context window is finite (phi4-mini ~8k tokens). Naive "dump all history" overflows; naive truncation loses important mannerisms.
+The agent needs several kinds of memory: episodic (what happened today and yesterday),
+semantic (facts that persist), working (the current goal's steps), intentions (long-term
+goals), mannerisms (tone), and habits (frequent actions).
 
-Also retention: old episodes should summarize, not live forever.
+The LLM context window is finite — phi4-mini holds roughly 8k tokens. A naive dump of all
+history overflows; naive truncation loses the mannerisms that matter. Old episodes should
+summarize rather than live forever.
 
 ## Decision
-Implement `shesh-memory` with hierarchy:
 
-```
+`shesh-memory` implements the hierarchy:
+
+```text
 working/         # current task trace (hot)
 episodic/YYYY-MM-DD.md  # daily notes, appended
 semantic.md      # persistent facts
 intentions.md    # user's stated goals
-mannerisms.md    # tone/communication style
+mannerisms.md    # tone and communication style
 habits.md        # frequentist learned habits
 skills/*.md      # Markdown skills
 ```
 
-- **ContextAssembler**: token-bounded assembly with priority:
-  1. mannerisms
-  2. intentions
-  3. facts
-  4. habits
-  5. skills
-  6. working
-  7. relevant (FTS/vector results)
-  8. recent episodes
+The **ContextAssembler** assembles context within a token budget by priority: mannerisms,
+intentions, facts, habits, skills, working, relevant (full-text or vector results), then
+recent episodes. It trims the lowest priority first and never exceeds the model budget.
 
-  Trims lowest priority first; never exceeds model budget.
+**Retrieval** uses full-text search over episodes plus a SQLite vector store (cosine) behind a
+pluggable embedder: an offline deterministic hash embedder (no model, tests green) or, online,
+Ollama's `nomic-embed-text`.
 
-- **Retrieval**: FTS over episodes + SQLite vector store (cosine) with pluggable Embedder:
-  - Offline: deterministic hash embedder (no model needed, tests green).
-  - Online: Ollama `nomic-embed-text`.
+**Compaction** offers a `compact_memory()` MCP tool that summarizes old episodes in batches into
+`semantic.md` via an injectable summarizer (an LLM in production, a deterministic stub offline),
+with a retention window and deletion of very old entries.
 
-- **Compaction**: `compact_memory()` MCP tool — summarizes old episodes in batches into `semantic.md` via injectable summarizer (LLM in prod, deterministic stub offline), retention window, very old deleted.
-
-MCP tools: `recall`, `remember`, `semantic_search`, `index_memory`, `compact_memory`.
+MCP tools include `recall`, `remember`, `semantic_search`, `index_memory`, and
+`compact_memory`.
 
 ## Consequences
-- ✅ Context never overflows — token budget enforced.
-- ✅ Important stuff (mannerisms/intentions) always present.
-- ✅ Searchable past — semantic_search returns relevant memories.
-- ✅ Compaction prevents infinite growth.
-- ❌ Summarizer quality matters — LLM summarizer needs eval.
+
+### Benefits
+
+- Context never overflows because the token budget is enforced.
+- Important material — mannerisms and intentions — is always present.
+- The past is searchable, and compaction prevents infinite growth.
+
+### Costs
+
+- Summarizer quality matters; the LLM summarizer needs evaluation.
 
 ## Links
+
 - `docs/LEARNING.md`, `docs/components/shesh-memory.md`
 - `shesh-memory` (26 tests)
-- D6, D14
+- [ADR-0014: Habit Learning](0014-habit-learning.md), [ADR-0006: /refine Governance](0006-refine-governance.md)

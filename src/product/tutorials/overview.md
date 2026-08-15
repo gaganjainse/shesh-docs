@@ -1,10 +1,10 @@
 # Tutorials
 
-Guided flows through real, shipped features. Each tutorial names its canonical
-component docs and ends in verifiable checks.
+These tutorials walk through real, shipped features end to end. Each one names its canonical
+component documentation and ends in checks you can verify on your own machine.
 
 - [Organize Downloads — Smart Organizer v2](organize-downloads.md)
-- [Voice + Settings + Organizer Flow](voice-settings-organizer.md)
-- [Memory & Recall (RAG today, vector planned)](rag-vector.md)
+- [Voice, Settings, and Organizer Flow](voice-settings-organizer.md)
+- [Memory and Recall (RAG today, vector search planned)](rag-vector.md)
 
-Prerequisite for all three: [Getting Started](../getting-started.md).
+The prerequisite for all three is [Getting Started](../getting-started.md).

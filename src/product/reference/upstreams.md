@@ -1,317 +1,449 @@
-# Sources & Steal-Map
+# Sources and Steal-Map
 
-> Deep research (2026-08-09) into what the Shesh body should absorb, from where, under what license,
-> and which part of the Agentic Body it feeds. **"Steal" = adopt/adapt/wrap with attribution; we do not
-> violate licenses. Every upstream is forked (①), wrapped as a `shesh-*` component (②), pinned in
-> the manifest, AND upgraded/customized/specialized for our CachyOS/Hyprland/6GB VRAM system and improved (③). We are integrating various different systems, but there should be no conflict between them. We have to be cautious but enterprising — namespace via MCP stdio process boundaries, Guard policy allow/confirm/deny, separate systemd services, no in-process FFI, so integrations don't clash.**
-> 
-> We only want **open-source things** — MIT/Apache-2.0/GPL-3.0, truly free, no API key, no subscription, self-hostable, offline-first. No online-led subscription search like Tavily (paid per query). Use self-hosted open-source alternatives like SearXNG, agent-search (bundles SearXNG, MIT, zero keys), DuckDuckGo MCP truly free no key.
+> **History —** This chapter is a research and planning log from 2026-08-09 (first-wave deep
+> research) and 2026-08-11 (second-wave intake). It records what the fleet chose to absorb,
+> from where, under what license, and which part of the Agentic Body it feeds. Treat it as
+> provenance for past decisions, not as live operating instructions.
 
-Legend: **MIND** / **BRAIN** / **SOMA**; license; ⭐ = first-wave (do now), 🔜 = later.
+The fleet grows by adopting, adapting, and wrapping open-source work with attribution — never by
+violating a license. Every upstream is forked, wrapped as a `shesh-*` component, pinned in the
+manifest, and then upgraded and specialized for the CachyOS/Hyprland machine and its 6 GB VRAM
+budget. Because many different systems integrate at once, the design avoids conflict by
+namespacing through MCP stdio process boundaries, a Guard policy of allow/confirm/deny, separate
+systemd services, and no in-process foreign-function calls.
 
----
+Only open-source software qualifies: MIT, Apache-2.0, or GPL-3.0; truly free; no API key; no
+subscription; self-hostable and offline-first. Online-led, per-query search services such as
+Tavily are excluded. Self-hosted alternatives such as SearXNG and agent-search stand in for them.
 
-## A. The user-facing agent / mind
-
-### ⭐ Newelle (qwersyk) — GPL-3.0  → `shesh-voice`
-Frontend + voice + wake word + MCP client. Already our primary mind shell.
-- **Steal:** wake word (1.3.0+), STT faster-whisper, TTS (Kokoro/Piper/Edge), MCP client (stdio+http,
-  1.4.5 supports STDIO on native), subagents (1.3.5), skills, scheduled tasks, file permissions,
-  chat folders/branching, OpenAI-compatible local API (1.4.0), Telegram interface.
-- **Watch issues/features for:** better MCP tool lazy-loading, per-profile models.
-- **Our fork (`shesh/` branch):** strip GNOME-only assumptions, add Hyprland Quickshell overlay,
-  prewire our MCP servers, set 6 GB-safe model defaults, rename in about-screen to "Shesh (Newelle core)".
-- **Do NOT take:** Flatpak manifest (use native AUR), cloud provider defaults.
-
-### 🔜 Goose (block/goose) — Apache-2.0  → reference for `shesh-mind`
-Model-agnostic agent, 70+ MCP extensions, CLI+desktop. Steal: MCP extension registry patterns, the
-desktop+CLI shape, provider abstraction. Don't replace Newelle; mine it for extension ideas.
-
-### 🔜 Hermes Agent (NousResearch) — MIT  → reference for skills/cron/gateway
-Self-improving agent with skills creation, cron automations, multi-platform gateway (Telegram/Discord),
-6 execution backends. Steal: skill format, scheduled automations, gateway (talk to Shesh from phone).
-Its companion `computer-use-linux` (Apache-2.0) is the blueprint for deeper Soma control.
-
-### 🔜 Open Interpreter — AGPL-3.0 (careful)  → patterns only
-AGPL is **incompatible with linking** into our GPL-3 desktop unless we keep it as a separate
-process/service. Use its approval-prompt and code-execution sandboxing patterns; do not vendor code.
-
-### 🔜 pi (earendil-works) — MIT  → reference
-The agent-loop harness under Prime Agent. Steal: supply-chain hardening (lockfile as ground truth,
-lifecycle allowlist), clean agent-loop/state design. Read-only inspiration.
-
-### 🔜 Prime Agent / RLM Harness (PrimeIntellect) — MIT  → reference
-"Continual Harness": a supplemental prompt/skill store refined with evidence without mutating the base
-system prompt. **This is exactly how Shesh should learn safely.** Implement in `shesh-mind`.
+Legend: **MIND** / **BRAIN** / **SOMA** mark the body layer; "first-wave" means adopt now,
+"later" means track or reference.
 
 ---
 
-## B. Brain / governance (your own lineage)
+## A. The user-facing agent and mind
 
-### ⭐ SheshAOS (you) — MIT  → `shesh-brain`
-The kernel: event store, policy engine, scheduler, router, tool broker, RPC. Already 981 tests.
-- **Steal (from yourself):** `shesh-kernel`, `shesh-rpc`, `shesh-ai` provider abstraction,
-  `shesh-terminal`, resource budgets, append-only audit, manifest lifecycle.
-- **Adapt:** target CachyOS/Hyprland instead of Ubuntu/GNOME; make policy gate MCP tool calls; expose
-  the event log as `shesh-audit`.
-- **Branches to study:** `bolt-optimize-raf-loop` (UI perf), `palette-ux-theme-switcher-a11y`
-  (accessibility/theme), `recovery/phase-1` (resilience). Fold the good bits in.
+### Newelle (qwersyk) — GPL-3.0 — first-wave — → `shesh-voice`
+Frontend, voice, wake word, and MCP client. Already the primary mind shell.
+- **Adopt:** wake word (1.3.0+), STT via faster-whisper, TTS (Kokoro/Piper/Edge), MCP client
+  (stdio + http; 1.4.5 supports STDIO on native), subagents (1.3.5), skills, scheduled tasks,
+  file permissions, chat folders and branching, OpenAI-compatible local API (1.4.0), Telegram
+  interface.
+- **Watch for:** better MCP tool lazy-loading and per-profile models.
+- **Our fork (`shesh/` branch):** strip GNOME-only assumptions, add the Hyprland Quickshell
+  overlay, prewire our MCP servers, set 6 GB-safe model defaults, and rename in the about-screen
+  to "Shesh (Newelle core)".
+- **Do not take:** the Flatpak manifest (use native AUR) and cloud provider defaults.
 
-### ⭐ shesh-kernel (you) — MIT  → research track
-Alpha microkernel. Steal the architecture ADRs (vte over Zig FFI, JSON-RPC id fix, resource budgets,
-policy-decision events, wgpu terminal). Many of these are *desktop-app* lessons directly applicable to
-a Quickshell/terminal Shesh UI. Keep as research, not daily driver.
+### Goose (block/goose) — Apache-2.0 — later — reference for `shesh-mind`
+Model-agnostic agent with 70+ MCP extensions, CLI and desktop. Mine it for MCP extension
+registry patterns, the desktop-plus-CLI shape, and provider abstraction. It does not replace
+Newelle.
 
-### 🔜 SheshOS (you) — MIT  → `shesh-mind` spec
-Specialist model routing (planner/coder/vision). Steal the router logic and manifest spec. On 6 GB
-VRAM, map its three large models to small equivalents (phi4-mini / qwen2.5-coder:3b / moondream2) and
-keep the same interface so bigger models drop in later.
+### Hermes Agent (NousResearch) — MIT — later — reference for skills/cron/gateway
+Self-improving agent with skill creation, cron automations, and a multi-platform gateway. Adopt
+the skill format, scheduled automations, and gateway pattern. Its companion `computer-use-linux`
+(Apache-2.0) is the blueprint for deeper Soma control.
 
-### 🔜 llm-eval-harness (you) — MIT  → `shesh-mind` reflection
-LLM-as-judge golden-set eval. Use it to grade specialists and gate mind changes.
+### Open Interpreter — AGPL-3.0 — later — patterns only
+AGPL is incompatible with linking into the GPL-3 desktop unless kept as a separate process or
+service. Use its approval-prompt and code-execution sandboxing patterns; do not vendor code.
+
+### pi (earendil-works) — MIT — later — reference
+The agent-loop harness under Prime Agent. Adopt its supply-chain hardening (lockfile as ground
+truth, lifecycle allowlist) and clean agent-loop and state design. Read-only inspiration.
+
+### Prime Agent / RLM Harness (PrimeIntellect) — MIT — later — reference
+"Continual Harness": a supplemental prompt and skill store refined with evidence without
+mutating the base system prompt. This is exactly how Shesh should learn safely. Implement it in
+`shesh-mind`.
+
+---
+
+## B. Brain and governance (our own lineage)
+
+### SheshAOS (our own) — MIT — first-wave — → `shesh-brain`
+The kernel: event store, policy engine, scheduler, router, tool broker, and RPC. Already 981
+tests.
+- **Adopt from ourselves:** `shesh-kernel`, `shesh-rpc`, `shesh-ai` provider abstraction,
+  `shesh-terminal`, resource budgets, append-only audit, and manifest lifecycle.
+- **Adapt:** target CachyOS/Hyprland instead of Ubuntu/GNOME; make policy gate MCP tool calls;
+  expose the event log as `shesh-audit`.
+- **Branches to study:** `bolt-optimize-raf-loop` (UI performance),
+  `palette-ux-theme-switcher-a11y` (accessibility and theming), `recovery/phase-1` (resilience).
+
+### shesh-kernel (our own) — MIT — later — research track
+An alpha microkernel. Adopt its architecture ADRs (vte over Zig FFI, JSON-RPC id fix, resource
+budgets, policy-decision events, wgpu terminal) as desktop-app lessons for a Quickshell or
+terminal Shesh UI. Keep it as research, not the daily driver.
+
+### SheshOS (our own) — MIT — later — `shesh-mind` spec
+> **Note —** `gaganjainse/SheshOS` is **conceptual and unpublished**, not a live, reachable
+> upstream. Treat it as a design specification for specialist model routing, not as cloneable
+> code.
+Its router logic maps three large models to small, 6 GB-safe equivalents — `phi4-mini`,
+`qwen2.5-coder:3b`, and `moondream2` — while keeping the same interface so bigger models drop in
+later.
+
+### llm-eval-harness (our own) — MIT — later — `shesh-mind` reflection
+An LLM-as-judge golden-set eval. Use it to grade specialists and gate mind changes.
 
 ---
 
 ## C. Soma — desktop shell and looks
 
-### ⭐ end-4/dots-hyprland — GPL-3.0  → base of `shesh-desktop`
-Our shell base. Steal: Lua config (Hyprland ≥0.55), Quickshell `ii` widgets, Material You/matugen,
-AI sidebar (Ollama/Gemini), anti-flashbang, screen translate, clipboard IPC, keybinds.
-- **Upstream strategy:** keep `custom/` overrides thin; rebase often. Add our MCP/automations without
-  diverging `dots/`.
-- **Watch:** their Quickshell/Lua migrations; their AI sidebar is a host for our overlay.
+### end-4/dots-hyprland — GPL-3.0 — first-wave — base of `shesh-desktop`
+Our shell base. Adopt the Lua config (Hyprland 0.55+), Quickshell `ii` widgets, Material
+You/matugen, the AI sidebar (Ollama/Gemini), anti-flashbang, screen translate, clipboard IPC,
+and keybinds.
+- **Upstream strategy:** keep `custom/` overrides thin and rebase often; add our MCP and
+  automations without diverging `dots/`.
+- **Watch:** their Quickshell and Lua migrations; their AI sidebar can host our overlay.
 
-### 🔜 ML4W 2.14.1 — GPL-3.0  → `statusbar.json` pattern
-Single-file Quickshell bar config; steal the declarative bar pattern and (optionally) the welcome app
-concept. Don't take the GUI configurator.
+### ML4W 2.14.1 — GPL-3.0 — later — `statusbar.json` pattern
+A single-file Quickshell bar config. Adopt the declarative bar pattern and, optionally, the
+welcome-app concept. Do not take the GUI configurator.
 
-### 🔜 JaKooLit/Hyprland-Dots — (check license, GPL-ish)  → robustness patterns
-Distro guards, per-monitor refresh scripts, SDDM sugar-candy, reliable Bluetooth menu. Borrow logic
-only; keep end-4 visuals.
+### JaKooLit/Hyprland-Dots — (GPL-ish; verify) — later — robustness patterns
+Distro guards, per-monitor refresh scripts, SDDM sugar-candy, and a reliable Bluetooth menu.
+Borrow logic only; keep end-4 visuals.
 
-### 🔜 prasanthrangan/hyprdots (HyDE) — GPL-ish  → theming
-Wallbash (one wallpaper → all apps theming), themepatcher, `hyde-cli` modularity. We already use
-matugen; consider Wallbash for apps matugen doesn't cover.
+### prasanthrangan/hyprdots (HyDE) — GPL-ish — later — theming
+Wallbash (one wallpaper themes all apps), themepatcher, and `hyde-cli` modularity. We already use
+matugen; consider Wallbash for apps matugen does not cover.
 
-### 🔜 CachyOS Noctalia shell — (CachyOS)  → animation/perf ideas
-Now a Hyprland option on the 260628 ISO. Compare animation curves and NVIDIA compositing hints; do
-not switch shells.
+### CachyOS Noctalia shell — (CachyOS) — later — animation and performance ideas
+Now a Hyprland option on the 260628 ISO. Compare animation curves and NVIDIA compositing hints;
+do not switch shells.
 
-### 🔜 Caelestia-shell — Qt6/Quickshell  → animation curves
-Copy easing/blur parameters (QML, no dep change) for 144 Hz smoothness.
-
----
-
-## D. Soma — file/automation organs
-
-### ⭐ Our own smart-organizer (in shesh-desktop)  → `shesh-files`
-Rust `notify` watcher + Python classifier + MCP. Promote to its own repo; add:
-- **Steal from `waku-agent`** (MIT): single-afternoon agent harness shape (loop/memory/eval) — use as
-  the structural model for `shesh-files`'s agent mode, not a dependency.
-- **Steal from OpenAdapt** (MIT): record-and-replay demonstration for automations.
-- Trash via `gio trash`; undo log; SQLite history (already specced).
-
-### 🔜 system-aidai/**openclaw** family (MIT if used) → gateway ideas
-Personal agent servers (moltis/clawdbot) — single Rust binary, sandboxed, multi-LLM, voice, Telegram.
-Reference for packaging Shesh as one binary later.
-
-### 🔜 Leon (leon-ai/leon) — MIT  → skills architecture
-17.4k★ open personal assistant, Python+Node, skills/memory layers. Older but clean; mine its skill
-packaging and i18n.
-
-### 🔜 pipecat-ai/pipecat — BSD-2  → real-time voice pipeline
-13.9k★ framework for voice/multimodal conversational pipelines. Use if we outgrow Newelle's voice
-pipeline (interruption, barge-in, low latency).
-
-### 🔜 openWakeWord (dscripka) — Apache-2.0
-Fallback if Newelle's wake word is insufficient; train a custom "Hey Shesh" model.
+### Caelestia-shell — Qt6/Quickshell — later — animation curves
+Copy easing and blur parameters (QML, no dependency change) for 144 Hz smoothness.
 
 ---
 
-## E. Soma — computer/device control
+## D. Soma — file and automation organs
 
-### 🔜 computer-use-linux (avifenesh) — Apache-2.0
-AT-SPI accessibility tree + Wayland input injection + screenshots + compositor window targeting. This
-is the missing "eyes and hands" for Shesh on Hyprland beyond `hyprctl`. Evaluate maturity; wrap as
-`shesh-control` MCP server, behind brain policy (destructive actions require approval).
+### Our own smart-organizer (in shesh-desktop) — first-wave — → `shesh-files`
+A Rust `notify` watcher plus a Python classifier and MCP. Promote it to its own repository and
+add:
+- **Adopt from `waku-agent`** (MIT): a single-afternoon agent harness shape (loop, memory,
+  eval) as the structural model for `shesh-files`'s agent mode, not as a dependency.
+- **Adopt from OpenAdapt** (MIT): record-and-replay demonstration for automations.
+- Trash via `gio trash`; an undo log; and a SQLite history (already specced).
 
-### 🔜 OS-Copilot / OS-Copilot (Ubuntu) — Apache-2.0
-Linux-oriented shell+screenshot agent; good reference for Linux-first control.
+### system-aidai/openclaw family (MIT if used) — later — gateway ideas
+Personal agent servers (moltis/clawdbot): a single Rust binary, sandboxed, multi-LLM, voice, and
+Telegram. Reference for packaging Shesh as one binary later.
 
-### 🔜 browser-use — MIT
-Drive a real browser for web tasks. Wrap as `shesh-browser` MCP; run in a separate sandboxed profile.
+### Leon (leon-ai/leon) — MIT — later — skills architecture
+A 17.4k-star open personal assistant in Python and Node with skills and memory layers. Older but
+clean; mine its skill packaging and i18n.
 
-### ⭐ phone-harness concept (ShawnPana) — MIT  → `shesh-phone`
-macOS-only; we port the OCR→coordinate→act loop to **ADB on the Realme Narzo 90x**. Use `moondream2`
-vision instead of OCR. Direct coordinates via `adb shell input`.
+### pipecat-ai/pipecat — BSD-2 — later — real-time voice pipeline
+A 13.9k-star framework for voice and multimodal conversational pipelines. Use it if we outgrow
+Newelle's voice pipeline (interruption, barge-in, low latency).
+
+### openWakeWord (dscripka) — Apache-2.0 — later
+A fallback if Newelle's wake word is insufficient; train a custom "Hey Shesh" model.
+
+---
+
+## E. Soma — computer and device control
+
+### computer-use-linux (avifenesh) — Apache-2.0 — later
+An AT-SPI accessibility tree plus Wayland input injection, screenshots, and compositor window
+targeting. This is the missing "eyes and hands" for Shesh on Hyprland beyond `hyprctl`. Evaluate
+maturity; wrap it as a `shesh-control` MCP server behind brain policy, where destructive actions
+require approval.
+
+### OS-Copilot (Ubuntu) — Apache-2.0 — later
+A Linux-oriented shell-and-screenshot agent; a good reference for Linux-first control.
+
+### browser-use — MIT — later
+Drives a real browser for web tasks. Wrap it as `shesh-browser` MCP and run it in a separate
+sandboxed profile.
+
+### phone-harness concept (ShawnPana) — MIT — first-wave — → `shesh-phone`
+macOS-only upstream; we port the OCR-to-coordinate-to-act loop to **ADB on the Realme Narzo 90x**,
+using `moondream2` vision instead of OCR and direct coordinates via `adb shell input`.
 
 ---
 
 ## F. Mind — memory and knowledge
 
-### 🔜 Khoj — AGPL-3.0  → patterns only (or separate service)
-Self-hosted second brain over docs/ Obsidian/Emacs. AGPL means run as a **separate service** the brain
-talks to, don't link. Great reference for personal RAG. We have our own `rag-service` (MIT) which is
-preferred and license-clean.
+### Khoj — AGPL-3.0 — later — patterns only (or a separate service)
+A self-hosted second brain over docs, Obsidian, and Emacs. AGPL means run it as a **separate
+service** the brain talks to, never link it. We prefer our own `rag-service` (MIT), which is
+license-clean.
 
-### 🔜 AnythingLLM / Jan / GPT4All — MIT/Apache
-Reference UIs and local model management; not direct deps.
+### AnythingLLM / Jan / GPT4All — MIT/Apache — later
+Reference UIs and local model management; not direct dependencies.
 
 ---
 
-## G. Build-your-own / learning track (build-your-own-x, MIT)
+## G. Build-your-own and learning track (build-your-own-x, MIT)
 
 Use the test-driven, increment-by-increment tutorials for the `shesh-kernel` research track:
-build-a-shell, build-a-database, build-an-interpreter, build-a-docker. Not production code; a learning
-scaffold so the AI-first kernel vision is grounded, not fantasy.
+build-a-shell, build-a-database, build-an-interpreter, build-a-docker. Not production code — a
+learning scaffold so the AI-first kernel vision stays grounded rather than fanciful.
 
 ---
 
-## H. Dotfile/rice leaderboard signals (star-history / trendshift)
+## H. Dotfile and rice leaderboard signals (star-history / trendshift)
 
-Fastest-moving in 2026: Newelle (voice/MCP), Hermes/pi/Prime (agents), end-4/Noctalia/Caelestia
-(Quickshell shells). The signal: **Quickshell + MCP + local voice** is the winning combo — exactly our
-stack. We're surfing the wave, not fighting it.
+Fastest-moving in 2026: Newelle (voice/MCP), Hermes/pi/Prime (agents), and end-4/Noctalia/Caelestia
+(Quickshell shells). The signal is clear — **Quickshell + MCP + local voice** is the winning
+combination, and it is exactly our stack. We are surfing the wave, not fighting it.
 
 ---
 
-## I. License compatibility summary for our GPL-3 body
+## I. License compatibility for our GPL-3 body
 
 | License | Vendored into GPL-3 code? | Notes |
 |---|---|---|
-| MIT / BSD-2 / Apache-2.0 | ✅ yes, with attribution/NOTICE | bulk of the ecosystem |
-| LGPL | ✅ dynamic linking only | Quickshell |
-| GPL-3 | ✅ same license | Newelle, end-4, HyDE |
-| AGPL-3.0 | ⚠️ separate service only | Open Interpreter, Khoj — never link |
-| Elastic/SSPL/source-available | ❌ no | Suna and similar — skip |
+| MIT / BSD-2 / Apache-2.0 | Yes, with attribution and NOTICE | bulk of the ecosystem |
+| LGPL | Dynamic linking only | Quickshell |
+| GPL-3 | Same license | Newelle, end-4, HyDE |
+| AGPL-3.0 | Separate service only | Open Interpreter, Khoj — never link |
+| Elastic / SSPL / source-available | No | Suna and similar — skip |
 
-We maintain `NOTICES.md` and a per-component `LICENSE` in each `shesh-*` repo. The manifest gate
-(`scripts/check-licenses.py`) refuses incompatible licenses.
+We maintain `NOTICES.md` and a per-component `LICENSE` in each `shesh-*` repository. The manifest
+gate (`scripts/check-licenses.py`) refuses incompatible licenses.
 
 ---
 
 ## J. First-wave intake (done 2026-08-09)
 
-1. **Fork & track:** Newelle, end-4/dots-hyprland — ✅ done, now shesh-voice 41M, shesh-desktop 22M
-2. **Promote from shesh-desktop:** `shesh-files`, `shesh-shell`, `shesh-system`, `shesh-voice` (Newelle wrapper config) — ✅ done
-3. **Bridge:** `shesh-audit` to SheshAOS event store — ✅ done via KernelBridge
-4. **Reference-only (read, don't vendor yet):** Goose, Hermes, pi, Prime, computer-use-linux, pipecat, Leon — ✅ read, cataloged in TOOLING_CATALOG
-5. Set up the weekly upstream-tracker bot (see `scripts/upstream-tracker.py`) — ✅ done
+1. **Fork and track:** Newelle and end-4/dots-hyprland — Done; now `shesh-voice` (41M) and
+   `shesh-desktop` (22M).
+2. **Promote from shesh-desktop:** `shesh-files`, `shesh-shell`, `shesh-system`, and the
+   `shesh-voice` Newelle wrapper config — Done.
+3. **Bridge:** `shesh-audit` to the SheshAOS event store — Done via KernelBridge.
+4. **Reference-only (read, do not vendor yet):** Goose, Hermes, pi, Prime, computer-use-linux,
+   pipecat, Leon — Done; cataloged in TOOLING_CATALOG.
+5. **Weekly upstream-tracker bot** (`scripts/upstream-tracker.py`) — Done.
 
-## K. Second-wave intake — 2026-08-11 deep research (open-source only, truly free, no API key, no subscription)
+## K. Second-wave intake — 2026-08-11 deep research
 
-> User said: Tavily not completely free but subscription based, don't want things that are online led, only open-source things. Also: our job is not just to fork and wrap, but to upgrade wrapper for our needs and customize and specialize for our system and improve it. We are integrating various different systems, but there should be no conflict — cautious but enterprising.
+> **History —** The user directed: Tavily is not completely free but subscription-based; do not
+> use online-led tools, only open-source ones. Our job is not merely to fork and wrap, but to
+> upgrade the wrapper for our needs, customize and specialize it for our system, and improve it.
+> We integrate many different systems, but there must be no conflict — cautious but enterprising.
 
-From web search 2026-08-11 (awesome-hyprland, best MCP servers 2026, CachyOS June 2026, Rust eBPF, file watcher):
+From web search on 2026-08-11 (awesome-hyprland, best MCP servers 2026, CachyOS June 2026, Rust
+eBPF, file watcher).
 
-### K.1 Desktop shells — Quickshell ecosystem (steal, upgrade, specialize for 1920x1200@144 RTX 4050 6GB)
+### K.1 Desktop shells — Quickshell ecosystem
+Steal, upgrade, and specialize for 1920x1200 at 144 Hz with an RTX 4050 and 6 GB VRAM.
+- **DankMaterialShell** (AvengeMedia/DankMaterialShell) — MIT, Quickshell + Go, a complete
+  Wayland desktop shell optimized for Hyprland/Niri/Sway/MangoWC; replaces waybar, swaylock,
+  swayidle, mako, fuzzel, and polkit. Provides dankcalendar (local/Google/Microsoft/CalDAV), a
+  dgop system-monitoring TUI, dank-qml-common shared QML, and dankgo common Go modules.
+  **Adopt:** calendar integration, the system-monitoring TUI library, and shared QML widgets;
+  upgrade the wrapper for our MSI with power-profile, GPU MUX, and backup-status widgets, and
+  specialize for the 6 GB VRAM budget.
+- **ekremx25/quickshell** — MIT, a modern feature-rich Wayland shell with a modular bar, dock,
+  Material You theming, event-driven design, a 10-band EQ, multi-monitor, HDR/VRR/10-bit,
+  night light via hyprsunset/gammastep, OSD volume/brightness, an app drawer with fuzzy search,
+  a wallpaper picker with matugen, a lock screen, mouse/keyboard sensitivity, and
+  network/bluetooth/VPN managers. **Adopt:** the `bar_config.json` declarative pattern, dock
+  drag-and-drop pinning, single `hyprctl --batch` monitor management (no flicker), a night-light
+  1000-6500K slider with a fixed-time schedule that wraps at midnight, and an EQ filter-chain
+  rather than a rebuild.
+- **qs-hyprview** (dom0/qs-hyprview) — MIT, a native, highly customizable Quickshell window
+  switcher and Expose for Hyprland with nine mathematical layout algorithms and zero-latency
+  smooth animations. **Adopt:** the nine layout algorithms for an overview, upgraded for 144 Hz
+  smoothness and specialized for Hyprland workspace overview.
+- **awesome-hyprland list:** `hyprpaper` (wallpaper daemon with IPC), `hyprpicker` (colorpicker),
+  launchers (`rofi`/`tofi`/`bemenu`/`wofi`/`fuzzel`/`yofi`), `swww` (wallpaper daemon with live
+  switching and GIF support), `ironbar` (Rust bar), `HyprPanel` (TypeScript bar/panel with
+  context menus), `ashell` (Rust ready-to-go bar), `ignis` (Python GTK4 widget framework).
+  **Adopt:** `swww` live switching with GIF for wallpaper (better than hyprpaper), the
+  `HyprPanel` context-menu pattern, and `ashell` as a reference bar — upgrade the wrapper with a
+  Shesh ambient-offer overlay, not just a bar.
 
-- **⭐ DankMaterialShell** (AvengeMedia/DankMaterialShell) — MIT, Quickshell+Go, complete desktop shell for Wayland, optimized for Hyprland/Niri/Sway/MangoWC, replaces waybar, swaylock, swayidle, mako, fuzzel, polkit. Provides dankcalendar (local/Google/Microsoft/CalDAV), dgop system monitoring TUI, dank-qml-common shared QML, dankgo common Go modules. **Steal:** calendar integration, system monitoring TUI library, shared QML widgets — upgrade wrapper for our MSI: add power profile + GPU MUX + backup status widgets, specialize for 6GB VRAM budget
-- **⭐ ekremx25/quickshell** — MIT, modern feature-rich Wayland shell, modular bar, dock, Material You theming, event-driven, 10-band EQ, multi-monitor, HDR/VRR/10-bit, night light hyprsunset/gammastep, OSD volume/brightness, app drawer fuzzy search, wallpaper picker with matugen, lock screen, mouse/keyboard sensitivity, network/bluetooth/VPN managers, API keys for SmartComplete AI (OpenAI/Claude/Groq/Ollama). **Steal:** bar_config.json declarative pattern, dock drag-and-drop pinning, monitor management single hyprctl --batch (no flicker), night light 1000-6500K slider + fixed-time schedule midnight-wrap, EQ filter-chain, not rebuild
-- **⭐ qs-hyprview** (dom0/qs-hyprview) — MIT? Quickshell, native highly customizable Window Switcher/Exposé for Hyprland, 9 mathematical layout algorithms, Qt/QML Wayland Layershell zero latency smooth animations, standalone drop-in replacement, no heavy Python. **Steal:** 9 layout algorithms for overview, upgrade wrapper for our 144 Hz smoothness, specialize for Hyprland workspace overview
-- **awesome-hyprland** list: `hyprpaper` (wallpaper daemon IPC), `hyprpicker` colorpicker, `rofi`/`tofi`/`bemenu`/`wofi`/`fuzzel`/`yofi` launchers, `swww` wallpaper daemon live switching animations GIF support, `ironbar` Rust customizable bar, `HyprPanel` TS bar/panel extensive customizability + context menus, `ashell` Rust ready-to-go bar, `ignis` Python GTK4 widget framework
-  - **Steal:** `swww` live switching + GIF for wallpaper (better than hyprpaper), `HyprPanel` context menus pattern, `ashell` ready-to-go bar for reference — upgrade wrapper: add Shesh ambient offer overlay, not just bar
-
-### K.2 MCP servers — truly free, open-source, no API key, no subscription (discard Tavily)
-
-From Best Free MCP Servers 2026 (designrevision.com, 2026-07-30): **Truly free, no key, no account, open-source reference servers from @modelcontextprotocol**:
-
-- **Filesystem** — sandboxed local file read/write — truly free, no key — MIT — we already package in shesh-mcp-bundle, but upgrade wrapper: scoped allowed dirs `~/Projects/personal`, `~/Documents/Inbox`, Guard deny `~/Documents/Job`, `~/.ssh`, etc.
-- **Git** — repository operations on local repo — truly free — MIT — already packaged, upgrade: add `git_view` read-only + `github_view` via `shesh-secrets` PAT scoped
-- **Fetch** — fetch URL and return clean markdown — truly free — MIT — already packaged, upgrade: add user-agent `Shesh/1.0` + timeout + content size limit
-- **Sequential Thinking** — structured step-by-step reasoning — truly free — MIT — package next, not built
-- **Memory** — persistent knowledge graph — truly free — MIT — we have `shesh-memory` hierarchical but can steal knowledge graph pattern
-- **Playwright** — drive real local browser — truly free — MIT — package next: `npx @playwright/mcp@latest` — runs sandboxed, no key
-- **DuckDuckGo** — privacy-first web search — truly free, no key — from `shesh-skills` keyless DDG HTML, but now formal MCP server `duckduckgo-mcp` — upgrade wrapper: add rate limit + result deduplication
-- **GitHub** — repos, issues, PRs — free with account, needs PAT token — we have `shesh-secrets` multi-backend, okay, open-source reference
-- **Obsidian** — read/write Obsidian vaults — fully free, no key — MIT — package for Notes vault `~/Notes/` (Obsidian/logseq)
-- **Chrome DevTools MCP** — browser devtools — fully free — open-source
+### K.2 MCP servers — truly free, open-source, no API key, no subscription
+From Best Free MCP Servers 2026 (designrevision.com, 2026-07-30): truly free, keyless,
+accountless, open-source reference servers from `@modelcontextprotocol`.
+- **Filesystem** — sandboxed local file read/write — truly free, no key — MIT — already packaged
+  in `shesh-mcp-bundle`; upgrade the wrapper with scoped allowed dirs (`~/Projects/personal`,
+  `~/Documents/Inbox`), and Guard-deny `~/Documents/Job` and `~/.ssh`.
+- **Git** — repository operations on a local repo — truly free — MIT — already packaged; upgrade
+  with a read-only `git_view` and `github_view` via `shesh-secrets` scoped PAT.
+- **Fetch** — fetch a URL and return clean markdown — truly free — MIT — already packaged; upgrade
+  with a `Shesh/1.0` user-agent, a timeout, and a content-size limit.
+- **Sequential Thinking** — structured step-by-step reasoning — truly free — MIT — package next.
+- **Memory** — a persistent knowledge graph — truly free — MIT — we have `shesh-memory`
+  hierarchical memory, but can adopt the knowledge-graph pattern.
+- **Playwright** — drives a real local browser — truly free — MIT — package next
+  (`npx @playwright/mcp@latest`), sandboxed, no key.
+- **DuckDuckGo** — privacy-first web search — truly free, no key — from `shesh-skills` keyless
+  DDG HTML, now a formal `duckduckgo-mcp` server; upgrade with rate limiting and result
+  deduplication.
+- **GitHub** — repos, issues, PRs — free with an account, needs a PAT token — we have
+  `shesh-secrets` multi-backend, so it is acceptable.
+- **Obsidian** — read/write Obsidian vaults — fully free, no key — MIT — package for the Notes
+  vault `~/Notes/` (Obsidian/logseq).
+- **Chrome DevTools MCP** — browser devtools — fully free — open-source.
 
 **Discarded per user request (online-led, subscription, not open-source):**
-- **Tavily MCP** — closed-source, $0.005/query, needs API key, online-led, subscription — **DISCARDED** — replaced with self-hosted open alternatives below
-- **Brave Search MCP** — needs API key, $5/1k queries, not fully free — **DISCARDED** unless user explicitly opts in with key via shesh-secrets
-- **Perplexity MCP** — needs API key, subscription — **DISCARDED**
+- **Tavily MCP** — closed-source, about $0.005 per query, needs an API key, online-led,
+  subscription — **discarded**; replaced with self-hosted open alternatives below.
+- **Brave Search MCP** — needs an API key, about $5 per 1k queries, not fully free —
+  **discarded** unless the user explicitly opts in with a key via `shesh-secrets`.
+- **Perplexity MCP** — needs an API key, subscription — **discarded**.
 
-**Open-source self-hosted search alternatives to Tavily (free, no keys, self-hostable, offline-first):**
-- **SearXNG** — AGPL-3.0, self-hosted metasearch 70+ engines, no key, fully private, no monthly fees, no vendor lock-in — `docker compose up` — aggregates 70+ sources, we can self-host on `localhost:3939`
-- **agent-search** (brcrusoe72/agent-search) — MIT, self-hosted search API + MCP server for AI agents, bundles SearXNG, zero API keys, one-command deploy, 17 endpoints, layered content extraction with optional browser rendering, deduplication cross-engine, prompt injection scrubbing, adaptive failure analysis (evolver), optional Tor-anonymized stack — **open-source alternative to Tavily, Exa, Serper** — `git clone && ./scripts/prepare-searxng.sh && docker compose up`
-- **fastCRW** — AGPL-3.0, Rust + bundled SearXNG, Tavily-style endpoints, adapter shim, MCP server: `crw_search, crw_scrape, crw_crawl, crw_map`, Rust runtime ~8 MB image low idle RAM
-- **OrioSearch** — MIT, Python FastAPI + SearXNG + Redis, explicit Tavily drop-in
-- **TrailSearch / tavily-open** (jianjungki/tavily-open) — MIT, powered by SearXNG and Crawl4AI, self-hosted web search, crawl, content extraction API, low-cost search router local SQLite FTS first, then SearXNG, only call Brave when explicitly enabled
+**Open-source, self-hosted search alternatives to Tavily (free, no keys, self-hostable,
+offline-first):**
+- **SearXNG** — AGPL-3.0, a self-hosted metasearch over 70+ engines, no key, fully private, no
+  monthly fees, no vendor lock-in — `docker compose up`; aggregates 70+ sources on
+  `localhost:3939`.
+- **agent-search** (brcrusoe72/agent-search) — MIT, a self-hosted search API and MCP server for
+  AI agents that bundles SearXNG, zero API keys, one-command deploy, 17 endpoints, layered
+  content extraction with optional browser rendering, cross-engine deduplication, prompt-injection
+  scrubbing, adaptive failure analysis (evolver), and an optional Tor-anonymized stack — an
+  open-source alternative to Tavily, Exa, and Serper.
+- **fastCRW** — AGPL-3.0, Rust with bundled SearXNG, Tavily-style endpoints, an adapter shim, and
+  an MCP server (`crw_search`, `crw_scrape`, `crw_crawl`, `crw_map`); a Rust runtime about 8 MB
+  with low idle RAM.
+- **OrioSearch** — MIT, Python FastAPI + SearXNG + Redis, an explicit Tavily drop-in.
+- **TrailSearch / tavily-open** (jianjungki/tavily-open) — MIT, powered by SearXNG and Crawl4AI,
+  a self-hosted web search, crawl, and content-extraction API with a low-cost search router that
+  checks local SQLite FTS first, then SearXNG, and calls Brave only when explicitly enabled.
 
-**Steal and upgrade:** Package `agent-search` as `shesh-search` component — MIT, zero keys, one-command, MCP server for Claude Desktop/Cursor, Tor option, better than Tavily because free forever, private, no API key. Upgrade wrapper: add Guard policy (allow search, deny exfil of protected paths), add cache `~/.cache/shesh/search/`, add result ranking via RRF.
+**Steal and upgrade:** package `agent-search` as a `shesh-search` component — MIT, zero keys,
+one command, an MCP server for Claude Desktop/Cursor, with a Tor option. It beats Tavily because
+it is free forever, private, and keyless. Upgrade the wrapper with a Guard policy (allow search,
+deny exfiltration of protected paths), a cache at `~/.cache/shesh/search/`, and result ranking via
+RRF.
 
-### K.3 Rust eBPF / Observability — Aya and friends
+### K.3 Rust eBPF and observability — Aya and friends
+From search: **aya-rs/aya** (4.7k stars) is a pure-Rust eBPF library focused on developer
+experience and operability, with no libbpf dependency, fast builds, BTF portability, and
+tokio/async-std support.
+- **Top Rust eBPF projects:** `aya` (4.7k), `oryx` (2.5k, TUI network sniffing), `rbpf` (1.1k,
+  Rust VM JIT), `kunai` (1k, threat hunting), `pulsar` (1k, modular runtime security for IoT),
+  `libbpf-rs` (998, minimal opinionated tooling), `tracexec` (436, an execve/at tracer),
+  `aya-template` (cargo-generate template).
+- **Observability:** `vector` (22.2k), `greptimedb` (6.5k, an Observability 2.0 database for
+  metrics/logs/traces), `autometrics-rs` (834, easy metrics), `weaver` (450, OTel Weaver semantic
+  conventions).
 
-From search: **aya-rs/aya** 4.7k★ pure Rust eBPF library, focus developer experience and operability, no libbpf dep, fast builds, BTF portable, supports tokio/async-std
-
-- **Top Rust eBPF projects:** `aya` 4.7k, `oryx` 2.5k TUI sniffing network eBPF, `rbpf` 1.1k Rust VM JIT for eBPF, `kunai` 1k threat-hunting, `pulsar` 1k modular runtime security IoT, `libbpf-rs` 998 minimal opinionated eBPF tooling, `tracexec` 436 tracer for execve/at, `aya-template` cargo-generate template
-- **Observability:** `vector` 22.2k, `greptimedb` 6.5k Observability 2.0 DB metrics/logs/traces, `autometrics-rs` 834 easily add metrics, `weaver` 450 OTel Weaver semantic conventions
-
-**Steal:** Use `aya` + `aya-template` `cargo generate --name demo -d program_type=xdp https://github.com/aya-rs/aya-template` for execve/openat/tcp-retransmit tracers — we did stub in `shesh-ebpf` with `/proc` fallback, should upgrade to real Aya programs for execve, openat, tcp_retransmit_skb via `BPF_MAP_TYPE_PERF_EVENT_ARRAY`, read-only, behind Guard allow/confirm/deny — P2 done minimal, future real Rust.
+**Steal:** use `aya` and `aya-template` (`cargo generate --name demo -d program_type=xdp
+https://github.com/aya-rs/aya-template`) for execve/openat/tcp-retransmit tracers. We stubbed
+this in `shesh-ebpf` with a `/proc` fallback; upgrade to real Aya programs for execve, openat, and
+tcp_retransmit_skb via `BPF_MAP_TYPE_PERF_EVENT_ARRAY`, read-only, behind the Guard
+allow/confirm/deny. P2 is a minimal done state; real Rust comes later.
 
 ### K.4 File watcher — notify-rs
+- **notify-rs/notify** (3.3k stars) is a cross-platform filesystem-notification library in Rust,
+  used by Alacritty, cargo watch, mdBook, and Zed, across Linux inotify, macOS FSEvents,
+  Windows ReadDirectoryChangesW, FreeBSD kqueue, and more. **Steal:** replace our custom
+  watcher-rs with the `notify` RecommendedWatcher, which selects the best backend automatically.
+  We already did this in `shesh-files`, but the audit found that smart-organizer `--watch` is a
+  polling loop, not inotify, and wastes I/O — ensure we use the `notify` crate, not a custom
+  polling loop.
+- **Other Rust file managers:** `yazi` is a blazing-fast terminal file manager with async I/O, a
+  client-server architecture, a Lua pub-sub, and a plugin/theme package manager. **Steal:** async
+  task scheduling, real-time progress, and the package-manager pattern for `shesh-files`.
 
-- **notify-rs/notify** 🔭 3.3k★ cross-platform filesystem notification library Rust, used by Alacritty, cargo watch, mdBook, Zed, etc. Platforms: Linux inotify, macOS FSEvents, Windows ReadDirectoryChangesW, FreeBSD kqueue, iOS etc. — **steal**: replace our custom watcher-rs with `notify` RecommendedWatcher (selects best backend automatically), we already did in `shesh-files` but should ensure we use `notify` crate, not custom polling loop — audit found smart-organizer `--watch` is polling loop, not inotify, wastes I/O
-
-- **Other Rust file managers:** `yazi` blazing fast terminal file manager Rust async I/O, client-server architecture Lua pub-sub, package manager for plugins/themes, integration ripgrep/fd/fzf/zoxide — steal: async task scheduling, real-time progress, package manager pattern for `shesh-files`
-
-### K.5 CachyOS June/August 2026 — performance
-
-From search: CachyOS June 2026 ships Python PGO, GCC patch, OpenBLAS fix, **CachyOS Hyprland Noctalia desktop option**, GNOME Resources app, Welcome app improvements; August 2026 ships Linux 6.18 LTS + 7.1, KDE Plasma 6.7.4, improved installer, Noctalia greeter login screen instead of SDDM. BORE scheduler, LTO, PGO, BOLT, x86-64-v3/v4, Zen4, gaming meta.
-
-**Steal:** Noctalia animation curves + NVIDIA compositing hints, compare BORE vs EEVDF scheduler, use `cachyos-rate-mirrors` + `cachyos-gaming-meta` — already in CachyOS, we should not rebuild.
+### K.5 CachyOS June and August 2026 — performance
+From search: CachyOS June 2026 ships Python PGO, a GCC patch, and an OpenBLAS fix, plus the
+CachyOS Hyprland Noctalia desktop option, a GNOME Resources app, and Welcome-app improvements.
+August 2026 ships Linux 6.18 LTS and 7.1, KDE Plasma 6.7.4, an improved installer, and the
+Noctalia greeter login screen instead of SDDM, with the BORE scheduler, LTO, PGO, BOLT, and
+x86-64-v3/v4 and Zen4 gaming meta.
+**Steal:** Noctalia animation curves and NVIDIA compositing hints, a BORE-versus-EEVDF scheduler
+comparison, and `cachyos-rate-mirrors` plus `cachyos-gaming-meta` — already in CachyOS, so we do
+not rebuild.
 
 ### K.6 Computer-use agents
+- **Best open-source AI computer-use agents 2026:** `Fazm` (MIT, Claude/GPT-4o/Ollama + the
+  Accessibility API + vision on macOS), `Browser Use` (MIT, 52k stars, any LangChain model with
+  DOM + vision, cross-platform), `Open Interpreter` (AGPL-3.0), `UI-TARS` (Apache-2.0, a
+  custom fine-tuned screenshot-native model), `OS-Copilot` (Apache-2.0, shell + screenshot on
+  Linux/macOS), `OpenAdapt` (MIT, screenshot + recording), `Skyvern` (AGPL-3.0).
+- **Our gap:** `computer-use-linux` (Apache-2.0) provides an AT-SPI tree, Wayland input
+  injection, screenshots, and compositor window targeting — the missing eyes and hands for Shesh
+  beyond `hyprctl` — so we need a `shesh-control` MCP behind policy.
 
-- **Best open source AI computer-use agents 2026:** `Fazm` MIT Claude/GPT-4o/Ollama + Accessibility API + vision macOS, `Browser Use` MIT 52k Any LangChain model DOM+vision cross-platform, `Open Interpreter` AGPL-3.0 versatile, `UI-TARS` Apache-2.0 custom fine-tuned screenshot native, `OS-Copilot` Apache-2.0 shell+screenshot Linux/macOS, `OpenAdapt` MIT screenshot+recording, `Skyvern` AGPL-3.0, etc.
-- **Our gap:** `computer-use-linux` Apache-2.0 AT-SPI tree + Wayland input injection + screenshots + compositor window targeting — missing eyes/hands for Shesh beyond `hyprctl` — need `shesh-control` MCP behind policy
+## L. Avoiding conflict while staying enterprising
 
-### L. How we avoid conflicts while being enterprising (cautious but enterprising)
-
-User said: integrating various different systems, but there should be no conflict between them. We have to be cautious but enterprising.
+> **History —** The user directed: integrate many different systems, but there must be no conflict
+> between them. We must be cautious but enterprising.
 
 **Design we already have (LANGUAGE_POLICY.md):**
-
-- Five languages only: Rust, Python, Lua, QML/JS, Bash — no Zig/C/Mojo/Go — minimize FFI, cross-language talk is MCP/JSON over processes, not in-process links
-- Exotic runtimes go in rootless Podman/Distrobox, not host — reproducible envs, no host pollution
-- Federated component repos + manifest/locks, not monorepo — each independently versioned/tested
-- MCP over stdio process boundaries — one job per component, one process per MCP server, one policy gate — no in-process FFI, so integrations don't clash
-- Guard policy allow/confirm/deny + hash-chained audit + protected paths deny
+- Five languages only: Rust, Python, Lua, QML/JS, and Bash — no Zig, C, Mojo, or Go. This
+  minimizes foreign-function calls; cross-language talk happens over MCP/JSON between processes,
+  never through in-process links.
+- Exotic runtimes go in rootless Podman or Distrobox, not on the host — reproducible environments
+  with no host pollution.
+- Federated component repositories plus manifest and locks, not a monorepo — each component is
+  independently versioned and tested.
+- MCP over stdio process boundaries — one job per component, one process per MCP server, one
+  policy gate — so integrations do not clash.
+- A Guard policy of allow/confirm/deny, plus a hash-chained audit and protected-path denials.
 
 **New from second-wave research:**
+- **Quickshell + Go** (DankMaterialShell, ekremx25) shows how to avoid conflict: a shell framework
+  (outfoxxed/quickshell) plus a Go daemon for system monitoring, with shared QML widgets via
+  `dank-qml-common` — separate processes where QML widgets communicate over IPC, not shared memory.
+  Adopt the same split: a Go daemon for system, QML for UI, and MCP for tools, all separate.
+- **HyprPanel / ashell / qs-hyprview** are each a standalone drop-in replacement with no heavy
+  Python background processes; logic lives entirely in QML/JS. Keep our shell as a standalone
+  drop-in that does not modify Hyprland core, so it does not conflict with Noctalia (a CachyOS
+  option); the user can switch shells via `hyprland.conf` `exec-once`.
+- **Aya eBPF** is pure Rust with no C toolchain and BTF portability; eBPF programs run inside the
+  kernel, not in userspace, so they do not conflict with userspace MCP servers — a separate
+  domain.
 
-- **Quickshell + Go (DankMaterialShell, ekremx25) shows how to avoid conflict:** Shell framework (outfoxxed/quickshell) + Go daemon for system monitoring, shared QML widgets via `dank-qml-common` — separate processes, QML widgets communicate via IPC, not shared memory — we should adopt same: Go daemon for system, QML for UI, MCP for tools, all separate
-- **HyprPanel / ashell / qs-hyprview:** Each is standalone drop-in replacement, no heavy Python background processes, logic entirely in QML/JS — we should keep our shell as standalone drop-in, not modifying Hyprland core, so no conflict with Noctalia (CachyOS option) — user can switch shell via `hyprland.conf` `exec-once`
-- **Aya eBPF:** Pure Rust, no C toolchain, BTF portable — eBPF programs run inside kernel, not userspace, so no conflict with userspace MCP servers — separate domain
+**Cautious-but-enterprising checklist:**
+- [ ] One job per component — `shesh-files` watches only Downloads/Desktop/Documents/Pictures,
+  never Projects/, Vaults/, Documents/Job, or `.ssh`.
+- [ ] One process per MCP server — `shesh-audit-mcp`, `shesh-system-mcp`, and so on, each stdio,
+  not shared.
+- [ ] One policy gate — every tool call passes `Guard.check(actor, tool, args)` returning
+  allow/confirm/deny, then is logged and emitted as a kernel event.
+- [ ] Separate config dirs — `~/.config/shesh/mcp/` per server, `~/.config/shesh/messaging/`
+  flags, `~/.local/share/shesh/` state, `~/.cache/shesh/` cache.
+- [ ] Separate btrfs subvolumes — `AI/Models` nocow, `Downloads` transient,
+  `Documents/Personal` snapshotted hourly, `Documents/Job` not snapshotted per employer policy.
+- [ ] Namespace via MCP — tool names prefixed `fs_*`, `fetch_*`, `git_*` through the
+  `shesh-mcp-bundle` proxy, so nothing collides.
+- [ ] Version pin plus license gate — `manifests/components.toml` and
+  `scripts/check_licenses.py` refuse incompatible licenses (AGPL/SSPL only as separate services).
+- [ ] Test before push — `make check` runs ruff, pytest, license, and lock checks; autopilot
+  refuses red commits.
 
-**Cautious but enterprising checklist:**
+## M. Discard what we made if something better exists
 
-- [ ] One job per component — `shesh-files` only watches Downloads/Desktop/Documents/Pictures, never touches `Projects/`, `Vaults/`, `Documents/Job`, `.ssh`
-- [ ] One process per MCP server — `shesh-audit-mcp`, `shesh-system-mcp`, etc each stdio, not shared
-- [ ] One policy gate — every tool call passes Guard `check(actor, tool, args)` → allow/confirm/deny + logged + kernel event
-- [ ] Separate config dirs — `~/.config/shesh/mcp/` per server, `~/.config/shesh/messaging/` flags, `~/.local/share/shesh/` state, `~/.cache/shesh/` cache
-- [ ] Separate btrfs subvolumes — `AI/Models` nocow, `Downloads` transient, `Documents/Personal` snapshot hourly, `Documents/Job` no snapshot per employer policy
-- [ ] Namespace via MCP — tool names prefixed `fs_*, fetch_*, git_*` via `shesh-mcp-bundle` proxy, so no collision
-- [ ] Version pin + license gate — `manifests/components.toml` + `scripts/check_licenses.py` refuses incompatible licenses (AGPL/SSPL only as separate service)
-- [ ] Test before push — `make check` ruff + pytest + license + locks, autopilot refuses red commits
+> **History —** The user directed: we can discard what we made if something better exists to
+> steal, and we should never engage in pointless brooding.
 
-## M. Discard what we made if something better exists (no pointless brooding)
-
-User: we can discard what we made if there is something better we can steal. We should never engage in pointless brooding.
-
-- **Discard custom power/GPU logic** — steal Night Light backend `hyprsunset`/`gammastep` + EQ filter-chain + monitor management `hyprctl --batch` from `ekremx25/quickshell` instead of rebuilding
-- **Discard custom bar/panel** — steal `HyprPanel` context menus pattern + `ashell` ready-to-go bar + `qs-hyprview` 9 layout algorithms for overview
-- **Discard custom file watcher polling loop** — audit found smart-organizer `--watch` is polling loop not inotify, wastes I/O — replace with `notify-rs/notify` RecommendedWatcher (selects best backend automatically)
-- **Discard custom web-search/fetch DDG HTML scraper** — package `agent-search` MIT self-hosted SearXNG zero keys + DuckDuckGo MCP truly free no key + `SearXNG` self-hosted metasearch 70+ engines, no API key, fully private
-- **Keep only Shesh-specific organs** — `shesh-audit` hash-chained, `shesh-brain` packaged kernel, `shesh-mind` 6GB VRAM router, `shesh-memory` hierarchical + habit learning, `shesh-harness` continual harness + /refine, `shesh-orchestrator` RLM + A2A UDS + sessions, `shesh-ambient` catch-up scheduler + warm proactivity
-- **Package, don't rebuild** — mature MCP servers: Filesystem, Git, Fetch, Sequential Thinking, Memory, Playwright, Context7, DuckDuckGo, Obsidian, Chrome DevTools — all truly free no key, MIT/Apache-2.0, open-source reference servers from Model Context Protocol project
+- **Discard custom power/GPU logic** — steal the night-light backend `hyprsunset`/`gammastep`,
+  the EQ filter-chain, and monitor management via `hyprctl --batch` from `ekremx25/quickshell`
+  instead of rebuilding.
+- **Discard a custom bar/panel** — steal the `HyprPanel` context-menu pattern, the `ashell`
+  ready-to-go bar, and the `qs-hyprview` nine layout algorithms for overview.
+- **Discard a custom file-watcher polling loop** — the audit found that smart-organizer `--watch`
+  is a polling loop, not inotify, and wastes I/O — replace it with `notify-rs/notify`
+  RecommendedWatcher.
+- **Discard a custom web-search/fetch DDG HTML scraper** — package `agent-search` (MIT,
+  self-hosted SearXNG, zero keys), the truly free, keyless DuckDuckGo MCP, and self-hosted
+  SearXNG metasearch over 70+ engines.
+- **Keep only Shesh-specific organs** — `shesh-audit` (hash-chained), `shesh-brain` (packaged
+  kernel), `shesh-mind` (6 GB VRAM router), `shesh-memory` (hierarchical plus habit learning),
+  `shesh-harness` (continual harness plus `/refine`), `shesh-orchestrator` (RLM plus A2A UDS plus
+  sessions), and `shesh-ambient` (catch-up scheduler plus warm proactivity).
+- **Package, do not rebuild** — mature MCP servers: Filesystem, Git, Fetch, Sequential Thinking,
+  Memory, Playwright, Context7, DuckDuckGo, Obsidian, and Chrome DevTools — all truly free, no
+  key, MIT/Apache-2.0, open-source reference servers from the Model Context Protocol project.
 
 ## N. First-wave intake (done 2026-08-09) — kept for history
 
-1. **Fork & track:** Newelle, end-4/dots-hyprland — ✅ done
-2. **Promote from shesh-desktop:** `shesh-files`, `shesh-shell`, `shesh-system`, `shesh-voice` — ✅ done
-3. **Bridge:** `shesh-audit` to SheshAOS event store — ✅ done
-4. **Reference-only:** Goose, Hermes, pi, Prime, computer-use-linux, pipecat, Leon — ✅ read
-5. Upstream-tracker bot — ✅ done
-
+1. **Fork and track:** Newelle and end-4/dots-hyprland — Done.
+2. **Promote from shesh-desktop:** `shesh-files`, `shesh-shell`, `shesh-system`, and `shesh-voice`
+   — Done.
+3. **Bridge:** `shesh-audit` to the SheshAOS event store — Done.
+4. **Reference-only:** Goose, Hermes, pi, Prime, computer-use-linux, pipecat, Leon — Done (read).
+5. **Upstream-tracker bot** — Done.

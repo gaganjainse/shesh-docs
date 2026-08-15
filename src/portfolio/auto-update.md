@@ -1,7 +1,9 @@
-# Portfolio auto-update — GitHub API + gates + Vercel
+# Portfolio auto-update — GitHub API, gates, and Vercel
 
 Everything below is wired in the
-[portfolio repo](https://github.com/gaganjainse/portfolio) today.
+[portfolio repo](https://github.com/gaganjainse/portfolio) today. The site
+regenerates itself: project data is pulled from the GitHub API, assets are
+rebuilt, and the result is gated before it ships.
 
 ## The pipeline
 
@@ -19,12 +21,13 @@ Two GitHub Actions workflows carry it:
 | `auto-update.yml` | scheduled refresh of project data from the GitHub API |
 | `ci.yml` | check + lint + test + build gate on every push |
 
-Deploys: Vercel, configured by `vercel.json` — main is production.
+Deploys target Vercel, configured by `vercel.json` — the main branch is
+production.
 
-## What to verify by hand (quarterly)
+## What to verify by hand, quarterly
 
-- [ ] Last `auto-update.yml` run is green and its commit landed.
+- [ ] The last `auto-update.yml` run is green and its commit landed.
 - [ ] The projects shown match the real pinned order on the GitHub profile.
 - [ ] `npm run auto` exits 0 locally end-to-end — if any stage fails, the
-      pipeline must fail loudly (a green run with a broken stage is the one
-      outcome this design exists to prevent).
+      pipeline must fail loudly. A green run with a broken stage is the one
+      outcome this design exists to prevent.

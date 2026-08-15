@@ -1,5 +1,23 @@
 # Query Log
 
+This file records every user prompt and the assistant's answer, with links to
+docs created or updated, newest first. It anchors the project to the user's
+actual intent and prevents drift.
+
+> **Historical record —** This log accumulated across the build-out and is
+> preserved as a factual record. It is retained as a record, not as live
+> reference. The authoritative factual baseline is the
+> [2026-08-15 fleet audit](../../../FLEET_AUDIT_2026-08-15.md): the body is
+> **GPL-3.0-or-later** (not MIT), SheshAOS reports **877 passing tests with 1
+> ignored** at the baseline, and `gaganjainse/SheshOS` is an unpublished,
+> conceptual project rather than a live upstream.
+
+## Summary
+
+- Entries are chronological (newest first) and pair each user prompt with the assistant's answer and the docs touched.
+- They capture real fixes — naming purges, NVIDIA bootloader separators, fleet enforcement, and component work — as they happened.
+- The log is the decision trail referenced by the audit, roadmap, and handoff documents.
+
 Every prompt from the user and the assistant's response, with links to docs
 created or updated. Newest first. This anchors the project to the user's actual
 intent and prevents drift.

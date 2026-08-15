@@ -1,5 +1,15 @@
 # Manifest — components.toml
 
+The manifest is the fleet's parts list. One TOML file declares every organ of the Agentic Body:
+its upstream, its body layer, its version, its license, and the channel it rides. The
+resolve-manifest script validates this file, checks license compatibility, resolves versions, and
+writes `shesh.lock` — the "package repository" metadata in a single auditable place.
+
+- The body as a whole is **GPL-3.0-or-later**; individual components keep the license of the
+  upstream they wrap (for example, the OmniRoute fork carries MIT upstream).
+- Three channels filter what reaches production: `stable`, `canary`, `devel`.
+- Three body layers organize the work: `brain` (governance), `mind` (deliberation), `soma` (body).
+
 ```toml
 # Shesh Ecosystem — component manifest
 #
@@ -260,3 +270,13 @@ provides = ["dotfiles", "hyprland-config", "quickshell", "installer"]
 upstream = { name = "dots-hyprland", repo = "end-4/dots-hyprland", ref = "main" }
 notes = "The desktop body. Thin custom/ overrides; rebase upstream often."
 ```
+
+## Notes on the data
+
+The `shesh-mind` component names `SheshOS` (`gaganjainse/SheshOS`) as its upstream. That
+repository is **conceptual and unpublished**, not a live, reachable source; treat it as a design
+specification for specialist model routing, not as code you can clone today.
+
+> **Warning —** `shesh-omniroute` carries `license = "MIT"` because it forks the upstream
+> OmniRoute project. That per-component upstream license does not change the fleet body's overall
+> license, which is GPL-3.0-or-later.

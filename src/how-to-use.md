@@ -1,26 +1,48 @@
 # How to Use These Docs
 
-> Read `docs/SESSION_HANDOFF.md` FIRST in `shesh-ecosystem`, then use this repo for reading only as compilation.
+This book is built to be read in order or consulted by task. The guidance below points you
+to the right starting chapter depending on what you are trying to do.
 
-## Navigation (stolen from big projects)
+## Start here, by intent
 
-- **If you are new:** Start with Introduction → Getting Started → Installation — CachyOS + Hyprland
-- **If you want to understand architecture:** Concepts → Architecture → Agentic Body, Repo Topology, Language Policy, Multi-Agent, ACP & A2A
-- **If you want to do a task:** Tasks — Manual Verification Checklist split into First Boot, Accounts, MCP Mesh, Voice, GPU, etc. — each is step-by-step like Kubernetes Tasks
-- **If you want to learn by doing:** Tutorials — Organize Downloads, Voice + Settings + Organizer Flow, RAG + Vector — guided learning like Kubernetes Tutorials
-- **If you need precise details:** Reference — Manifest, Channels, Components, Models, Upstreams, API — like Kubernetes Reference + Rust rustdoc
-- **If you are working on factory (dev tooling):** Factory section — Session Protocol, Swarm, Secure PAT, Efficiency, Model Agnostic — messy works that should not be in ecosystem
-- **If you are working on product (clean):** Product section — shesh-ecosystem overview, getting started, architecture, concepts, tasks, reference, tutorials
-- **If you want optional cloud:** Gateway section — OmniRoute Study, Free Providers, Fork, Wrapper
+- **I am new to Shesh.** Begin with the [Introduction](./introduction.md), then
+  [Product Overview](./product/overview.md) and
+  [Getting Started](./product/getting-started.md). Read the
+  [Agentic Body](./product/architecture/agentic-body.md) to understand the metaphor that
+  frames the whole system.
+- **I want to understand the architecture.** Move to the architecture chapters: the
+  [Repo Topology](./product/architecture/repo-topology.md), the
+  [Language Policy](./product/architecture/language-policy.md),
+  [Multi-Agent](./product/architecture/multi-agent.md), and the
+  [ACP & A2A Protocols](./product/architecture/acp-a2a.md).
+- **I have a concrete task.** The Tasks section breaks verification into focused,
+  step-by-step chapters — [First Boot](./product/tasks/first-boot.md),
+  [Accounts and Secrets](./product/tasks/accounts-keys-secrets.md),
+  [MCP Mesh](./product/tasks/mcp-mesh.md), and so on. Each reads like a checklist you can
+  follow top to bottom.
+- **I learn by doing.** The Tutorials section offers guided flows:
+  [Organize Downloads](./product/tutorials/organize-downloads.md),
+  [Voice and Settings](./product/tutorials/voice-settings-organizer.md), and
+  [Memory and Recall](./product/tutorials/rag-vector.md).
+- **I need exact details.** The Reference section holds the
+  [Manifest](./product/reference/manifest.md), [Channels](./product/reference/channels.md),
+  [Components](./product/reference/components/README.md),
+  [Models](./product/reference/models.md), and [Upstreams](./product/reference/upstreams.md).
+- **I build the system, not just run it.** The Factory and Desktop parts cover the
+  development harness and the styling layer respectively.
 
 ## Search
 
-- mdBook has built-in search (limit-results 20) — use `S` shortcut to focus search bar, `?` for help, left/right arrows move between tabs, up/down among results, enter opens result — stolen from Rust rustdoc
+The book ships with built-in full-text search. Press `S` to focus the search field, `?`
+for help, and the arrow keys to move between results. Search is scoped to this compilation
+only; for component-specific detail, follow the cross-links to the source repository.
 
-## Three docs separation
+## Three planes, one rule
 
-- **Product — shesh-ecosystem (clean):** What user installs, no session protocol, no swarm dev tooling
-- **Factory — shesh-workspace (messy):** Session protocol, swarm, secure PAT, efficiency, model-agnostic, travel mode — keeps ecosystem clean, new chats don't mix
-- **Gateway — shesh-omniroute + OmniRoute (optional):** Free big models gateway 291 providers 90+ free, optional to local Ollama primary where enable is user choice
+The fleet separates **product**, **factory**, and **gateway** so that builder tooling never
+complicates the system a person runs. When reading, keep that separation in mind: a chapter
+in the Factory part describes how the system is built, not how it behaves on your machine.
+The Desktop part describes how it looks and feels.
 
-This separation is proper system, not messed up, as you requested.
+This is a reading compilation. The source of truth remains in each component's repository;
+this book is the organized projection of all of them.

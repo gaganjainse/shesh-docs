@@ -1,5 +1,15 @@
 # Models — models.toml
 
+The model manifest decides which brain a task borrows. Rather than hardcoding one model's name,
+Shesh declares each model's capabilities, context window, cost, and free tier, then lets a router
+pick the best fit for the job. The local Ollama stack is the primary; cloud gateways are optional
+fallbacks.
+
+- Local Ollama is the 100% free, offline primary, bounded by a 6 GB VRAM budget.
+- The router chains free providers in order: OmniRoute gateway, then Groq free, then OpenRouter
+  `:free`, then HuggingFace free, then local Ollama.
+- GitHub Models were retired on 2026-07-30 (upstream shutdown, HTTP 410) and must not return.
+
 ```toml
 # Shesh — Model Manifest — free, model-agnostic routing
 # Every model declares capabilities, context, cost, provider, and free tier.
@@ -173,3 +183,15 @@ capabilities = ["planner", "coordinator", "researcher", "critic", "coder", "visi
 notes = "Deterministic stub — returns fixed JSON steps, always valid, zero variance — final fallback"
 priority = 99
 ```
+
+## How the router reads this file
+
+Each entry lists the capabilities a task can ask for — `planner`, `coder`, `vision`,
+`embedding`, and so on. The router matches the task to a model that advertises the needed
+capabilities, within the 6 GB VRAM budget for local models, then falls back along the priority
+chain when a provider is unavailable. The `stub-planner` sits at priority 99 as a deterministic
+last resort: it always returns valid JSON steps and never fails on network or quota.
+
+> **Note —** The four local Ollama models — `phi4-mini`, `qwen2.5-coder:3b`, `moondream2`,
+> `nomic-embed-text` — are the 6 GB-safe equivalents of larger SheshOS specialists, so bigger
+> models can drop in later without changing the interface.

@@ -1,122 +1,149 @@
-# Live Update System — Automatic, In Rules, No Manual Steps Missed
+# Live Documentation Updates — Making the Rules Executable
 
-> **User complaint:** "Wait a minute you guys are not updating documentations live like query log and other such documents ????????? Whyyyyyyyyy. What else are you not doing that you should do. Have you been ignoring my orders"
+A rule that says "append to the query log after every message" is only as reliable as the person
+remembering it, and in practice it was forgotten and the log was summarized instead of appended.
+This chapter describes the tool that turns those rules into code, the five places that call it
+automatically, and the complete list of artifacts it keeps current.
 
-> **Also:** "What about the query log of the 5 other agents that i worked with for some time?? Also make all the systems that need live updation automatic and in the rules. Make proper rules and see if we missed anything else. Also don't summarise and append, append everything completely"
+## Summary
 
-This doc makes live updation **automatic** and **in the rules**, so nothing is missed.
+- `tools/live_update.py` performs every live documentation update in one command.
+- Five callers invoke it automatically: the autopilot runner and CLI, the supervise loop, the
+  session guard tick, and the swarm orchestrator and workers.
+- The query log is appended in full rather than summarized, which was an explicit requirement.
+- GitHub Actions runs `live_update.py --check` and fails when documentation was not updated.
+- A checklist enumerates every artifact that needs live updating, with the trigger that updates it.
 
-## What was missed before
+## Why manual rules failed
 
-- **QUERYLOG.md** — operating rule says "After every user message: append to docs/history/queries/QUERYLOG.md" — but we were doing it manually, sometimes missed, and summarized instead of appending completely. User had to complain.
-- **TODO.md** — rule says update status real-time, last updated date, pending count — we updated sometimes but not after every user message.
-- **SESSION_HANDOFF.md** — rule says generated date, accomplishments, remains — we updated only on handoff, not live.
-- **AUDIT_AND_ROADMAP.md** — last audited date, what exists — not updated live.
-- **MANUAL_VERIFICATION.md** — says updated on every autopilot run, but we weren't.
-- **NEXT_SESSION_PROMPT.md, SESSION_HOP_ALERT.md, channels/*.lock, docs/components/*.md, swarm/ledger.jsonl** — all need live updation but were manual.
+Documentation drift behaves like an untended logbook on a ship. Each individual omission is
+defensible — the watch was busy, the entry seemed minor — but the log's value comes entirely from
+being complete, so a handful of omissions destroy it.
 
-## What is automatic now (implemented 2026-08-11)
+The specific omissions were identifiable. `QUERYLOG.md` was updated by hand, sometimes skipped, and
+sometimes summarized rather than appended. `TODO.md` status, its last-updated date, and its pending
+count were refreshed occasionally rather than after each message. `SESSION_HANDOFF.md` was written
+only at handoff time instead of continuously. `AUDIT_AND_ROADMAP.md` and `MANUAL_VERIFICATION.md`
+carried stale dates. The generated prompt, the hop alert, the channel locks, the synced component
+docs, and the swarm ledger all needed refreshing and all depended on someone remembering.
 
-### 1. Tool `tools/live_update.py` — single command does all live updates
+## One command, every artifact
 
-```bash
-python tools/live_update.py --query "User prompt text" --answer "One paragraph answer" --docs SESSION_HANDOFF,TODO,QUERYLOG,MANUAL_VERIFICATION
-```
-
-What it does automatically:
-
-- **QUERYLOG.md** — appends full Q and A completely, not summarized, with timestamp, newest at bottom (oldest at top per existing file says newest first but actually oldest first, we follow existing order: append at bottom). Includes full logs from PDF for 5 agents, not summarized (user requested).
-- **TODO.md** — updates Last updated date, pending count (counts ⬜), status vs original plan, accomplishments
-- **SESSION_HANDOFF.md** — updates Generated date, repos table (from src/), component tests count (from pytest), what is DONE/REMAINS from TODO.md
-- **AUDIT_AND_ROADMAP.md** — updates Last audited date, what exists table (from src/ audit)
-- **MANUAL_VERIFICATION.md** — updates Last updated date
-- **NEXT_SESSION_PROMPT.md** — regenerates via `session_guard.py --handoff` logic (live metrics + PAT status)
-- **channels/*.lock** — regenerates via `resolve_manifest.py`
-- **docs/components/*.md** — syncs from src/*/README.md if component changed (via `setup_worker.py` already does)
-- **swarm/ledger.jsonl** — append-only log of all swarm events (seed, heartbeat, claimed, completed)
-- **docs/history/queries/QUERYLOG_ALL_AGENTS.md** — aggregates query logs from all 5 agents via GitHub Issues + PRs + ledger
-
-All via one command, no manual steps.
-
-### 2. Integration points — automatic, in rules
-
-- **`tools/autopilot/runner.py`** — `process_task` now calls `live_update.py --query ... --answer ...` after each task before commit — so QUERYLOG, TODO, SESSION_HANDOFF updated automatically after every task
-- **`tools/autopilot/cli.py`** `seed` and `run` — calls live_update
-- **`scripts/supervise.sh`** — loop calls `live_update.py --tick` before `next_todo()` — so live docs updated even without user message
-- **`tools/session_guard.py`** `--tick` — logs tick to `session_guard.jsonl`, checks hop needed, and calls `live_update.py --docs SESSION_HANDOFF,MANUAL_VERIFICATION` — so SESSION_HANDOFF and MANUAL_VERIFICATION updated live
-- **`tools/swarm/orchestrator.py`** `--monitor` loop — calls `live_update.py --docs SWARM --swarm` every iteration — so swarm dashboard and ledger updated
-- **`tools/swarm/worker.py` and `worker_github.py`** — after each claim/complete, calls `live_update.py --docs SWARM --swarm` — so claims, heartbeats, artifacts live
-- **GitHub Actions** — `ci.yml`, `swarm-auto-merge.yml`, `swarm-scheduled.yml`, `swarm-llm-worker.yml` — each runs `live_update.py --check` to verify docs were updated, fails if not (enforces live update)
-
-### 3. Operating rules updated — now includes live update automatic
-
-Added to `TODO.md` How to work, `AUDIT_AND_ROADMAP.md` Operating rules, `SESSION_HANDOFF.md` How to build safely + Design principles:
-
-**Old rules (manual, missed):**
-- After every user message: append to QUERYLOG.md, update TODO.md status, refresh relevant docs — real-time (manual, we missed)
-
-**New rules (automatic, in code):**
-- After every user message OR every autopilot task OR every swarm claim/complete OR every session_guard tick: **automatically** run `python tools/live_update.py --query "<user prompt>" --answer "<one paragraph>" --docs ALL` — this appends to QUERYLOG.md completely (not summarized), updates TODO.md Last updated + pending count + accomplishments, updates SESSION_HANDOFF.md Generated date + repos table + DONE/REMAINS + component tests count, updates AUDIT_AND_ROADMAP.md Last audited, updates MANUAL_VERIFICATION.md Last updated, regenerates NEXT_SESSION_PROMPT.md, regenerates locks, syncs docs/components, appends ledger, aggregates 5 agents query logs via GitHub API + PDF full extract
-- **No manual steps** — autopilot runner, supervise.sh loop, session_guard tick, swarm orchestrator monitor all call live_update automatically
-- **Don't summarise and append, append everything completely** — for 5 agents query logs, append full PDF extract (24 pages, 20503 chars) + Worker-Mind and Worker-Soma verbatim reports, not summarized, into QUERYLOG.md new section "Q: This is the situation — 5 agents..."
-- **Query log of 5 other agents:** Aggregated via `swarm/ledger.jsonl` + GitHub Issues + PRs + PDF full text + worker reports, all appended completely to `docs/history/queries/QUERYLOG.md` + `docs/history/queries/QUERYLOG_ALL_AGENTS.md` (new file that aggregates all agents)
-- **Make proper rules and see if we missed anything else:** Added checklist below — every system that needs live updation now listed with automatic trigger
-
-### 4. Checklist — every system that needs live updation, now automatic
-
-| System | Needs live updation | How automatic now | Rule file |
-|--------|---------------------|-------------------|-----------|
-| QUERYLOG.md | After every user message + every agent task | `live_update.py --query ... --answer ...` appends completely, not summarized, newest at bottom, includes full PDF from 5 agents | TODO.md rule 7, AUDIT_AND_ROADMAP rule 3, SESSION_HANDOFF rule 7 |
-| QUERYLOG_ALL_AGENTS.md | Aggregate 5 agents query logs | `live_update.py --swarm` aggregates via GitHub Issues API + ledger + PDF full extract, writes to `docs/history/queries/QUERYLOG_ALL_AGENTS.md` | New file, created this session |
-| TODO.md | After every task, status vs original plan, last updated | `live_update.py --docs TODO` updates Last updated date, pending count, accomplishments from git log, status vs original plan | TODO.md rule 6, SESSION_HANDOFF rule 8 |
-| SESSION_HANDOFF.md | Generated date, repos table, component tests count, DONE/REMAINS | `live_update.py --docs SESSION_HANDOFF` regenerates Generated date, repos table from `src/`, tests count from pytest, DONE/REMAINS from TODO | SESSION_HANDOFF rule 8 |
-| AUDIT_AND_ROADMAP.md | Last audited date, what exists table | `live_update.py --docs AUDIT` updates Last audited date, what exists from `src/` audit, decisions | AUDIT rule 3 |
-| MANUAL_VERIFICATION.md | Last updated date, hardware checklist | `live_update.py --docs MANUAL_VERIFICATION` updates Last updated | MANUAL_VERIFICATION header says updated on every autopilot run — now automatic via session_guard tick |
-| NEXT_SESSION_PROMPT.md | Live metrics + PAT status + pending todos | `session_guard.py --handoff` generates, called by `live_update.py --docs NEXT_PROMPT` | SESSION_PROTOCOL |
-| SESSION_HOP_ALERT.md | When hop needed | `session_guard.py --tick` writes alert when thresholds exceeded | SESSION_PROTOCOL |
-| channels/*.lock | After manifest change | `resolve_manifest.py` via `make check` and `live_update.py --docs LOCKS` | Makefile check target |
-| docs/components/*.md | When component README changes | `setup_worker.py` syncs from `src/*/README.md` + `live_update.py --docs COMPONENTS` | TOOLING_CATALOG promotion rule |
-| swarm/ledger.jsonl | Every seed, heartbeat, claimed, completed | `common.py:append_ledger()` called by orchestrator and workers automatically | SWARM.md |
-| swarm/queue, claims, heartbeats, artifacts | Every claim/complete/heartbeat | `common.py` and `github_queue.py` write files + `git add + commit + push` automatically | SWARM.md |
-| GitHub Issues | Every seed, claim, complete | `github_queue.py:create_issue()`, `claim_issue_atomic()`, `comment_issue()` via API | SWARM.md |
-
-All via one command `python tools/live_update.py --all` called automatically in 5 integration points, not manual.
-
-### 5. What else were we not doing that we should do (audit of missed orders)
-
-**Missed per operating rules:**
-
-- ❌ Branch per item `feat/<thing>` — we were pushing directly to main, not branching per TODO item. Now fixed: `supervise.sh` creates branch `feat/auto-<timestamp>` before work, `autopilot` runner does `safe_commit` + `safe_push` via branch.
-- ❌ Tests gate every push, never push red — we pushed with lint errors (29 pre-existing in tools/ blocking every swarm PR) — fixed in `45150db5397bd01058c7f5f535c0e54f49eef54c` lint debt, now `make check` GATE OK 36 tests, autopilot refuses red.
-- ❌ After every user message append to QUERYLOG — we missed many, including 5 agents logs — now fixed by appending full PDF completely and automating via `live_update.py`.
-- ❌ Update TODO status real-time — we updated sometimes, not after every message — now automatic via `live_update.py`.
-- ❌ Refresh relevant docs real-time — we updated some, not all — now automatic.
-- ❌ Archive never delete, no force-push main — we archived, but did force-push? No, we used rebase, not force-push.
-- ❌ Mark hardware-dependent items 🟡 rather than faking success — we did, okay.
-- ❌ Don't make minimal stubs, make proper working versions — we made minimal stubs for brain, media, messaging, ebpf — now we make proper working versions (real implementation, not placeholder) per new rule.
-- ❌ Steal first, not make tool — we made tools first, not stealing — now added to operating rules and `upstreams.toml` + `tools/steal/` infrastructure.
-- ❌ We can discard what we made if better exists — we didn't discard, we kept custom bar etc — now we have rule to discard if better exists (DankMaterialShell vs custom bar, etc).
-- ❌ Upgrade wrapper, not just fork and wrap — we were just wrapping, not upgrading — now added to rules and SOURCES.md.
-- ❌ Integrating various systems, no conflict — we had conflicts (background committers share working tree, rebase hit heartbeat commit mid-flight) — now documented in `SITUATION_REPORT.md` and fixed via separate clones or pause monitor.
-- ❌ We have a lot of time, freely, no limited time — we were rushing minimal to save time — now rule says no limited time, make proper working versions.
-- ❌ Style + Performance non-negotiable — we proposed replacing look with other dotfiles, breaking illogical-impulse — now fixed in `STYLE_PERFORMANCE.md`, keep look intact, improve backend only.
-
-**All now in operating rules and automatic via tooling.**
-
-## How to verify live update automatic
+The tool landed on 2026-08-11 and does the whole job in a single invocation.
 
 ```bash
-# After any user message, run:
-python tools/live_update.py --query "User prompt text" --answer "One paragraph answer" --docs ALL --swarm
-
-# Check files updated:
-ls -lt docs/history/queries/QUERYLOG.md TODO.md docs/SESSION_HANDOFF.md docs/MANUAL_VERIFICATION.md docs/NEXT_SESSION_PROMPT.md channels/*.lock | head
-
-# For 5 agents logs, check aggregated:
-cat docs/history/queries/QUERYLOG_ALL_AGENTS.md | head -n 100
-cat swarm/ledger.jsonl | tail -n 20
+python tools/live_update.py --query "User prompt text" --answer "One paragraph answer" \
+  --docs SESSION_HANDOFF,TODO,QUERYLOG,MANUAL_VERIFICATION
 ```
 
-No manual steps — autopilot, supervise.sh, session_guard, swarm orchestrator/workers all call `live_update.py` automatically.
+Each target is regenerated from a real source rather than retyped, which is what makes the numbers
+trustworthy.
 
-This doc itself is auto-updated via `live_update.py --docs LIVE_UPDATE_SYSTEM`.
+| Artifact | What the tool writes |
+|---|---|
+| `QUERYLOG.md` | The full question and answer with a timestamp, appended at the bottom, never summarized |
+| `TODO.md` | Last-updated date, pending count from the `⬜` markers, status against the original plan, and accomplishments from the Git log |
+| `SESSION_HANDOFF.md` | Generated date, the repository table read from `src/`, the component test count from pytest, and the done and remaining lists from `TODO.md` |
+| `AUDIT_AND_ROADMAP.md` | Last-audited date and the "what exists" table from a `src/` audit |
+| `MANUAL_VERIFICATION.md` | Last-updated date |
+| `NEXT_SESSION_PROMPT.md` | Regenerated through the `session_guard.py --handoff` path, with live metrics and credential status |
+| `channels/*.lock` | Regenerated by `resolve_manifest.py` |
+| `docs/components/*.md` | Synced from `src/*/README.md` when a component changed |
+| `swarm/ledger.jsonl` | Append-only record of seed, heartbeat, claim, and completion events |
+| `QUERYLOG_ALL_AGENTS.md` | Aggregated logs from the five agent sessions, drawn from GitHub issues, pull requests, and the ledger |
+
+## The five automatic callers
+
+The tool is useful; being called without being asked is what makes it reliable.
+
+| Caller | When it runs |
+|---|---|
+| `tools/autopilot/runner.py` | `process_task` calls it after each task, before the commit |
+| `tools/autopilot/cli.py` | On `seed` and `run` |
+| `scripts/supervise.sh` | Each loop calls `--tick` before selecting the next task, so docs stay current even with no user message |
+| `tools/session_guard.py --tick` | Logs the tick, checks whether a hop is due, and refreshes the handoff and verification documents |
+| `tools/swarm/orchestrator.py --monitor` and the workers | Every monitor iteration, and after each claim or completion, refreshing the swarm dashboard and ledger |
+
+GitHub Actions closes the loop from the other side. `ci.yml`, `swarm-auto-merge.yml`,
+`swarm-scheduled.yml`, and `swarm-llm-worker.yml` each run `live_update.py --check` and fail when
+the documentation was not updated, which makes the rule enforceable rather than advisory.
+
+## The rule, restated
+
+The operating rules in `TODO.md`, `AUDIT_AND_ROADMAP.md`, and `SESSION_HANDOFF.md` changed from a
+manual instruction to an automatic one.
+
+The old rule asked a human to append to the query log, update the task status, and refresh the
+relevant documents after every user message. The new rule states that after every user message,
+autopilot task, swarm claim or completion, or session guard tick, `live_update.py` runs
+automatically across all targets — appending the query log completely, refreshing task counts and
+accomplishments, regenerating the handoff and prompt, resolving locks, syncing component docs, and
+appending the ledger.
+
+Two clauses are worth stating explicitly, because both were violated before. Nothing is
+summarized: the aggregated agent logs preserve the full extracted text — a 24-page, 20,503-character
+document — alongside the verbatim Worker-Mind and Worker-Soma reports. And the five agents' logs are
+aggregated from the swarm ledger, GitHub issues and pull requests, and those reports into both
+`docs/history/queries/QUERYLOG.md` and `docs/history/queries/QUERYLOG_ALL_AGENTS.md`.
+
+## The complete checklist
+
+Every artifact that needs live updating, with the mechanism that updates it and the rule that
+requires it.
+
+| Artifact | Trigger | Mechanism |
+|---|---|---|
+| `QUERYLOG.md` | Every user message and agent task | `live_update.py --query ... --answer ...`, appended in full |
+| `QUERYLOG_ALL_AGENTS.md` | Aggregation across sessions | `live_update.py --swarm` via the Issues API, the ledger, and the extracted reports |
+| `TODO.md` | Every task | `--docs TODO`: last-updated date, pending count, accomplishments |
+| `SESSION_HANDOFF.md` | Every task and tick | `--docs SESSION_HANDOFF`: date, repository table, test count, done and remaining |
+| `AUDIT_AND_ROADMAP.md` | Every audit pass | `--docs AUDIT`: last-audited date and the existing-components table |
+| `MANUAL_VERIFICATION.md` | Every autopilot run | `--docs MANUAL_VERIFICATION`, now driven by the guard tick |
+| `NEXT_SESSION_PROMPT.md` | Every handoff | `session_guard.py --handoff`, invoked by `--docs NEXT_PROMPT` |
+| `SESSION_HOP_ALERT.md` | Threshold breach | `session_guard.py --tick` writes the alert |
+| `channels/*.lock` | Manifest change | `resolve_manifest.py` via `make check` and `--docs LOCKS` |
+| `docs/components/*.md` | Component README change | `setup_worker.py` sync plus `--docs COMPONENTS` |
+| `swarm/ledger.jsonl` | Every seed, heartbeat, claim, completion | `common.py:append_ledger()` |
+| `swarm/queue`, `claims`, `heartbeats`, `artifacts` | Every claim, completion, heartbeat | `common.py` and `github_queue.py` write, then add, commit, and push |
+| GitHub issues | Every seed, claim, completion | `github_queue.py` — `create_issue()`, `claim_issue_atomic()`, `comment_issue()` |
+
+## Verifying that it ran
+
+```bash
+python tools/live_update.py --query "User prompt text" --answer "One paragraph answer" \
+  --docs ALL --swarm
+ls -lt docs/history/queries/QUERYLOG.md TODO.md docs/SESSION_HANDOFF.md channels/*.lock
+tail -n 20 swarm/ledger.jsonl
+```
+
+This chapter is itself maintained through `live_update.py --docs LIVE_UPDATE_SYSTEM`.
+
+## Historical: the audit of missed rules
+
+> **Historical —** The table below records a self-audit performed on 2026-08-11 against the
+> operating rules in force at that time. It is kept for the trail, not as live reference; each
+> control listed is now in effect.
+
+| Rule | What went wrong | Control now |
+|---|---|---|
+| Branch per item (`feat/<thing>`) | Work pushed directly to `main` | `supervise.sh` creates `feat/auto-<timestamp>`; autopilot commits and pushes through that branch |
+| Never push red | Pushes went out with 29 pre-existing lint errors in `tools/`, blocking every swarm pull request | Lint debt cleared in commit `45150db5397bd01058c7f5f535c0e54f49eef54c`; `make check` reported GATE OK over 36 tests at that time, and autopilot refuses a red commit |
+| Append to the query log after every message | Many messages missed, including the five agents' logs | Full text appended and automated through `live_update.py` |
+| Update task status in real time | Updated occasionally | Automatic through `live_update.py` |
+| Refresh relevant docs in real time | Some refreshed, not all | Automatic |
+| Archive, never delete; no force-push to `main` | Followed — rebase was used, not force-push | Unchanged |
+| Mark hardware-dependent items as pending rather than faking success | Followed | Unchanged |
+| No minimal stubs | Stubs shipped for brain, media, messaging, and eBPF | Proper implementations required; see [upstream harvesting](steal-infrastructure.md) |
+| Look for existing work before building | Tools were built first | Registry and tooling added under `manifests/upstreams.toml` and `tools/steal/` |
+| Discard in-house code when something better exists | Custom work was kept regardless | Now an explicit rule |
+| Upgrade the wrapper, not just fork and wrap | Wrapping only | Added to the rules and sources |
+| Integrate without conflict | Background committers shared one working tree; a rebase hit a heartbeat commit mid-flight | Daemons isolated to their own clone; documented in the situation report |
+| No artificial time pressure | Minimal versions were rushed to save time | The rule now states there is no time limit |
+| Style and performance are non-negotiable | Replacing the look with other dotfiles was proposed | Look preserved; only the backend improves |
+
+## Where this fits
+
+[Session Protocol](session-protocol.md) covers the handoff artifacts this tool regenerates,
+[Swarm](swarm/README.md) covers the ledger and queue it appends to, and the
+[documentation policy](../policies/documentation-policy.md) states the standards the updates are
+meant to uphold.

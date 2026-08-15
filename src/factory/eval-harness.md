@@ -1,8 +1,9 @@
-# 🔁 shesh-harness
+# shesh-harness — Self-Improvement With Guardrails
 
-> **Continual Harness for safe self-improvement.** Implements the Prime Agent
-> `/refine` pattern with hard guardrails: an immutable base prompt, evidence-backed
-> edits, evaluation before apply, and rollback by ID.
+An agent allowed to rewrite its own prompt will eventually rewrite it to score well rather than
+to work well. The continual harness is the component that prevents that: it keeps the base
+prompt immutable, requires evidence and evaluation before any change applies, and can revert any
+refinement by identifier.
 
 ![Python](https://img.shields.io/badge/Python-3.11%2B-blue?logo=python) ![License](https://img.shields.io/badge/License-GPL--3.0--or--later-blue) ![Tests](https://img.shields.io/badge/Tests-23-success) ![CI](https://github.com/gaganjainse/shesh-harness/actions/workflows/ci.yml/badge.svg)
 
@@ -11,18 +12,16 @@
 - **Layer:** Mind (self-improvement)
 - **Part of:** [shesh-ecosystem](https://github.com/gaganjainse/shesh-ecosystem)
 
----
+## Why the component exists
 
-## Why this repo exists
+The harness implements the Prime Agent `/refine` pattern, and it treats every proposed change to
+the agent's own instructions as a candidate rather than a decision. A candidate must cite
+evidence, pass evaluation, and clear tests before it is promoted.
 
-A self-improving agent that can edit its own prompt without guardrails will
-overfit metrics. This harness keeps the base prompt immutable, requires evidence
-and evaluation, supports rollback, and promotes changes only after they pass
-tests — so the system can learn your intentions without destabilizing itself.
+The result is a system that can learn a user's intentions without destabilizing itself. Learning
+is permitted; drifting is not.
 
----
-
-## Quick start
+## Working with the repository
 
 ```bash
 uv sync --extra dev
@@ -30,29 +29,38 @@ uv run pytest -q        # 23 tests
 uv run ruff check .
 ```
 
-## Tools (MCP, stdio)
+> **Note —** `uv.lock` pins the full dependency tree. Use `uv sync --frozen` — or
+> `uv pip install -r <(uv export --frozen)` — for a reproducible, locked build.
 
-- `get_prompt_block()` — supplemental prompt + memories for the turn
-- `add_memory(text)` / `upsert_skill(name, body)` / `list_skills()`
-- `refine(trigger, trajectory)` — propose, evaluate, and apply a small change
+## Tools exposed over MCP
 
-Every refinement is append-only with trigger, before/after, score, and outcome;
-any change can be **reverted by ID**.
+The harness speaks the Model Context Protocol over stdio and exposes a small surface.
 
+| Tool | Purpose |
+|---|---|
+| `get_prompt_block()` | Supplemental prompt and memories for the current turn |
+| `add_memory(text)` | Record a durable memory |
+| `upsert_skill(name, body)` / `list_skills()` | Manage the skill set |
+| `refine(trigger, trajectory)` | Propose, evaluate, and apply one small change |
 
-> **Reproducible install:** `uv.lock` pins the full dependency tree. Install with
-> `uv sync --frozen` (or `uv pip install -r <(uv export --frozen)`) for a locked build.
+Every refinement is recorded append-only with its trigger, the before and after state, its
+score, and its outcome — which is what makes reverting by identifier possible rather than
+aspirational.
 
 ## Status
 
-Component CI is green (reusable ecosystem pipeline). Security posture and
-vulnerability reporting: [SECURITY.md](https://github.com/gaganjainse/shesh-harness/blob/main/SECURITY.md).
+Component CI is green on the reusable ecosystem pipeline. Security posture and vulnerability
+reporting are covered in
+[SECURITY.md](https://github.com/gaganjainse/shesh-harness/blob/main/SECURITY.md).
 
-## Documentation index
+## Where this fits
 
-- **Part of:** [shesh-ecosystem](https://github.com/gaganjainse/shesh-ecosystem)
-- **Compiled reading:** [shesh-docs](https://github.com/gaganjainse/shesh-docs)
+The same grading contract — `must_contain`, `must_not_contain`, structural checks, and a minimum
+score of 0.7 — is reused by the [model-agnostic workflow](model-agnostic.md), so a refinement is
+judged by the same standard as a model response. Compiled reading for the whole fleet lives in
+[shesh-docs](https://github.com/gaganjainse/shesh-docs).
 
 ## License
 
-GPL-3.0-or-later — see [LICENSE](https://github.com/gaganjainse/shesh-harness/blob/main/LICENSE).
+GPL-3.0-or-later — see
+[LICENSE](https://github.com/gaganjainse/shesh-harness/blob/main/LICENSE).

@@ -1,85 +1,96 @@
-# Complete Audit & Master Roadmap
+# Complete Audit and Master Roadmap
 
-_A comprehensive penny-pick of every decision made, everything built, and
-every task remaining across the Shesh ecosystem. Generated from the live
-repos and this session's decisions. This is the anchor document; TODO.md
-is the actionable checklist derived from it._
+This chapter is the anchor document from a 2026-08-12 hardening pass: every
+decision made, everything built, and every task remaining across the Shesh
+ecosystem. Read it to understand how the fleet was reasoned into existence and
+what was left to do.
 
-Last audited: 2026-08-12 (evening — full hardening pass; see 2026-08-12 evening delta below)
+> **Historical record —** Generated around 2026-08-12 and preserved as a
+> planning snapshot. It is retained as a record, not as live reference. The
+> authoritative factual baseline is the
+> [2026-08-15 fleet audit](../../../FLEET_AUDIT_2026-08-15.md): the body is
+> licensed **GPL-3.0-or-later** (not MIT), SheshAOS reports **877 passing tests
+> with 1 ignored** at the baseline, and `gaganjainse/SheshOS` is an unpublished,
+> conceptual project rather than a live upstream. The repo counts and test
+> numbers below are historical; where they differ from the baseline, treat them
+> as a record of that date.
 
-## 2026-08-12 evening delta
+## Summary
 
-- **Dependency truth**: hand-drawn graphs replaced by tools/depgraph.py + CI
-  freshness gate; cargo-machete trimmed ~24 declared-but-unused Rust deps
-  (which is why the hand graphs had phantom edges).
-- **Silent failures (17:40 directive) done ecosystem-wide**: 0 error-class
-  findings across every clone; three real bugs surfaced and fixed
-  (smart-organizer fake savings, safety.sh fake backup, voice console-crash
-  silence) plus the earlier component batch (harness outage-as-zero-score,
-  omniroute config revert, swarm claim race).
-- **Supply chain**: SheshAOS has a real LICENSE, deny/machete/typos CI;
-  actionlint 1.7.12 pinned org-wide; link integrity gated.
-- **Workspace self-service (16:41 directive)**: orchestrator toolkit adopted
-  into tools/ with `make verify-all`; home dir de-cluttered to
-  archive/adopted-or-oneoff-2026-08-12/.
-- Open threads moved to TODO.md: callable component-CI workflow decision,
-  fork/archive triage, SHESH/SESHA mirror naming drift, janitor TODO policy,
-  and the PAT rotation (user action).
+- Fifteen decisions (D1–D15) set the fleet's language policy, federation model, release channels, local-first stance, and governance.
+- At the time of writing, sixteen repositories existed (fifteen active, one archived), with component and ecosystem tests all green.
+- The remaining work was tagged P0 (blocks real use), P1 (soon), and P2 (later); the checkable form lived in TODO.md.
+- Hardware validation, the kernel-to-SheshAOS merge, and real LLM/eval wiring were explicitly deferred as not faked.
 
----
+## The 2026-08-12 evening delta
 
-## 0. Truthful answers
+Several hardening passes landed that evening:
+
+- **Dependency truth.** Hand-drawn graphs were replaced by `tools/depgraph.py`
+  plus a CI freshness gate; `cargo-machete` trimmed about 24 declared-but-unused
+  Rust dependencies (the source of the phantom edges in the hand graphs).
+- **Silent failures (17:40 directive).** Zero error-class findings across every
+  clone; three real bugs were surfaced and fixed (a smart-organizer fake
+  savings, a `safety.sh` fake backup, and a voice console-crash silence), along
+  with an earlier component batch.
+- **Supply chain.** SheshAOS gained a real LICENSE, plus deny/machete/typos CI;
+  actionlint 1.7.12 was pinned org-wide; link integrity was gated.
+- **Workspace self-service (16:41 directive).** The orchestrator toolkit was
+  adopted into `tools/` with `make verify-all`; the home directory was
+  de-cluttered into `archive/adopted-or-oneoff-2026-08-12/`.
+- Open threads (callable component-CI workflow, fork/archive triage, mirror
+  naming drift, janitor TODO policy, and a PAT rotation that required owner
+  action) were moved to TODO.md.
+
+## Truthful answers
 
 - **Can the assistant see the whole conversation?** This session's transcript,
-  yes. Anything before the opening summary is only known through the files/docs
-  we created, not raw memory. The on-disk repos are the source of truth.
-- **Are the files (sesha-audit, pyproject.toml, etc.) present?** Yes. All 12
-  components live in `/home/user/sesha/components/shesh-*/`, each with
-  `pyproject.toml`, `src/`, `tests/`, README, and CI. shesh-audit has all 5
-  modules (`__init__, log, policy, gate, kernel_bridge, server`) plus 18 tests.
+  yes. Anything before the opening summary is known only through the files and
+  docs created, not raw memory. The on-disk repositories are the source of
+  truth.
+- **Are the expected files present?** Yes. The components lived under
+  `/home/user/sesha/components/shesh-*/`, each with a `pyproject.toml`, `src/`,
+  `tests/`, a README, and CI. `shesh-audit` carried its modules plus eighteen
+  tests.
 - **What caused the workspace-over-budget notice?** The Rust toolchain
-  (`~/.cargo`+`~/.rustup`, ~1 GB) installed to test the kernel merge, plus
-  large git clones. Removed; workspace now 127 MB.
+  (`~/.cargo` + `~/.rustup`, about 1 GB) was installed to test the kernel merge,
+  plus large git clones. After removal, the workspace was 127 MB.
 
----
-
-## 1. Decisions made (and why)
+## Decisions made, and why
 
 | # | Decision | Rationale |
 |---|----------|-----------|
-| D1 | Five languages only: Rust, Python, Lua, QML/JS, Bash; no Zig/C/Mojo/Go | Minimize FFI; cross-language talk is MCP/JSON over processes, not in-process links |
-| D2 | Exotic runtimes go in rootless Podman/Distrobox, not host | Reproducible envs, no host pollution |
-| D3 | Federated component repos + manifest/locks, not a monorepo | Each component independently versioned/tested; ecosystem repo is the integration point |
-| D4 | Three release channels stable/canary/devel | Daily work on devel, integration on canary, releases on stable; gates promote |
-| D5 | Local-first; cloud is opt-in behind policy | Privacy, offline operation; no keys in config |
-| D6 | Governance: immutable base prompt + evidence-backed `/refine` with rollback | Self-improvement must be safe (Prime Agent "cheating" lesson) |
-| D7 | Agent roles: coordinator/planner/coder/researcher/vision/critic | Specialist models; 6 GB-safe model per role |
-| D8 | shesh-kernel archived rather than force-merged | The two Rust trees diverged at type level (57 compile errors); forcing would ship a broken build. Staged rebase documented. |
-| D9 | Newelle forked as shesh-voice with an overlay, core untouched | Keeps upstream rebase easy; overlay ships MCP config + local model + wake word |
-| D10 | ACP adopted alongside MCP | ACP = editor↔agent (Zed/JetBrains); MCP = agent↔tools. They stack. |
-| D11 | Catch-up scheduler, not fixed cron timers | Laptops sleep/shut down; `OnStartupSec`+jitter+AC/idle gates + budget |
-| D12 | Warmth via one optional offer at natural pauses, ≤3/day | Proactive but never nagging; throttled/snoozeable |
-| D13 | Hierarchical memory + token-bounded context assembly | Solves retention and finite context window together |
-| D14 | Habit learning is frequentist with decay, not opaque weights | Inspectable/reversible; candidate habits reviewed |
-| D15 | Every tool call passes through shesh-audit Guard | allow/confirm/deny + logged + emitted in SheshAOS event format |
+| D1 | Five languages only: Rust, Python, Lua, QML/JS, Bash | Minimize FFI; cross-language talk is MCP/JSON over processes |
+| D2 | Exotic runtimes go in rootless Podman/Distrobox, not the host | Reproducible environments, no host pollution |
+| D3 | Federated component repos plus manifest/locks, not a monorepo | Each component independently versioned and tested |
+| D4 | Three release channels: stable/canary/devel | Daily work on devel, integration on canary, releases on stable |
+| D5 | Local-first; cloud is opt-in behind policy | Privacy and offline operation; no keys in config |
+| D6 | Governance: immutable base prompt plus evidence-backed `/refine` with rollback | Safe self-improvement |
+| D7 | Agent roles: coordinator/planner/coder/researcher/vision/critic | Specialist models with a 6 GB-safe budget per role |
+| D8 | `shesh-kernel` archived rather than force-merged | The two Rust trees diverged at the type level; forcing would ship a broken build |
+| D9 | Newelle forked as `shesh-voice` with an overlay; core untouched | Keeps upstream rebase easy |
+| D10 | ACP adopted alongside MCP | ACP is editor↔agent; MCP is agent↔tools; they stack |
+| D11 | Catch-up scheduler, not fixed cron timers | Laptops sleep and shut down |
+| D12 | Warmth via one optional offer at natural pauses, at most three per day | Proactive but never nagging |
+| D13 | Hierarchical memory plus token-bounded context assembly | Solves retention and finite context together |
+| D14 | Habit learning is frequentist with decay, not opaque weights | Inspectable and reversible |
+| D15 | Every tool call passes through the `shesh-audit` Guard | allow/confirm/deny, logged, and emitted in SheshAOS event format |
 
----
+## What existed (verified)
 
-## 2. What exists (verified)
-
-### Repos (16 total: 15 active, 1 archived)
+At the time, sixteen repositories were recorded (fifteen active, one archived):
 
 | Repo | Layer | Tests | Purpose |
 |------|-------|------:|---------|
-| SheshAOS | Brain | 981 (Rust) | Governance kernel; Rust workspace of 12 crates |
-| shesh-audit | Brain | 18 | Hash-chained event log + policy Guard + kernel bridge |
+| SheshAOS | Brain | 981 (Rust, historical) | Governance kernel; Rust workspace of 12 crates |
+| shesh-audit | Brain | 18 | Hash-chained event log, policy Guard, kernel bridge |
 | shesh-mind | Mind | 13 | Role→model router (6 GB VRAM budget) |
-| shesh-memory | Mind | 15 | Episodic/semantic/intention/habit memory + context assembler |
+| shesh-memory | Mind | 15 | Episodic/semantic/intention/habit memory plus context assembler |
 | shesh-harness | Mind | 7 | Continual Harness: immutable base, `/refine`, rollback |
 | shesh-orchestrator | Mind | 9 | Multi-agent RLM runtime, A2A bus, budgets |
-| shesh-skills | Mind | 10 | Everyday MCP tools + 5 Markdown skills |
-| shesh-voice | Soma | — (fork) | Newelle fork + overlay (wake/STT/TTS/MCP wiring) |
-| shesh-files | Soma | 5 | Rust watcher + Python classifier |
+| shesh-skills | Mind | 10 | Everyday MCP tools plus five Markdown skills |
+| shesh-voice | Soma | — (fork) | Newelle fork plus overlay (wake/STT/TTS/MCP wiring) |
+| shesh-files | Soma | 5 | Rust watcher plus Python classifier |
 | shesh-shell | Soma | 3 | Hyprland/Quickshell MCP |
 | shesh-system | Soma | 7 | Power/GPU/MUX/status MCP |
 | shesh-acp | Soma | 9 | Agent Client Protocol server |
@@ -89,138 +100,89 @@ Last audited: 2026-08-12 (evening — full hardening pass; see 2026-08-12 evenin
 | shesh-ecosystem | — | 13 | Manifest, resolver, gates, docs, canary CI |
 | ~~shesh-kernel~~ | ~~Brain~~ | — | **ARCHIVED**: superseded by SheshAOS, merge pending |
 
-**Verified test total: 124 Python tests passing across components + 13 ecosystem = 137, plus 981 Rust tests in SheshAOS and 20 ambient tests in shesh-desktop.**
+> **Note —** The test counts above are the historical figures from 2026-08-12.
+> The [2026-08-15 fleet audit](../../../FLEET_AUDIT_2026-08-15.md) is the
+> authoritative baseline and reports different, verified numbers (for example,
+> SheshAOS at 877 passing tests with 1 ignored).
 
-### Central documentation (in shesh-ecosystem/docs/)
+Each component carried a standardized README (layer, license, ecosystem link,
+tools, dev commands), and central documentation lived in
+`shesh-ecosystem/docs/`.
 
-- `architecture/AGENTIC_BODY.md`, `REPO_TOPOLOGY.md`, `LANGUAGE_POLICY.md`, `MULTI_AGENT.md`
-- `ACP_A2A.md`, `CONTAINERS_AND_VENV.md`, `LINUX_LAYOUT.md`, `LEARNING.md`
-- `TOOLING_CATALOG.md`, `GAP_ANALYSIS.md`, `GLOSSARY.md`
-- `components/` — README for every shesh-* component (9)
-- `skills/` — 5 agent skills (+ autopilot)
-- `desktop/` — 14 SHESH docs from shesh-desktop
-- `queries/QUERYLOG.md` — every user prompt + answer
+## Penny-picked task list
 
-### Component docs
-Each repo has a standardized README (layer, license, ecosystem link, tools, dev commands).
+Tasks were tagged P0 (blocks real use), P1 (soon), and P2 (future). The
+checkable version lived in TODO.md.
 
----
+- **Brain / governance.** Finish the `shesh-kernel`→SheshAOS merge (port leaf
+  crates first, reconcile `KernelError`/TUI, bring in `shesh-protocols`, fix
+  upstream build breaks, gate on `cargo test --workspace`). Wire the Guard in
+  front of every MCP tool call. Consume `kernel-events.jsonl` from Rust. Add
+  secret-manager integration. Pursue eBPF/Aya telemetry honestly. Add
+  supply-chain provenance.
+- **Mind / agents.** LLM-backed planner/critic in the orchestrator. A2A over a
+  Unix socket, then optional remote. Persistent/background sessions. A real
+  `/refine` loop with held-out grading. Automatic skill capture and deprecation.
+  Episodic compaction. Honor currently-loaded models in the router.
+- **Soma / body.** Package mature third-party MCP servers behind the Guard.
+  Build `shesh-maintenance`, `update-check`, and `health`. Add phone
+  vision→tap. Add container-control MCP. Add local-first email/calendar and
+  messaging bridges. Add media tools. Complete ACP full sessions.
+- **Desktop / physique.** Hardware validation on the physical MSI. Installer
+  channel support with btrfs snapshot and rollback. Wire ambient offers to the
+  Quickshell overlay. Make proactivity data-aware.
+- **Platform / infrastructure.** Canary end-to-end test in a container. A
+  Distrobox/Containerfile for onboarding. OpenTelemetry traces (local only).
+  Install `shesh-ambient` as a user service.
+- **Docs / process.** ADRs for D1–D15. A user getting-started guide.
+  A doc-sync job copying each component README into `docs/components/`.
 
-## 3. Penny-picked task list (everything remaining, incl. "future work")
+Several P2 items were already done: RAG (in `shesh-memory`), the skill
+marketplace primitives (in `shesh-harness`), accessibility (a spec plus
+checker), and a self-hosted update mirror (in `shesh-desktop`).
 
-Tasks are tagged P0 (blocks real use) / P1 (soon) / P2 (future). The
-checkable version is TODO.md.
+## What was explicitly not done
 
-### 3.1 Brain / governance
-- [P0] **Shesh-kernel → SheshAOS merge.** Rebase archived kernel onto
-  SheshAOS; port leaf crates first (protocols, waveobj, wps, blockctl,
-  wconfig), reconcile `KernelError`/TUI API divergence, bring
-  `shesh-protocols` (ACP+MCP wire impls) and CLI/worker bins; fix
-  upstream build breaks (`russh::Error::msg` removed, `zig` required by
-  terminal); gate on `cargo test --workspace` green. See
-  `KERNEL_MERGE_PLAN.md` in SheshAOS.
-- [P0] Wire shesh-audit Guard in front of **every** MCP tool call
-  (orchestrator + skills currently declare it; enforce at the server boundary).
-- [P1] kernel bridge: have Rust SheshAOS actually consume `kernel-events.jsonl`
-  (currently Python writes it; Rust reads TBD).
-- [P1] Secret manager integration (KeePassXC/gopass); no keys in MCP config.
-- [P2] eBPF/Aya telemetry — shesh-ebpf verified (8 tests, /proc-based); real eBPF needs kernel privileges (sandbox/host boundary, honest)
-- [P2] Supply-chain: sigstore/provenance for component artifacts.
+- The kernel merge was **not** force-merged (D8) — it would have shipped broken
+  code.
+- No repositories were deleted; the duplicate was archived. Personal and college
+  projects (portfolio, AIM, ClinicLedger, Vyakrti, and others) were left
+  untouched.
+- Hardware/GPU/audio tests were **not** run — impossible in the sandbox.
+- Real LLM/LLM-eval was **not** yet wired to `/refine` or the orchestrator;
+  stubs were in place.
 
-### 3.2 Mind / agents
-- [P0] **LLM-backed planner/critic** in orchestrator (currently stub); wire to
-  Ollama via shesh-mind routing.
-- [P1] **A2A over a Unix socket** (currently in-process); then optional remote
-  (opt-in, authenticated).
-- [P1] Persistent/background agent sessions (detach/reattach like Prime).
-- [P1] Real `/refine` loop: local-model planner + llm-eval-harness grading on
-  held-out checks before promotion.
-- [P1] Automatic skill capture (Read→Execute→Reflect→Write) with held-out
-  scoring; deprecate unused/low-success skills ("discard the dross").
-- [P1] Episodic compaction/summarization retention job.
-- [P1] `shesh-mind` model router: honor currently-loaded models (avoid
-  unloading), add embedding provider abstraction.
-- ✅ [P2] RAG — covered in-component: shesh-memory embeddings + vectorstore + semantic_search (local hash offline, Ollama nomic-embed-text; 33 tests); rag-service remains an optional separate repo
-- ✅ [P2] Skill marketplace — primitives done (shesh-harness 5d784a56f759760e8ce1a3ac4a379f6fe2c1272d): export/import skills as portable JSON manifests; hosted marketplace remains 💡Future on top of this format
+## Operating rules going forward
 
-### 3.3 Soma / body
-- [P1] Package mature third-party MCP servers behind the Guard: filesystem,
-  git, fetch, Playwright, GitHub (scoped PAT), SQLite, markitdown, time.
-- [P1] `shesh-maintenance` (cache/journal/orphan packages), `update-check`
-  (notify never auto-`-Syu`), `health` (CPU/GPU/disk/battery).
-- [P1] `shesh-phone`: OCR/vision→tap loop (the harness concept from
-  phone-harness); currently only adb primitives exist.
-- [P1] Container-control MCP (podman/distrobox) for sandboxed/untrusted tasks.
-- [P1] Email/calendar: local-first CalDAV/IMAP (vdirsyncer + khal/neomutt).
-- [P1] Messaging bridges (Telegram/Signal) as isolated opt-in services.
-- [P1] Media: screenshots, screen recording, wallpaper, audio routing.
-- [P1] ACP full sessions: terminal bridge, diff/update messages (cancel +
-  permission responses done).
-- ✅ [P2] Accessibility (a11y) — spec + checker: docs/A11Y.md (2026-08-13): tools/a11y_check.py, 381-element baseline, reference fixes in killDialog/ConfigSwitch; long tail is an on-machine file-by-file pass
-- [P2] Job-mode isolated profile (work git identity, no personal cloud).
+The autopilot rules that governed the build:
 
-### 3.4 Desktop / AP (Agentic Physique — the MSI)
-- [P0] **Hardware validation on the actual machine**: Hyprland@144, NVIDIA
-  MUX, wake word, PipeWire audio, Quickshell render. (Cannot run in this
-  sandbox.)
-- [P1] Installer channel support (stable/canary/devel) with btrfs snapshot
-  + rollback.
-- [P1] Wire ambient offers to the Quickshell overlay (call
-  `shesh-ambient offer` on workspace switch / idle).
-- [P1] Make proactivity data-aware (real Inbox count, git status, backup age)
-  instead of static strings.
-- [P2] Accessibility, recording.
-
-### 3.5 Platform / infrastructure
-- [P0] **Canary end-to-end test**: boot all MCP + ACP servers in a container,
-  run a real task end-to-end. (Workflow matrix exists; e2e does not.)
-- [P1] Distrobox/Containerfile for one-command onboarding.
-- [P1] Observability: OpenTelemetry traces for agent runs (local only).
-- [P1] shesh-ambient installed as a user service + wired into setup.
-- ✅ [P2] Self-hosted update mirror — shesh-desktop tools/maintenance/update-mirror.sh (9d0c678ab3b616e2a25012ee06469a95b4435685): local pacman mirror + repo-add + prune policy, dry-run safe
-
-### 3.6 Docs / process (this audit)
-- [x] Centralize all docs — **done** (42 markdown files in docs/).
-- [x] Query log — **done** and must be appended each response (real-time).
-- [x] Master TODO/roadmap — **this document + TODO.md**.
-- [P1] ADRs (Architecture Decision Records) for D1–D15.
-- [P1] User getting-started guide for shesh-desktop.
-- [P1] Doc-sync job: copy each component README into docs/components/ on change.
-
----
-
-## 4. What was explicitly NOT done (and why)
-
-- Did **not** force the kernel merge (D8) — would have shipped broken code.
-- Did **not** delete any repos — archived the duplicate; personal/college
-  projects (portfolio, AIM, ClinicLedger, Vyākṛti, etc.) left untouched.
-- Did **not** run hardware/GPU/audio tests — impossible in this sandbox.
-- Did **not** connect real LLM/LLM-eval to refine/orchestrator yet — stubs
-  are in place; this is P0/P1.
-
----
-
-## 5. Operating rules going forward (autopilot) — UPDATED 2026-08-11 per user feedback
-
-1. Anchor to TODO.md; pick the highest-priority unblocked ⬜.
+1. Anchor to TODO.md; pick the highest-priority unblocked item.
 2. Branch per item; tests gate every push; never push red.
-3. After every user message: append to `docs/history/queries/QUERYLOG.md`, update TODO.md status, and refresh relevant docs — real-time.
-4. Archive, never delete. No force-push to main.
-5. Mark hardware-dependent items 🟡 rather than faking success.
-6. **DON'T make minimal versions/stubs that become dead code — make proper working versions** with real implementation, tests, integration, docs. Minimal versions we made (shesh-brain, media, messaging, ebpf minimal) became stubs — user called out, now we make proper.
-7. **First thought when challenged with an issue = STEAL, not make a tool.** What have we been learning? Philosophy is steal from open source world and make it ours. Check `SOURCES.md`, `TOOLING_CATALOG.md`, `manifests/upstreams.toml`, awesome-hyprland, best MCP servers 2026, Rust crates (notify, aya, etc), CachyOS Noctalia, etc. Search web for open-source things (MIT/Apache/GPL, truly free no API key, self-hostable). If something better exists that can be stolen, upgraded, customized, specialized for our CachyOS/Hyprland/6GB VRAM system and improved — STEAL IT. Only if not found, then make yourself.
-8. **We can discard what we made if something better exists to steal.** Never engage in pointless brooding — if existing open-source does job better (e.g., DankMaterialShell bar vs our custom bar, ekremx25/quickshell monitor management vs our custom, SearXNG/agent-search vs Tavily subscription), discard ours and wrap better one, upgrade wrapper for our needs.
-9. **Upgrade wrapper, not just fork and wrap.** Our job is not just to fork and wrap, but to upgrade wrapper for our needs and customize and specialize for our system and improve it — e.g., Newelle fork stripped GNOME, added Quickshell overlay, prewired MCP, 6GB-safe models, renamed Shesh (Newelle core).
-10. **Integrating various different systems, but no conflict.** We have to be cautious but enterprising — namespace via MCP stdio process boundaries (never in-process FFI), Guard policy allow/confirm/deny, separate systemd user services, separate config dirs, btrfs subvolumes, Python venvs via uv, so integrations don't clash. One job per component, one process per MCP server, one policy gate.
-11. **We have a lot of time, freely — no limited time constraint.** Who posted limited time constraint? We have a lot of time. Don't rush to minimal stubs to save time. Make proper working versions. User is traveling now 1-2 days, can keep one chat open, GitHub Actions true hours unattended handle rest.
-12. **Style + Performance non-negotiable:** User uses illogical-impulse (end-4 dots-hyprland) because loves its look, CachyOS because loves its performance. Can't compromise, don't break these systems. Already using best customized dotfiles riced look, don't need looks, need good backend and other systems that integrate into that look. Improve style, not change — if something better in other dotfiles (ML4W, JaKooLit, HyDE, Noctalia, Caelestia, DankMaterialShell, ekremx25/quickshell, qs-hyprview, HyprPanel, rishot pill bar morphing), include it in our look: functionalities, improvements, better response and animations, more smooth and buttery feel, better bluetooth wifi integration. At end of day, it is also fork and wrapper so we should improve it. Pick features/issues from every mainstream fork we are using and if useful extract and work on it. Build proper infrastructure for stealing/improving/customising so user doesn't have to write it many times — `manifests/upstreams.toml`, `tools/steal/`, `scripts/upstream_tracker.py`, `docs/STEAL_INFRASTRUCTURE.md`.
+3. After every user message, append to the query log, update TODO.md, and
+   refresh relevant docs.
+4. Archive, never delete; no force-push to main.
+5. Mark hardware-dependent items 🟡 rather than fake success.
+6. Build proper working versions, not minimal stubs that become dead code.
+7. First instinct when blocked = *steal*, not build — check `SOURCES.md`,
+   `TOOLING_CATALOG.md`, and `manifests/upstreams.toml` for open-source tools to
+   adopt, upgrade, and specialize.
+8. Discard what Shesh made if something better exists to steal.
+9. Upgrade the wrapper, not just fork and wrap.
+10. Integrate systems without conflict — namespace via MCP stdio, the Guard,
+    separate services and config dirs, one job per component.
+11. Take the time to build properly; there is no deadline forcing stubs.
+12. Treat style and performance as non-negotiable — the Hyprland look and
+    CachyOS performance are the point.
 
----
+## Manual verification
 
-## 6. Manual verification
+Items that could not be tested in the sandbox are tracked separately in
+**[MANUAL_VERIFICATION.md](../verification/manual-verification.md)** and worked
+through on the physical MSI after install. It covers accounts and keys, the MCP
+mesh, voice/GPU/display, backup, phone, containers, agent behavior, security,
+and the deliberate non-autopilot items (kernel merge, hardware validation).
 
-Things that cannot be tested in the sandbox are tracked separately in
-**[MANUAL_VERIFICATION.md](../verification/manual-verification.md)** — work through it on the
-physical MSI after install. It covers accounts/keys, the MCP mesh, voice/GPU/
-display, backup, phone, containers, agent behavior, security, and the
-deliberate non-autopilot items (kernel merge, hardware validation).
+> **Where this fits —** The [exhaustive audit](./exhaustive-audit.md) and
+> [gap analysis](./gap-analysis.md) give the surrounding context, and the
+> [2026-08-15 fleet audit](../../../FLEET_AUDIT_2026-08-15.md) is the live
+> baseline.

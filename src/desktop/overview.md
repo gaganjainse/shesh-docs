@@ -1,106 +1,264 @@
-# Style + Performance — Non-Negotiable (illogical-impulse + CachyOS)
+# Style and Performance: The Non-Negotiable Constraint
 
-> User: "My need is style + performance. I am using illogical impulse because i love its look, and using CachyOS because i love its performance. We can't compromise on this, and last point don't break these systems or anything else per se. I am already using end-4's shesh-desktop so i don't need looks, i need a good backend and other systems that integrate into that look, do you understand. I am not using native Hyprland and need to customize it, i am already using the best customized dotfiles riced look."
+Two decisions in this project are fixed, and every other decision bends around them: the desktop
+keeps the illogical-impulse look, and the machine keeps CachyOS performance. This chapter states
+that constraint precisely and defines the only kind of work allowed inside it.
 
-## What you are using
+## Summary
 
-- **Look:** `illogical-impulse` — end-4's `shesh-desktop` — the best customized dotfiles riced look, Material You, Quickshell `ii` widgets, anti-flashbang, screen translate, clipboard IPC, keybinds, Lua config Hyprland ≥0.55, Quickshell framework
-- **Performance:** CachyOS 260628 (Arch-based, Linux 6.18 live / 7.1 installed, BORE scheduler, LTO, PGO, BOLT, x86-64-v3/v4, Zen4, gaming meta) — you love its performance
+- The visual layer is `end-4/dots-hyprland` (illogical-impulse) with Quickshell `ii`; the
+  performance layer is CachyOS 260628. Neither is up for renegotiation.
+- Shesh contributes backend systems that plug into the existing look. It never replaces the
+  compositor config, the bar, or the theme engine.
+- Seven components already integrate correctly through thin `custom/` overrides, Quickshell
+  widgets, and systemd user services.
+- Remaining work is backend only: desktop control, browser automation, media, containers,
+  telemetry, and an optional cloud gateway.
+- Patterns may be borrowed from rival dotfile projects; their visuals may not.
+- Dependencies must be open source and usable without a metered API key.
 
-You are **NOT** using native Hyprland and need to customize it — you already have best customized look, you need **good backend and other systems that integrate into that look** without breaking it.
+> **Requirement —** "My need is style + performance. I am using illogical impulse because i love
+> its look, and using CachyOS because i love its performance. We can't compromise on this, and last
+> point don't break these systems or anything else per se. I am already using end-4's shesh-desktop
+> so i don't need looks, i need a good backend and other systems that integrate into that look, do
+> you understand. I am not using native Hyprland and need to customize it, i am already using the
+> best customized dotfiles riced look."
 
-## What we must NOT do
+## The two layers that cannot change
 
-- **Do NOT replace look** with DankMaterialShell, ekremx25/quickshell, HyprPanel, ashell, etc — those are different looks that would break illogical-impulse
-- **Do NOT switch shells** — CachyOS Noctalia shell is now a Hyprland option on 260628 ISO, but you already have illogical-impulse, don't switch
-- **Do NOT break CachyOS performance** — don't install heavy dependencies, don't use Flatpak for Newelle (use native AUR), keep host clean via rootless Podman/Distrobox, keep `custom/` overrides thin, rebase upstream often
-- **Do NOT break systems** — don't break Hyprland, Quickshell, CachyOS, or anything else per se
+Think of the machine as a finished building. The facade and interior design are complete and
+admired; what is missing is plumbing, wiring, and a building-management system. Shesh is the
+building services contractor, not the architect. It runs pipes inside existing walls.
 
-## What we must do — backend that integrates into look
+The **look** is `illogical-impulse` — end-4's dotfiles, carried in this fork as `shesh-desktop`.
+It supplies Material You theming, Quickshell `ii` widgets, anti-flashbang, screen translate,
+clipboard IPC, the keybind set, a Lua-configured Hyprland at 0.55 or newer, and the Quickshell
+framework itself.
 
-**Backend systems that integrate into illogical-impulse look, without breaking it:**
+The **performance** base is CachyOS 260628: Arch-derived, Linux 6.18 live and 7.1 installed, the
+BORE scheduler, and packages built with LTO, PGO, BOLT, and x86-64-v3/v4 targets. This is why the
+distribution was chosen, so nothing may erode it.
 
-### Already built, correctly integrated (thin custom overrides)
+Native Hyprland is not in use. The customized configuration is the product. Work that "starts
+fresh" from upstream Hyprland defaults is work that destroys the deliverable.
 
-- **shesh-files** — Rust watcher + Python classifier — watches Downloads/Desktop/Documents/Pictures, debounces 30s, emits JSON, deterministic extension/name rules first (no LLM, instant, private), optional Ollama phi4-mini for ambiguous, vision moondream2 for screenshots, rules.toml, SQLite history + undo log at `~/.local/share/smart-organizer/`, trash via `gio trash` not rm, always --dry-run capable, low-confidence → notify-send action buttons, wire into MCP so Shesh can say "organize downloads" / "undo last move", Quickshell indicator widget (last N moves, pause/resume, open undo) — integrates into illogical-impulse look via Quickshell widget, not replacing bar
-- **shesh-shell** — Hyprland/Quickshell MCP — `hyprctl` wrapper + Quickshell IPC, does NOT replace Hyprland config, only controls via existing Hyprland IPC, behind Guard
-- **shesh-system** — power/GPU/MUX/backup/status MCP — powerprofilesctl, MUX switch `msi-mux-switcher`, restic backup, update check read-only, health, maintenance cache clean — integrates via systemd user services, not via bar replacement, uses `powerprofilesctl` which CachyOS already has
-- **shesh-audit** — hash-chained append-only event log + policy Guard + Nexus bridge — logs every tool call, behind all MCP servers, no UI, no conflict with look
-- **shesh-voice** — Newelle fork overlay — wake word "hey shesh", STT faster-whisper, TTS Piper, MCP client stdio, 6GB-safe model defaults, about-screen "Shesh (Newelle core)" — integrates into illogical-impulse AI sidebar (Ollama/Gemini) as host for overlay, not replacing sidebar
-- **shesh-ambient** (in desktop) — polite catch-up scheduler + warm proactivity — OnStartupSec + jitter, not fixed wall-clock, heavy jobs need AC+idle, budget bounds, courtesy policy defers during fullscreen/calls/high-CPU/low battery, proactivity one optional offer at natural pause 45s–15m idle throttled ≤3/day snoozeable — integrates via Quickshell overlay, not interrupting look
+## Four things this project must never do
 
-### Need to build, backend that integrates into look (not look itself)
+| Prohibition | Why it matters |
+|---|---|
+| Do not replace the shell look with DankMaterialShell, `ekremx25/quickshell`, HyprPanel, or ashell | Each is a different visual identity; adopting one discards illogical-impulse |
+| Do not switch shells to CachyOS Noctalia, even though 260628 ships it as a Hyprland option | The existing shell is already chosen and tuned |
+| Do not erode CachyOS performance | No heavy dependency trees, no Flatpak for the voice agent, host kept clean via rootless Podman and Distrobox, `custom/` overrides kept thin, upstream rebased often |
+| Do not break working systems | Hyprland, Quickshell, and CachyOS must all keep functioning through every change |
 
-From `GAP_ANALYSIS.md` + `SOURCES.md` second-wave research, but filtered to **backend only, not look**:
+## Backend components that already fit inside the look
 
-- **shesh-control MCP** — AT-SPI accessibility tree + Wayland input injection + screenshots + compositor window targeting — **needs backend eyes and hands beyond `hyprctl`** — steal from `computer-use-linux` Apache-2.0, wrap as MCP server behind brain policy (destructive actions require approval) — integrates into illogical-impulse look via existing Hyprland windows, doesn't replace look
-- **shesh-browser MCP** — drive real browser for web tasks, sandboxed profile — steal from `browser-use` MIT — backend, no UI, integrates via existing browser window
-- **shesh-files improvements** — use `notify-rs/notify` RecommendedWatcher cross-platform filesystem notification library Rust (used by Alacritty, cargo watch, mdBook, Zed) — replaces custom polling loop that wastes I/O, <100ms reaction, not replacing look
-- **shesh-system improvements** — steal **backend logic only** from `ekremx25/quickshell`: monitor management single `hyprctl --batch` (no flicker) for resolution/refresh/HDR/VRR, night light backend `hyprsunset`/`gammastep` with 1000-6500K slider + fixed-time schedule, not the bar itself; steal `DankMaterialShell` system monitoring TUI library `dgop` + shared QML widgets via `dank-qml-common` — backend, not look
-- **shesh-media** — screenshots `grim+slurp` pipeline (already in illogical-impulse? check `configs/quickshell/rishot` — pure Wayland Quickshell app, keybind Print), screen recording, wallpaper, audio routing — backend, integrates into existing keybinds
-- **shesh-messaging** — Telegram/Signal isolated opt-in services — backend, separate systemd services, no UI conflict
-- **shesh-containers** — podman/distrobox sandboxed `run_sandboxed(["echo","hi"])` with `--cap-drop=ALL --network=none` — backend, no UI
-- **shesh-ebpf** — eBPF telemetry with Aya Rust read-only — backend, no UI, behind Guard
-- **shesh-omniroute** — free big models gateway 291 providers 90+ free, optional to local Ollama primary — backend, where enable is user choice in settings GUI `SeshaConfig.qml` (in same widget style as General/Bar/Services, not breaking style)
+Each of these lands as a thin override, a Quickshell widget, or a systemd user service. None of
+them repaints the desktop.
 
-### What we must NOT steal for looks
+**shesh-files** pairs a Rust watcher with a Python classifier over Downloads, Desktop, Documents,
+and Pictures. It debounces for 30 seconds, emits JSON, and applies deterministic extension and
+name rules first, so the common case needs no model at all and stays private. Ambiguous files can
+optionally reach Ollama `phi4-mini`, and screenshots can reach `moondream2` for vision. State
+lives in a SQLite history and undo log under `~/.local/share/smart-organizer/`; deletions go
+through `gio trash` rather than `rm`; a dry-run mode is always available. Low-confidence
+decisions surface as `notify-send` action buttons. The tool is wired into MCP, so Shesh can act
+on "organize downloads" or "undo last move" by voice, and its Quickshell indicator shows recent
+moves with pause, resume, and undo — a widget inside the bar, not a replacement for it.
 
-- **ML4W 2.14.1** `statusbar.json` pattern — single-file Quickshell bar config, declarative bar pattern — **do NOT take GUI configurator**, only steal declarative pattern if needed for backend, but keep illogical-impulse look
-- **JaKooLit/Hyprland-Dots** per-monitor refresh scripts, SDDM sugar-candy, Bluetooth menu — borrow logic only, keep end-4 visuals
-- **prasanthrangan/hyprdots (HyDE)** Wallbash one wallpaper → all apps theming, themepatcher, `hyde-cli` modularity — we already use matugen, consider Wallbash for apps matugen doesn't cover, but don't replace look
-- **CachyOS Noctalia shell** — animation/perf ideas, now Hyprland option on 260628 ISO — compare animation curves and NVIDIA compositing hints, do NOT switch shells
-- **Caelestia-shell** Qt6/Quickshell — copy easing/blur parameters QML, no dep change, for 144 Hz smoothness — backend perf, not look
+**shesh-shell** is the Hyprland and Quickshell MCP surface: a `hyprctl` wrapper plus Quickshell
+IPC. It never rewrites the Hyprland configuration; it drives the compositor through the IPC that
+already exists, behind the policy Guard.
 
-## How we integrate without conflict (cautious but enterprising)
+**shesh-system** covers power, GPU and MUX switching, backup, and status. It calls
+`powerprofilesctl`, which CachyOS already ships, switches the MUX through `msi-mux-switcher`,
+runs restic backups, checks updates read-only, reports health, and cleans caches. It integrates
+as systemd user services rather than as a bar.
 
-From `REPO_TOPOLOGY.md` + `LANGUAGE_POLICY.md` already, plus second-wave research:
+**shesh-audit** is a hash-chained, append-only event log with a policy Guard and a Nexus bridge.
+It sits behind every MCP server and records every tool call. It has no user interface at all, so
+it cannot conflict with the look.
 
-- **One job per component** — `shesh-files` only watches Downloads/Desktop/Documents/Pictures, never touches `Projects/`, `Vaults/`, `Documents/Job`, `.ssh` — protected via `safety.sh`
-- **One process per MCP server** — `shesh-audit-mcp`, `shesh-system-mcp`, etc each stdio, separate systemd user services, not shared
-- **One policy gate** — every tool call passes Guard `check(actor, tool, args)` → allow/confirm/deny + logged + Nexus event — behind all MCP servers
-- **Separate config dirs** — `~/.config/shesh/mcp/` per server, `~/.config/shesh/messaging/` flags, `~/.local/share/shesh/` state, `~/.cache/shesh/` cache
-- **Separate btrfs subvolumes** — `AI/Models` nocow, `Downloads` transient, `Documents/Personal` snapshot hourly, `Documents/Job` no snapshot per employer policy
-- **Namespace via MCP** — tool names prefixed `fs_*, fetch_*, git_*` via `shesh-mcp-bundle` proxy, so no collision
-- **Version pin + license gate** — `manifests/components.toml` + `scripts/check_licenses.py` refuses incompatible licenses
-- **Test before push** — `make check` ruff + pytest + license + locks, autopilot refuses red commits
-- **Thin custom/ overrides** — keep `custom/` overrides thin in `shesh-desktop` (end-4 base), rebase often, add MCP/automations without diverging `dots/`
-- **Quickshell + Go pattern** — from DankMaterialShell, ekremx25: shell framework + Go daemon for system monitoring, shared QML widgets via `dank-qml-common` — separate processes, QML widgets communicate via IPC, not shared memory — adopt same: Go daemon for system, QML for UI, MCP for tools, all separate
+**shesh-voice** is the Newelle fork overlay: wake word "hey shesh", `faster-whisper` for speech
+to text, Piper for speech synthesis, an MCP client over stdio, model defaults chosen for a 6 GB
+GPU, and an about screen reading "Shesh (Newelle core)". It hosts its overlay inside the existing
+illogical-impulse AI sidebar rather than replacing it.
 
-## Open-source only, no online-led subscription
+**shesh-ambient**, which lives in the desktop repository, is the polite catch-up scheduler
+described in [Ambient Design](./ambient-design.md). It triggers on `OnStartupSec` plus jitter
+instead of a fixed wall-clock hour, requires AC power and idleness for heavy jobs, bounds itself
+with a catch-up budget, and defers during fullscreen windows, calls, high CPU, or low battery.
+Proactivity is limited to one optional offer at a natural pause between 45 seconds and 15 minutes
+of idleness, throttled to at most three per day and always snoozeable.
 
-User: "Tavily not completely free but subscription based, don't want things that are online-led, only want open-source things"
+## Backend components still to build
 
-- **Discarded:** Tavily ($0.005/query, needs API key, closed-source, online-led, subscription), Brave Search ($5/1k queries, needs API key)
-- **Keep truly free, no key, open-source:** Filesystem `@modelcontextprotocol/server-filesystem` MIT, Git `server-git` MIT, Fetch `mcp-server-fetch` MIT, Sequential Thinking MIT, Memory knowledge graph MIT, Playwright MCP Microsoft MIT (Apache-2.0), Context7 free optional key, DuckDuckGo privacy-first web search truly free no key, Obsidian fully free, Chrome DevTools fully free, SearXNG AGPL-3.0 self-hosted metasearch 70+ engines no key fully private, agent-search MIT bundles SearXNG zero keys one-command deploy MCP server for AI agents, Tor option
+These come from the second wave of research recorded in `GAP_ANALYSIS.md` and `SOURCES.md`,
+filtered down to backend work only.
 
-## Upgrade wrapper, not just fork and wrap
+- **shesh-control MCP** gives the agent eyes and hands beyond `hyprctl`: the AT-SPI accessibility
+  tree, Wayland input injection, screenshots, and compositor window targeting. Borrow from
+  `computer-use-linux` (Apache-2.0) and wrap it as an MCP server behind brain policy, with
+  destructive actions requiring approval. It drives existing Hyprland windows and paints nothing.
+- **shesh-browser MCP** drives a real browser in a sandboxed profile for web tasks, borrowing from
+  `browser-use`. It has no interface of its own.
+- **shesh-files improvements** replace the custom polling loop with `notify-rs/notify`
+  `RecommendedWatcher`, the cross-platform filesystem notification crate already used by
+  Alacritty, `cargo watch`, mdBook, and Zed. Polling wastes I/O; the crate reacts in under
+  100 ms.
+- **shesh-system improvements** take backend logic only from neighbouring projects: single-batch
+  monitor management via `hyprctl --batch` to avoid flicker when changing resolution, refresh
+  rate, HDR, or VRR; a night-light backend built on `hyprsunset` or `gammastep` with a
+  1000–6500 K slider and a fixed-time schedule; and the `dgop` system-monitoring library plus
+  shared QML widgets from `dank-qml-common`. The bars those projects ship stay behind.
+- **shesh-media** covers screenshots through a `grim`/`slurp` pipeline, screen recording,
+  wallpaper, and audio routing. Check `configs/quickshell/rishot` first, since illogical-impulse
+  may already provide a pure Wayland Quickshell screenshot app bound to Print.
+- **shesh-messaging** runs isolated, opt-in Telegram and Signal services as separate systemd
+  units with no interface.
+- **shesh-containers** wraps Podman and Distrobox for sandboxed execution, for example
+  `run_sandboxed(["echo","hi"])` with `--cap-drop=ALL --network=none`.
+- **shesh-ebpf** provides read-only eBPF telemetry through Aya in Rust, behind the Guard.
+- **shesh-omniroute** is the free-model gateway — 291 providers, more than 90 of them free —
+  strictly optional and always secondary to the local Ollama primary. Its enable switch belongs
+  in the settings GUI (`SeshaConfig.qml`), styled exactly like the existing General, Bar, and
+  Services pages.
 
-Our job is not just to fork and wrap, but to **upgrade the wrapper for our needs and customize and specialize it for our system and improve it** — e.g., Newelle fork stripped GNOME-only assumptions, added Hyprland Quickshell overlay, prewired our MCP servers, set 6GB-safe model defaults, renamed in about-screen to "Shesh (Newelle core)" — that's upgrade and specialization, not just wrap.
+> **Note —** The settings page and its service still carry the legacy `Sesha` file names. Treat
+> that spelling as a naming artifact from an earlier iteration, not as a second product.
 
-Examples:
+## What to borrow, and what to leave alone
 
-- **Newelle → shesh-voice:** strip GNOME, add Quickshell overlay, prewire MCP servers, 6GB-safe models, wake "hey shesh", faster-whisper, Piper — upgrade
-- **shesh-desktop → shesh-desktop:** keep `custom/` thin, add `shesh` config object to Quickshell settings system + Sesha settings page `SeshaConfig.qml` in same widget style as General/Bar/Services, service `Sesha.qml` applies toggles to systemd units and hyprctl — upgrade, not just fork
-- **modelcontextprotocol/servers filesystem → shesh-mcp-bundle:** proxy via Guard with tool prefixing `fs_*`, handshake, skip-if-missing, policy check every call, log + Nexus event — upgrade with governance
-- **phone-harness concept → shesh-phone:** macOS-only OCR→coordinate→act loop ported to ADB on Realme Narzo 90x, safe-area bounds, moondream2 vision instead of OCR — upgrade and specialize
+| Source | Borrow | Leave behind |
+|---|---|---|
+| ML4W 2.14.1 | The declarative single-file `statusbar.json` pattern, if a backend ever needs it | The GUI configurator |
+| JaKooLit/Hyprland-Dots | Per-monitor refresh scripts, SDDM handling, Bluetooth menu logic | The visuals |
+| prasanthrangan/hyprdots (HyDE) | Wallbash's one-wallpaper-themes-everything idea for apps `matugen` does not cover; `themepatcher` and `hyde-cli` modularity | The theme set and the look |
+| CachyOS Noctalia | Animation curves and NVIDIA compositing hints | The shell itself |
+| Caelestia-shell | Easing and blur parameters in QML for 144 Hz smoothness, with no dependency change | Anything visual |
 
-This point added to `SOURCES.md` and `REPO_TOPOLOGY.md`.
+## Rules of integration
 
-## How far till CachyOS install and first release with style+performance intact
+These rules come from `REPO_TOPOLOGY.md` and `LANGUAGE_POLICY.md`, extended by the second research
+wave. Together they explain why adding a component does not destabilize the whole.
 
-See `docs/desktop/02_ROADMAP.md` Phases 0–7, but filtered to **backend only, not look**:
+- **One job per component.** `shesh-files` watches Downloads, Desktop, Documents, and Pictures and
+  never touches `Projects/`, `Vaults/`, `Documents/Job`, or `.ssh`. Enforcement lives in
+  `safety.sh`.
+- **One process per MCP server.** `shesh-audit-mcp`, `shesh-system-mcp`, and their siblings each
+  speak stdio from their own systemd user service. Nothing is shared.
+- **One policy gate.** Every tool call passes `Guard.check(actor, tool, args)`, which returns
+  allow, confirm, or deny, then logs the decision and emits a Nexus event.
+- **Separate configuration and state directories.** `~/.config/shesh/mcp/` per server,
+  `~/.config/shesh/messaging/` for flags, `~/.local/share/shesh/` for state, `~/.cache/shesh/`
+  for cache.
+- **Separate btrfs subvolumes.** `AI/Models` is nocow, `Downloads` is transient,
+  `Documents/Personal` snapshots hourly, and `Documents/Job` is never snapshotted, per employer
+  policy.
+- **Namespaced tools.** Names are prefixed `fs_*`, `fetch_*`, `git_*` through the
+  `shesh-mcp-bundle` proxy, so two servers cannot collide.
+- **Pinned versions and a license gate.** `manifests/components.toml` pins versions and
+  `scripts/check_licenses.py` refuses incompatible licenses.
+- **Tests before push.** `make check` runs ruff, pytest, the license check, and lockfile
+  verification; autopilot refuses a red commit.
+- **Thin overrides.** `custom/` stays small in `shesh-desktop`, upstream is rebased often, and MCP
+  or automation work never diverges `dots/`.
+- **Separate processes, IPC between them.** Following DankMaterialShell and `ekremx25`, a
+  compiled daemon handles system monitoring while QML handles the interface, communicating over
+  IPC rather than shared memory. Shesh adopts the same split: a daemon for system state, QML for
+  the surface, MCP for tools.
 
-- **Phase 0 Pre-install fixes (1–2 sessions):** Fix N-01..N-10 new bugs introduced by prior AI + BUG-05 MSI DMI content check + HIGH-05 zram config + etc — 10 things in `01_AUDIT.md` §E — **must do BEFORE installing CachyOS**, else `./setup install` crashes. Does NOT break look, only backend installer.
-- **Phase 1 CI gates (½ session):** Expand ShellCheck to all `.sh`, Arch container CI — so bugs never reach main — backend only
-- **Phase 2 Refactor (1–2 sessions):** One source per unit, straight-line read, uninstall actually cleans up — backend maintainability, not look
-- **Phase 3 Device tuning (1 session + on-device 🧪):** Monitor `eDP-1,1920x1200@144`, VRR, tearing, NVIDIA hybrid `GBM_BACKEND=nvidia-drm`, iGPU primary for compositing, `prime-run`/`nvidia-run` for offload, MUX via `msi-mux-switcher`, ZRAM 8GB zstd, BORE scheduler, PipeWire low-latency 256 @48k, AX211 Wi-Fi power-save off — **performance tuning, not look**, steals animation curves/easing/blur QML from Caelestia-shell (no dep change) for 144 Hz smoothness — backend perf
-- **Till CachyOS install:** **1–2 sessions fixing Phase 0 top 10**
+## Open source only, with no metered gateway
 
-- **Phase 4 Smart-Organizer v2 (2–3 sessions):** watcher-rs Rust `notify` (3 MB) + classifier deterministic rules first (no LLM) + optional Ollama phi4-mini + vision moondream2, rules.toml, SQLite history + undo log, `gio trash` not rm, notify-send action buttons — backend that integrates into illogical-impulse look via Quickshell indicator widget (last N moves, pause/resume, open undo) — **backend, not look**
-- **Phase 5 Automations (1–2 sessions):** AC/battery → power profile + GPU hint via udev, nightly deep scan + backup verification + maintenance, weekly `pacman -Syu` notification-only (never auto), disk 80% alert, SMART/battery monthly, font cache via pacman hooks — backend, not look
-- **Phase 6 Shesh agent (3–5 sessions):** Newelle 1.4.5 native AUR (not Flatpak) + Ollama ≥0.32 6GB-safe models, 3 MCP servers stdio, Quickshell overlay listening/thinking/speaking states driven by Newelle's OpenAI-compatible endpoint, audit log, daily 08:00 briefing skill, optional ADB phone harness — **backend voice + overlay, not replacing illogical-impulse bar**
+> **Requirement —** "Tavily not completely free but subscription based, don't want things that are
+> online-led, only want open-source things"
 
-- **Till first release (Phases 0–3 first week, 4–5 week two, 6 weeks 3–4):** **~3-4 weeks** with you + AI pair-programmer, if we **steal backend patterns** (monitor management single `hyprctl --batch` no flicker from ekremx25, Night Light backend hyprsunset/gammastep, EQ filter-chain, SearXNG self-hosted free, agent-search MIT, notify-rs RecommendedWatcher) and **do NOT steal/replace look** (keep illogical-impulse).
+Two candidates are therefore discarded: Tavily, at roughly 0.005 USD per query with a required API
+key and a closed-source, online-led model, and Brave Search, at 5 USD per 1,000 queries with a key.
 
-**We are on right track for Mind/Brain** (memory, harness, orchestrator, skills, audit, mind router, model-agnostic free-first) — 100+ tests, 15 ADRs, swarm via GitHub Issues atomic lock + PR auto-merge + scheduled janitor true hours, secure PAT password flow.
-**We were off track for Soma/Desktop** — rebuilt what we should have stolen as backend, introduced 10 new bugs, looked further along than we are because stub files added. Now fixed: keep illogical-impulse look intact, steal backend logic only, expand CI to lint all scripts so N-01..N-09 never slip again.
+What remains is genuinely free, key-free, and open source: the filesystem server
+(`@modelcontextprotocol/server-filesystem`), Git (`server-git`), Fetch (`mcp-server-fetch`),
+Sequential Thinking, the Memory knowledge graph, Microsoft's Playwright MCP, Context7 with an
+optional key, DuckDuckGo for privacy-first search with no key, Obsidian, Chrome DevTools, SearXNG
+(AGPL-3.0) as a self-hosted metasearch front end across more than 70 engines with no key and full
+privacy, `agent-search` which bundles SearXNG into a one-command MCP deployment with zero keys,
+and Tor as an option.
+
+## Upgrade the wrapper, do not merely wrap it
+
+Forking is the beginning of the work, not the end. Each fork is specialized for this system and
+improved, which is what separates a product from a repackaging.
+
+| Upstream | Becomes | The upgrade |
+|---|---|---|
+| Newelle | `shesh-voice` | Strips GNOME-only assumptions, adds a Hyprland Quickshell overlay, prewires the MCP servers, sets 6 GB-safe model defaults, wake word "hey shesh", `faster-whisper` and Piper, renamed in the about screen to "Shesh (Newelle core)" |
+| end-4/dots-hyprland | `shesh-desktop` | Keeps `custom/` thin and adds a `shesh` configuration object to the Quickshell settings system, a settings page (`SeshaConfig.qml`) styled like General, Bar, and Services, and a service (`Sesha.qml`) that applies toggles to systemd units and `hyprctl` |
+| `modelcontextprotocol/servers` filesystem | `shesh-mcp-bundle` | Proxies through the Guard with `fs_*` tool prefixing, a handshake, skip-if-missing behaviour, a policy check on every call, and a logged Nexus event |
+| `phone-harness` concept | `shesh-phone` | Ports a macOS-only OCR-to-coordinate-to-act loop onto ADB for a Realme Narzo 90x, with safe-area bounds and `moondream2` vision in place of OCR |
+
+## Distance to a CachyOS install and a first release
+
+The phases below are drawn from [Roadmap — Phases 0 through 7](./02-roadmap.md), filtered to
+backend work.
+
+**Phase 0, pre-install fixes, one to two sessions.** Repair the 10 regressions catalogued in
+[the audit](./01-audit.md) — the new bugs N-01 through N-10, the MSI DMI content check in BUG-05,
+and the zram configuration in HIGH-05. This must happen *before* CachyOS is installed, or
+`./setup install` crashes. It touches the installer only, never the look.
+
+**Phase 1, CI gates, half a session.** Extend ShellCheck to every `.sh` file and add Arch
+container CI, so this class of bug cannot reach `main` again.
+
+**Phase 2, refactor, one to two sessions.** One source per systemd unit, a straight-line read
+through the installer, and an uninstall path that genuinely reverses itself.
+
+**Phase 3, device tuning, one session plus on-device verification.** Set the monitor to
+`eDP-1,1920x1200@144`, decide VRR and tearing, configure the NVIDIA hybrid path with
+`GBM_BACKEND=nvidia-drm`, keep the iGPU primary for compositing, use `prime-run` or `nvidia-run`
+for offload, drive the MUX through `msi-mux-switcher`, set up 8 GB of zstd ZRAM, confirm the BORE
+scheduler, configure PipeWire at quantum 256 and 48 kHz, and disable Wi-Fi power saving on the
+AX211. Borrowed easing and blur parameters from Caelestia-shell keep 144 Hz smooth without a new
+dependency.
+
+That places the CachyOS install one to two sessions away, gated on the Phase 0 fixes.
+
+**Phase 4, Smart-Organizer v2, two to three sessions.** The Rust `notify` watcher at roughly
+3 MB, a classifier that tries deterministic rules before any model, optional `phi4-mini` and
+`moondream2` passes, `rules.toml`, SQLite history with an undo log, `gio trash` instead of `rm`,
+and `notify-send` action buttons. Its only visible surface is a Quickshell indicator.
+
+**Phase 5, automations, one to two sessions.** Power profile and GPU hints on AC change via udev,
+a nightly deep scan with backup verification and maintenance, a weekly notification-only
+`pacman -Syu` reminder that never updates on its own, a disk alert at 80 percent, monthly SMART
+and battery reports, and font cache regeneration through pacman hooks.
+
+**Phase 6, the Shesh agent, three to five sessions.** Newelle 1.4.5 from the AUR rather than
+Flatpak, Ollama 0.32 or newer with 6 GB-safe models, three MCP servers over stdio, a Quickshell
+overlay showing listening, thinking, and speaking states driven by Newelle's OpenAI-compatible
+endpoint, the audit log, a daily 08:00 briefing skill, and an optional ADB phone harness. The
+overlay supplements the illogical-impulse bar; it does not replace it.
+
+Taken together, Phases 0 through 3 in the first week, 4 and 5 in the second, and 6 across weeks
+three and four put a first release roughly three to four weeks out — but only if backend patterns
+are borrowed rather than reinvented, and only if the look is left alone.
+
+## Where the fleet actually stands
+
+The Mind and Brain planes are on track: memory, harness, orchestrator, skills, audit, and a
+model-agnostic free-first router, with swarm coordination through GitHub Issues using atomic
+locks, PR auto-merge, a scheduled janitor on true hours, and a secure PAT password flow. The
+2026-08-09 reconciliation recorded more than 100 tests and 15 ADRs across those repositories.
+
+> **Note —** Test and ADR counts are date-scoped. The 2026-08-15 fleet audit is the current
+> baseline for fleet-wide totals; re-verify before quoting these figures elsewhere.
+
+The Soma and Desktop planes were off track. Work that should have been borrowed as backend logic
+was rebuilt instead, 10 new bugs were introduced, and stub files made the repository look further
+along than it was. The correction is now recorded: keep the illogical-impulse look intact, borrow
+backend logic only, and lint every script in CI so the N-01 through N-09 class of defect cannot
+slip through again.
+
+## Where this fits
+
+Read [the master index](./00-index.md) for the verified hardware and software baseline, then
+[the audit](./01-audit.md) for the issue list this chapter refers to.
