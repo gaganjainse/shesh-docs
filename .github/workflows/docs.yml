@@ -1,0 +1,77 @@
+name: docs
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  MDBOOK_VERSION: "0.4.40"
+
+jobs:
+  validate:
+    name: Validate documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12"
+
+      - name: Install mdBook
+        run: |
+          curl -fsSL \
+            "https://github.com/rust-lang/mdBook/releases/download/v${MDBOOK_VERSION}/mdbook-v${MDBOOK_VERSION}-x86_64-unknown-linux-gnu.tar.gz" \
+            | tar -xz -C /usr/local/bin
+
+      # Structure, front matter, links, and the style-guide prose rules.
+      - name: Check documentation
+        run: python3 tools/check_docs.py
+
+      # A generated page must match its source. This is what stops the
+      # component catalogue from drifting away from the manifest.
+      - name: Check generated pages are current
+        run: |
+          if [ -d ../shesh-ecosystem ]; then
+            python3 tools/generate_components.py ../shesh-ecosystem/manifests/components.toml
+            git diff --exit-code -- src/reference/components.md
+          else
+            echo "shesh-ecosystem not checked out; skipping regeneration check"
+          fi
+
+      - name: Build book
+        run: mdbook build
+
+      - name: Upload rendered book
+        uses: actions/upload-artifact@v4
+        with:
+          name: book
+          path: book/
+          retention-days: 7
+
+  links:
+    name: Check external links
+    runs-on: ubuntu-latest
+    continue-on-error: true  # external outages must not block a docs change
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check links
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --no-progress
+            --accept 200,206,429
+            --exclude-path src/history
+            --max-concurrency 8
+            'src/**/*.md' 'README.md'
+          fail: false
