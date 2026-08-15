@@ -2,15 +2,20 @@
 authors = ["Gagan Jain"]
 language = "en"
 src = "src"
-title = "Shesh Docs — Complete Reading Compilation"
+title = "Shesh documentation"
 
 [build]
 build-dir = "book"
 create-missing = false
+extra-watch-dirs = ["theme"]
 
-[preprocessor]
+[preprocessor.frontmatter]
+command = "python3 tools/frontmatter_preprocessor.py"
 
 [output.html]
+default-theme = "light"
+preferred-dark-theme = "navy"
+copy-fonts = true
 additional-css = ["theme/custom.css"]
 git-repository-url = "https://github.com/gaganjainse/shesh-docs"
 edit-url-template = "https://github.com/gaganjainse/shesh-docs/edit/main/src/{path}"
