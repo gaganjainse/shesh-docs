@@ -21,7 +21,7 @@ jobs:
     name: Validate documentation
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
@@ -63,7 +63,7 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true  # external outages must not block a docs change
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
       - name: Check links
         uses: lycheeverse/lychee-action@v2
